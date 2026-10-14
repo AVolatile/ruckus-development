@@ -1,106 +1,807 @@
-# Ruckus
+# Ruckus Development
 
-**Clock out of ordinary.** One shared screen, phone controllers, six Ruckus Originals, and a creator platform that turns your questions into live multiplayer. An original portfolio product by Anthony Volatile / Volatile Solutions. The startup and Paper Moon Co. demo employer are fictional; the multiplayer is implemented.
+**Ruckus** is a multiplayer social experience platform built for teams, workplaces, events, and groups who want something more engaging than another presentation, poll, or meeting icebreaker.
 
-## Play something. Make something.
+Players join from their phones while a shared screen acts as the stage. Hosts can launch original Ruckus games, create custom experiences, and eventually tailor sessions around their organization, event, brand, or audience.
 
-**Originals:** Hotwire (speed trivia), Room Temperature (majority opinions), Sellout (pitch + vote), Caption This (caption + vote), Odd One In (spot the real fact), Scribble Shift (phone drawing + vote). Each supports 2–30 players, presenter controls, pause, reconnect, scoring, bots and rematch.
+This repository represents the active **startup and product-development version of Ruckus**.
 
-**Studio:** `/studio` is the board library; `/studio/boards/new` creates a draft; `/studio/boards/:id` edits; `/studio/boards/:id/preview` previews host and phone together. Create multiple choice with 2–6 answers, True / False, and unscored polls. Add from 168 original library questions across 21 topics or copy any of twelve starters, including an explicitly fictional onboarding example. Browser-local autosave, keyboard reordering, duplication, deletion, JSON transfer, CSV import and live room launch are implemented. No account, cloud board sync or shared editing is implied. Export a backup before clearing browser data.
+The original portfolio/demo implementation remains separate and is treated as a stable proof of concept.
 
-The playable choice content contains **211 questions**: 169 Hotwire, 32 opinion prompts and 10 Odd One In sets. Studio adds **5 unique fictional-company questions**. The new After Hours starter adds **29 host-supplied party-quiz questions**. There are **245 distinct choice/poll questions across the product**, plus creative briefs, drawing prompts and 15 caption scenes. Template copies are not counted as new questions.
+---
 
-**New default starter — After Hours: Hot Takes & Highlights:** 29 questions covering football, baseball, movies, music, pop culture and workplace chaos. Find it first under Studio → Start with a little inspiration; choose **Demo it** to play with bots or **Make it mine** to edit and host. The supplied answer keys are preserved, including deliberately subjective punchline answers. This collection stays in its own party board, separate from Hotwire’s factual question bank. Rounds use 20 seconds, 500 points per correct answer, shuffled options and a leaderboard every five questions.
+## Product Vision
 
-## Local development
+Ruckus is designed around a simple idea:
 
-Use **Node 22 LTS** (package toolchain minimum 20.19). This workspace was verified on Node 20.15.1 with the installed dependencies; use Node 22 for reproducible deployment.
+> **Turn any shared screen into something the room can play with.**
 
-```sh
-npm ci
-cp .env.example .env
-npm run dev
-```
+The platform combines:
 
-Open `http://localhost:4310`. Express runs Vite middleware and Socket.IO on one port, bound to `0.0.0.0`. Marketing and Studio browsing do not connect sockets; live routes and explicit launches connect on demand.
+- Multiplayer party-game mechanics
+- Phone-based player controls
+- Shared-screen presentation
+- Custom content creation
+- Workplace and event use cases
+- Persistent player identity
+- Organization workspaces
+- Brand customization
+- Analytics
+- Progression and collectibles
+- Premium content
 
-**LAN play:** put computer and phones on the same non-isolated Wi-Fi. Open a room and scan its QR. Localhost host screens automatically get a detected LAN IPv4 join link. With VPNs/multiple adapters, set `PUBLIC_APP_URL=http://YOUR-LAN-IP:4310` in `.env`. Guest Wi-Fi may block device-to-device connections. Public production phones can use Wi-Fi or cellular.
+Ruckus should feel fun enough for a party while being polished enough for a company event.
 
-The host can play through a separate player tab. Per-tab identities preserve the presenter. Demo Party uses actual server-controlled players; add 4, 8 or 12 from the host lobby. Studio template demos create eight bots that understand the available choices and question type. They submit on the normal lifecycle, respect pause and receive server-calculated results.
+The goal is not to become another learning-management system or presentation tool.
 
-## Studio rules
+The long-term positioning is:
 
-Titles 60 characters; descriptions 180; questions 180; answers 80; explanations 300; maximum 50 questions and 100 local boards. Timers: 5/10/15/20/30/45/60 seconds. Casual: 500 per correct answer. Quick Draw: 500–1,000 according to server-measured active response time. Just play and polls: zero points. Board defaults apply to new questions; each existing question retains its own timer/score. Optional shuffling preserves the correct answer. Reveals, explanations and leaderboards (each / every five / final) are configurable.
+**Multiplayer social experiences for teams.**
 
-Launch requires a complete valid board; unfinished drafts can autosave. JSON exports are validated complete boards. CSV imports support quoted commas/newlines, answer A–F, correct letter or exact text, timer, score, explanation and type. Download the in-app template. HTML/control characters and basic profanity are rejected; React renders content as text. This basic filter is not an enterprise moderation system.
+---
 
-## Architecture
+# Current Product Foundation
+
+The current Ruckus platform already includes six multiplayer game formats.
+
+### Hotwire
+Fast-paced trivia focused on speed and accuracy.
+
+### Room Temperature
+Players answer opinion-based prompts and try to match the room.
+
+### Sellout
+Players create pitches and compete through group voting.
+
+### Caption This
+Players write captions for visual prompts and vote for their favorites.
+
+### Odd One In
+Players identify the real fact hidden among decoys.
+
+### Scribble Shift
+Players draw from their phones and compete through voting.
+
+The existing multiplayer engine supports:
+
+- 2–30 players
+- Phone controllers
+- Shared-screen host presentation
+- QR joining
+- Real-time Socket.IO communication
+- Host controls
+- Scoring
+- Leaderboards
+- Pause/resume
+- Reconnection
+- Bots
+- Rematches
+- Session summaries
+
+---
+
+# Ruckus Studio
+
+Ruckus Studio allows hosts to create their own multiplayer experiences.
+
+Current capabilities include:
+
+- Custom boards
+- Multiple-choice questions
+- True / False
+- Polls
+- Question libraries
+- Starter templates
+- Browser-local autosave
+- Question reordering
+- Duplication
+- Import/export
+- CSV imports
+- Host previews
+- Phone previews
+- Live launches
+
+The startup version of Ruckus will evolve Studio into a cloud-based creation platform.
+
+---
+
+# Startup Direction
+
+The next stage of Ruckus development focuses on transforming the existing prototype into a scalable SaaS platform.
+
+The product will eventually support three major audiences:
+
+### Players
+
+Players should be able to join Ruckus sessions with almost no friction.
+
+Core principles:
+
+- No payment required
+- No account required to join
+- QR or room-code access
+- Optional persistent player profile
+- Character customization
+- Progression
+- Achievements
+- Collectibles
+
+### Hosts
+
+Hosts create and run experiences.
+
+Potential paid capabilities include:
+
+- Unlimited boards
+- Cloud storage
+- Premium content
+- Session history
+- Analytics
+- Higher participant limits
+- Brand customization
+- Advanced moderation
+
+### Organizations
+
+Businesses and larger groups receive shared workspaces and professional tools.
+
+Potential capabilities include:
+
+- Shared board libraries
+- Multiple hosts
+- Organization templates
+- Brand Kits
+- Event branding
+- Analytics
+- Roles and permissions
+- Administration
+- Enterprise authentication
+- Audit controls
+
+---
+
+# Business Model
+
+The intended business model is:
+
+> **Free players. Paid hosts. Premium workplaces.**
+
+Ruckus should allow free users to experience the real product rather than placing the majority of gameplay behind a paywall.
+
+Monetization should primarily come from increased scale, persistence, customization, content, and organizational capabilities.
+
+---
+
+## Proposed Product Tiers
+
+### Ruckus Free
+
+Designed for casual groups and new users.
+
+Potential limits:
+
+- Smaller player counts
+- Limited custom boards
+- Core content packs
+- Local board storage
+- Basic session summaries
+- Standard Ruckus branding
+
+The purpose of the free tier is product discovery and organic adoption.
+
+---
+
+### Ruckus Host
+
+Designed for recurring hosts.
+
+Potential capabilities:
+
+- Higher participant limits
+- Unlimited cloud boards
+- Full Ruckus content library
+- Premium content packs
+- Session history
+- Analytics
+- Exports
+- Basic branding
+- Persistent host profile
+
+---
+
+### Ruckus Teams
+
+Designed for organizations and recurring workplace use.
+
+Potential capabilities:
+
+- Shared workspaces
+- Multiple hosts
+- Shared board libraries
+- Organization templates
+- Brand Kits
+- Event customization
+- Advanced analytics
+- Moderation controls
+- Higher participant limits
+- Workspace administration
+
+---
+
+### Ruckus Enterprise
+
+Designed for large organizations and high-volume events.
+
+Potential capabilities:
+
+- Custom participant limits
+- SSO
+- SCIM
+- Advanced permissions
+- Audit logs
+- Retention controls
+- Custom domains
+- Advanced branding
+- White-label options
+- Dedicated support
+- SLA agreements
+
+---
+
+# Ruckus Brand Kits
+
+Brand Kits are expected to become one of Ruckus's primary B2B features.
+
+Organizations should be able to make Ruckus experiences feel native to their company while maintaining subtle Ruckus attribution.
+
+Example:
 
 ```text
-src/studio/          board repository, import/export, creator routes, launch adapter
-src/components/      shared game UI, Studio editor, presenter + phone previews
-src/lib/             on-demand Socket.IO provider, runtime URLs, audio, dialog focus
-shared/boards.ts     versioned Zod schemas, draft/completion validation, limits
-shared/content/      original questions, topics, starter-board compositions
-shared/types.ts      public room contracts and typed socket events
-server/engine.ts     authoritative rooms, phases, timers, inputs, scoring, summaries
-server/config.ts     explicit frontend origins and safe public QR URL construction
-server/index.ts      HTTP/Socket.IO boundary, roles, rate limits, cleanup, health
+FIDELITY INVESTMENTS
+
+2027 Workplace Investing Team Challenge
+
+Powered by Ruckus
 ```
 
-A custom-board adapter uses the existing room engine with a private validated question snapshot. Future question keys, `correctAnswer`, and explanations are absent from live player payloads. Only the current choices and permitted reveal are sent. Server state controls eligibility, deadline, duplicate submissions and scoring. Studios’ author library is lazy loaded; Original players do not receive custom board banks via room events. Built-in trivia is public content, not an exam-security system.
+A Brand Kit may eventually contain:
 
-Rooms and scores are in process memory. Host/player tokens are random capabilities kept in sessionStorage; refresh and short reconnect restore the existing participant. Host absence ends a room after five minutes; ended rooms clear after a minute; idle rooms expire after two hours. Server restart loses live rooms. Local boards remain in the author’s browser. One always-on realtime instance is the intended deployment; persistence and horizontal scaling are future work.
+- Organization name
+- Company logo
+- Light/dark logo variants
+- Primary color
+- Secondary color
+- Accent color
+- Background assets
+- Typography preferences
+- Lobby styling
+- Leaderboard styling
+- Winner-screen styling
+- Footer text
+- Event graphics
 
-## Public deployment: Netlify + Render
+Brand Kits should be reusable across multiple boards and events.
 
-**Status: READY FOR DEPLOYMENT — EXTERNAL SETUP REQUIRED.** Netlify account access is available; Render backend authorization/setup is not available in this session. No public production deployment has been claimed or verified. Follow [the production guide](docs/NETLIFY-PRODUCTION.md).
+Organizations may eventually maintain multiple Brand Kits for:
 
-Netlify serves `dist`, built with `npm run build:client`. `netlify.toml` rewrites unknown paths to `/index.html` so React routes refresh correctly. A persistent Render Node web service builds with `npm ci && npm run build:server`, starts with `npm run start:server`, and exposes `/health`. `render.yaml` describes an always-on starter service; creating it requires the owner’s account/billing selection. Netlify Functions are not the realtime room server.
+- Departments
+- Conferences
+- Campaigns
+- Holiday events
+- Sales kickoffs
+- Internal initiatives
 
-| Variable              | Where                                 | Purpose                                                      |
-| --------------------- | ------------------------------------- | ------------------------------------------------------------ |
-| `VITE_REALTIME_URL`   | Netlify build                         | Public HTTPS Render origin; no path                          |
-| `VITE_PUBLIC_APP_URL` | Netlify build                         | Public HTTPS frontend origin                                 |
-| `CLIENT_ORIGIN`       | Render                                | Exact permitted frontend origin                              |
-| `PUBLIC_APP_URL`      | Render                                | Frontend origin used for QR and join links                   |
-| `ALLOWED_ORIGINS`     | Render, optional                      | Comma-separated explicitly permitted previews/custom domains |
-| `REALTIME_ONLY`       | Render                                | `true` avoids serving Vite/static frontend                   |
-| `PORT`                | Render automatically / local optional | HTTP listener; default 4310                                  |
-| `NODE_ENV`            | Render                                | `production` enables strict public origin checks             |
+---
 
-Use HTTPS endpoints; Socket.IO upgrades to WSS and retains HTTPS polling fallback. Changes to frontend build values require a rebuild. These are public URLs, not secret credentials. CORS and WebSocket origin validation are explicit, with no production wildcard. QR always targets the frontend `/join?room=CODE`, never the Render hostname.
+# Content Packs
 
-## Commands and verification
+Ruckus games should be treated as reusable game engines rather than static collections of questions.
 
-```sh
-npm run typecheck
-npm run lint
-npm run build
-npm test
-# With npm run dev in another terminal:
-TEST_ORIGIN=http://localhost:4310 npm test
-AUTOPLAY_ORIGIN=http://localhost:4310 node --import tsx --test tests/autoplay.test.ts
-npm run test:e2e
-node scripts/expansion-qa.mjs
-node scripts/accessibility-check.mjs
+Example:
+
+```text
+Hotwire
+├── General Mayhem
+├── Sports
+├── Movies
+├── Music
+├── Gaming
+├── Pop Culture
+├── Halloween
+└── Holiday Chaos
 ```
 
-`npm test` intentionally skips socket/autoplay suites unless their origins are supplied. Playwright uses installed Chromium; on a fresh machine run `npx playwright install chromium`. The expansion audit records element overflow, accessibility results and screenshots in `docs/qa` and `portfolio-assets/studio`. Contact sheets are internal QA artifacts, not public routes.
+This allows Ruckus to continuously add value without needing to build an entirely new multiplayer game for every release.
 
-```sh
-npm run build:client    # Netlify frontend
-npm run build:server    # Render backend
-npm run start:server   # Requires deployment env in production
-npm run build
-NODE_ENV=production npm start  # Optional combined frontend + server alternative
-npm run assets         # SVG assets; Python deps/venv needed for outlined brand exports
+Content packs may eventually be:
+
+- Free
+- Premium
+- Seasonal
+- Organization-specific
+- Event-specific
+- Unlockable
+- Limited edition
+
+---
+
+# Characters and Player Identity
+
+Ruckus characters will eventually become part of a persistent player identity system.
+
+Potential categories include:
+
+- Base characters
+- Earnable characters
+- Seasonal characters
+- Achievement rewards
+- Event-exclusive characters
+- Premium characters
+
+Characters should remain cosmetic.
+
+Ruckus should avoid pay-to-win mechanics.
+
+---
+
+## Seasonal Character Collections
+
+### Halloween
+
+Potential characters:
+
+- Zombie
+- Mummy
+- Witch
+- Bat
+- Scarecrow
+- Jack-o'-Lantern
+- Candy Corn
+- Ghost
+- Skeleton
+- Vampire
+
+### Holiday
+
+Potential characters:
+
+- Santa
+- Elf
+- Reindeer
+- Snowman
+- Gingerbread character
+- Nutcracker
+- Present
+- Yeti
+
+Seasonal collections can support:
+
+- Player retention
+- Limited-time events
+- Achievements
+- Progression
+- Premium cosmetic purchases
+
+---
+
+# Player Progression
+
+Optional Ruckus accounts may eventually track persistent player identity.
+
+Possible progression systems:
+
+- XP
+- Player level
+- Games played
+- Wins
+- Achievements
+- Character unlocks
+- Collection completion
+- Game-specific statistics
+- Event badges
+
+Example:
+
+```text
+Anthony
+Level 17
+
+38 Games Played
+12 Wins
+
+Hotwire Ace
+
+Halloween Collection
+6 / 10
 ```
 
-Asset source is in `scripts/generate-assets.py` and `scripts/avatar-overrides.json`. The refinement script needs `.venv` and `scripts/requirements.txt`; existing finished SVG assets are checked in, so deployment does not need Python.
+This creates continuity between otherwise independent Ruckus sessions.
 
-## Product honesty and portfolio
+---
 
-Currently implemented: local authoring, original games, custom multiplayer, session-level summaries and CSV export, server validation and capability-based session restoration. Future: accounts, cloud boards, workspaces, SSO, access controls, audit logs, retention policy, durable rooms, shared state, billing and organizational security/legal review. No enterprise certifications, paying customers or employer affiliation are claimed. Do not put confidential organization material into this unauthenticated prototype.
+# Ruckus Events
 
-See [product vision](docs/PRODUCT-VISION.md), [internal pilot notes](docs/ORGANIZATION-PITCH-NOTES.md), [final expansion report](docs/FINAL-EXPANSION-REPORT.md), and [portfolio export guide](portfolio-assets/EXPORT-GUIDE.md). The existing 1280×960 portfolio cover is preserved.
+Ruckus should eventually support event-specific experiences.
+
+Examples:
+
+- Company holiday parties
+- Conferences
+- Employee onboarding
+- Sales kickoffs
+- Team offsites
+- Weddings
+- Family events
+- Networking events
+- Fundraisers
+- Remote socials
+
+Events may include:
+
+- Custom branding
+- Event titles
+- Event graphics
+- Selected game playlists
+- Event-only characters
+- Analytics
+- Session history
+
+---
+
+# Event Passes
+
+Not every customer needs a subscription.
+
+Ruckus may eventually offer short-term Event Passes.
+
+Potential offering:
+
+```text
+Ruckus Event Pass
+
+7 Days
+100–200 Players
+All Ruckus Originals
+Premium Content Packs
+Custom Boards
+Brand Kit
+Event Analytics
+```
+
+This could serve customers hosting one-time events without requiring a recurring subscription.
+
+---
+
+# Future AI Features
+
+Ruckus Studio may eventually include assisted board generation.
+
+Example:
+
+> Create a 15-question holiday game for a corporate team event. Include Christmas trivia, pop culture, workplace humor, and sports. Keep everything workplace appropriate.
+
+Ruckus could generate:
+
+- Questions
+- Answers
+- Polls
+- Game combinations
+- Recommended timers
+- Suggested content packs
+
+AI-generated content should always require host review before publication or live use.
+
+---
+
+# Future Marketplace
+
+A long-term possibility is a creator marketplace.
+
+Creators could publish:
+
+- Trivia packs
+- Event templates
+- Holiday games
+- Wedding games
+- Sports content
+- Workplace templates
+- Original Ruckus experiences
+
+Marketplace development should not begin until Ruckus has mature:
+
+- Content moderation
+- Copyright policies
+- Creator ownership rules
+- Payments
+- Reporting
+- Quality controls
+
+---
+
+# Architecture Direction
+
+The existing application should remain modular as Ruckus grows.
+
+Target system boundaries:
+
+```text
+Client Applications
+        │
+        ▼
+Ruckus API
+        │
+        ├── Authentication
+        ├── Organizations
+        ├── Boards
+        ├── Content
+        ├── Entitlements
+        ├── Billing
+        ├── Analytics
+        └── Player Profiles
+        │
+        ▼
+PostgreSQL
+```
+
+Realtime gameplay remains a separate authoritative system:
+
+```text
+Players / Host
+      │
+      ▼
+Socket.IO
+      │
+      ▼
+Realtime Game Engine
+      │
+      ├── Rooms
+      ├── Timers
+      ├── Player State
+      ├── Scoring
+      ├── Voting
+      └── Session State
+```
+
+Future shared-state infrastructure may include Redis or another distributed coordination layer once scaling requirements justify it.
+
+---
+
+# Core Future Data Model
+
+Potential entities include:
+
+```text
+users
+organizations
+memberships
+subscriptions
+entitlements
+
+boards
+board_revisions
+questions
+content_packs
+
+brand_kits
+events
+
+sessions
+session_players
+session_results
+
+player_profiles
+characters
+character_packs
+user_unlocks
+achievements
+```
+
+Database design should preserve clear ownership boundaries between users, organizations, content, and live gameplay.
+
+---
+
+# Entitlements
+
+Ruckus should avoid hard-coding subscription plan names throughout the application.
+
+Instead, product access should be controlled through capabilities such as:
+
+```text
+canCreateBoard
+canHostPlayers
+canUseBrandKit
+canExportResults
+canUsePremiumPack
+canCreateWorkspace
+canViewAnalytics
+canUseCustomDomain
+```
+
+This allows pricing and packaging to evolve without tightly coupling business logic to UI code.
+
+---
+
+# Development Roadmap
+
+## Phase 1 — Foundation
+
+- Authentication
+- PostgreSQL
+- User accounts
+- Cloud BoardRepository
+- Persistent boards
+- Migration from local-only storage
+- Product analytics instrumentation
+
+---
+
+## Phase 2 — Product Packaging
+
+- Content-pack architecture
+- Entitlements
+- Free-tier limits
+- Premium feature gates
+- Session history
+- Host dashboard
+
+---
+
+## Phase 3 — Monetization
+
+- Subscription infrastructure
+- Payment provider integration
+- Billing portal
+- Subscription webhooks
+- Event Passes
+- Premium content
+
+---
+
+## Phase 4 — Business Platform
+
+- Organization workspaces
+- Workspace memberships
+- Roles and permissions
+- Shared board libraries
+- Organization templates
+- Ruckus Brand Kits
+- Event branding
+
+---
+
+## Phase 5 — Analytics
+
+- Session dashboards
+- Participation metrics
+- Question performance
+- Response timing
+- Voting metrics
+- CSV exports
+- Shareable recaps
+
+---
+
+## Phase 6 — Player Ecosystem
+
+- Player accounts
+- XP
+- Levels
+- Achievements
+- Character collections
+- Seasonal unlocks
+- Player statistics
+
+---
+
+## Phase 7 — Scale
+
+- Persistent room recovery
+- Distributed realtime state
+- Redis/shared infrastructure
+- Capacity testing
+- Observability
+- Error monitoring
+- Automated backups
+- Rate limiting
+- Security reviews
+
+---
+
+## Phase 8 — Expansion
+
+Potential future areas:
+
+- Slack integrations
+- Microsoft Teams
+- Zoom
+- Google Meet
+- AI Studio tools
+- Template marketplace
+- Creator ecosystem
+- Enterprise administration
+- Mobile applications
+
+---
+
+# Product Principles
+
+Ruckus development should continue to follow several core principles.
+
+### Joining must remain frictionless
+
+Players should never need an account simply to participate.
+
+### Fun comes first
+
+Business features should enhance Ruckus rather than turn it into corporate software with games attached.
+
+### Hosts are the primary customer
+
+Players generate adoption. Hosts and organizations generate revenue.
+
+### Customization should not destroy identity
+
+Company branding should coexist with recognizable Ruckus design.
+
+### Cosmetics stay cosmetic
+
+Characters and collectibles should not affect competitive outcomes.
+
+### Build systems, not isolated features
+
+Branding, events, content, progression, analytics, and subscriptions should share reusable architecture.
+
+### Validate before scaling
+
+Do not prematurely build enterprise infrastructure, marketplaces, or complex monetization before users demonstrate demand.
+
+---
+
+# Repository Purpose
+
+This repository is the active product-development environment for the future Ruckus startup.
+
+Development here may include experimental, incomplete, or unreleased functionality.
+
+The original portfolio/demo repository should remain separate and stable.
+
+```text
+icebreaker-game-project
+└── Stable portfolio/demo implementation
+
+ruckus-development
+└── Active startup product development
+```
+
+---
+
+# Status
+
+**Stage:** Early product development / startup exploration
+
+**Current objective:** Evolve the existing multiplayer proof of concept into a scalable, persistent, monetizable platform while preserving the simplicity and personality that make Ruckus fun.
+
+---
+
+# Long-Term Goal
+
+Ruckus should become the easiest way for a group of people to turn a shared screen into a live multiplayer experience.
+
+Whether the occasion is:
+
+- a five-minute meeting warmup,
+- an onboarding session,
+- a conference,
+- a holiday party,
+- a team offsite,
+- or a night with friends,
+
+the experience should begin the same way:
+
+**Open Ruckus.**
+
+**Start a room.**
+
+**Scan the code.**
+
+**Make some noise.**

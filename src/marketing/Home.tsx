@@ -1,137 +1,9 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Avatar, Icon, Logo, Star, Tag } from "../components/Visuals";
 import { GameCard } from "../components/GameCard";
-import { GAMES, DEFAULT_SETTINGS } from "../../shared/catalog";
-import { useParty } from "../lib/party";
-import { ErrorMessage } from "../components/Layout";
-export function DemoButton({
-  className = "button",
-  children = "Try a demo party",
-}: {
-  className?: string;
-  children?: string;
-}) {
-  const party = useParty(),
-    navigate = useNavigate(),
-    [busy, setBusy] = useState(false);
-  return (
-    <button
-      className={className}
-      disabled={busy}
-      onClick={async () => {
-        setBusy(true);
-        const reply = await party.create(
-          { ...DEFAULT_SETTINGS, rounds: 2, pace: "quick" },
-          true,
-        );
-        setBusy(false);
-        if (reply.ok && reply.identity)
-          navigate(`/room/${reply.identity.code}/host`);
-      }}
-    >
-      {busy ? "Calling the crew…" : children}
-      <Icon name="arrow" />
-    </button>
-  );
-}
-export function StagePreview() {
-  const [pick, setPick] = useState<number | null>(null);
-  return (
-    <div className="hero-playground">
-      <span className="preview-label">
-        <span className="live-dot" /> ONE SCREEN. EVERYONE IN.
-      </span>
-      <div className="preview-stage">
-        <div className="preview-stage-header">
-          <Logo light />
-          <span>
-            ROOM TEMP. <span className="mini-pill">01 / 03</span>
-          </span>
-        </div>
-        <div className="preview-stage-body">
-          <span className="preview-eyebrow">THE ROOM HAS OPINIONS.</span>
-          <h2>
-            Pick the office
-            <br />
-            mascot.
-          </h2>
-          <div className="preview-answers">
-            {["Pigeon", "Raccoon", "Tired robot", "Stapler"].map((a, i) => (
-              <button
-                key={a}
-                className={pick === i ? "selected" : ""}
-                onClick={() => setPick(i)}
-              >
-                <span>{"ABCD"[i]}</span>
-                {a}
-                {pick === i && <b>✓</b>}
-              </button>
-            ))}
-          </div>
-          <p className="preview-feedback" aria-live="polite">
-            {pick === null
-              ? "Go on. Tap an answer."
-              : pick === 0
-                ? "Excellent. Upper management material."
-                : pick === 1
-                  ? "Great at scavenging the snack budget."
-                  : pick === 2
-                    ? "Already knows how we feel on Mondays."
-                    : "Finally, someone holding it together."}
-          </p>
-        </div>
-        <div className="preview-stage-players">
-          {[1, 3, 5, 7, 14].map((id, i) => (
-            <div key={id}>
-              <Avatar id={id} size={45} />
-              <span>{["Maya", "Jordan", "Priya", "Mateo", "You"][i]}</span>
-            </div>
-          ))}
-          <span className="preview-plus">+ your people</span>
-        </div>
-      </div>
-      <div className="hero-phone">
-        <div className="phone-speaker" />
-        <div className="phone-top">
-          <Logo />
-          <span>J7KM5</span>
-        </div>
-        <span className="phone-status">YOU’RE IN.</span>
-        <Avatar id={5} size={104} />
-        <h3>
-          Nice to meet
-          <br />
-          your competitive side.
-        </h3>
-        <div className="phone-answer">
-          {pick !== null ? "Answer locked. ✓" : "Your phone. Your controller."}
-        </div>
-        <div className="phone-reactions">👏 🔥 👀</div>
-      </div>
-      <div className="sticker no-download">
-        ZERO
-        <br />
-        DOWNLOADS.
-        <Star />
-      </div>
-      <div className="sticker meeting-sticker">
-        Meeting mode
-        <br />
-        <s>ON</s> <b>OFF ↗</b>
-      </div>
-      <Avatar id={1} size={93} className="floating-bandit" />
-      <Star className="hero-star" />
-      <span className="hero-scribble">
-        Phones out.
-        <br />
-        Game faces on. <span>↗</span>
-      </span>
-    </div>
-  );
-}
+import { GAMES } from "../../shared/catalog";
+import { StagePreview } from "../components/StagePreview";
 export function Home() {
-  const { error } = useParty();
   return (
     <>
       <section className="home-hero">
@@ -146,24 +18,21 @@ export function Home() {
             <Star />
           </h1>
           <p>
-            Your conference room has a game mode.
-            <br />
-            One screen. A few phones. A very good reason
-            <br className="desktop-break" /> to put the spreadsheet away.
+            Live multiplayer games for teams, events, and your favorite people.
+            Turn any shared screen into something the room can play with.
+            Players join from their phones.
           </p>
           <div className="hero-actions">
-            <Link className="button" to="/host">
-              Start a ruckus <Icon name="arrow" />
+            <Link className="button" to="/signup">
+              Start free <Icon name="arrow" />
             </Link>
-            <DemoButton
-              className="button text-button"
-              children="Take it for a spin"
-            />
+            <Link className="button text-button" to="/product">
+              See how it works <Icon name="arrow" />
+            </Link>
           </div>
-          <ErrorMessage message={error} />
           <div className="hero-fine">
             <span>✳ 2–30 people</span>
-            <span>No accounts</span>
+            <span>No player accounts</span>
             <span>Just bring your phone</span>
           </div>
         </div>
@@ -190,7 +59,7 @@ export function Home() {
             </h2>
           </div>
           <p>
-            No downloads. No logins.
+            No downloads. Players skip the signup.
             <br />
             No one introducing their favorite fact
             <br />
@@ -237,7 +106,7 @@ export function Home() {
               for every kind of loud.
             </h2>
           </div>
-          <Link className="button outline" to="/games">
+          <Link className="button outline" to="/product#originals">
             All six games <Icon name="arrow" />
           </Link>
         </div>
@@ -290,7 +159,7 @@ export function Home() {
             place for your dangerously good pitches. Everyone gets their own
             controller.
           </p>
-          <Link to="/how-it-works" className="button yellow">
+          <Link to="/product" className="button yellow">
             See how it works <Icon name="arrow" />
           </Link>
         </div>
@@ -333,7 +202,7 @@ export function Home() {
             },
           ].map((o) => (
             <Link
-              to={o.avatar === 19 ? "/remote" : "/for-teams"}
+              to={o.avatar === 19 ? "/events" : "/teams"}
               className="occasion"
               key={o.title}
             >
@@ -343,28 +212,6 @@ export function Home() {
               <p>{o.text}</p>
               <Icon name="arrow" />
             </Link>
-          ))}
-        </div>
-      </section>
-      <section className="demo-banner">
-        <div>
-          <Tag>THE PARTY OF ONE, PLUS EIGHT.</Tag>
-          <h2>
-            No coworkers handy?
-            <br />
-            We know some people.
-          </h2>
-          <p>
-            Meet Maya, Priya, and the demo crew. They answer, vote,
-            <br />
-            and take the competition just seriously enough.
-          </p>
-          <DemoButton className="button yellow" />
-          <ErrorMessage message={error} />
-        </div>
-        <div className="demo-avatar-stack">
-          {[1, 3, 14, 9, 7, 5].map((id, i) => (
-            <Avatar key={id} id={id} size={110} className={`stack-${i}`} />
           ))}
         </div>
       </section>
@@ -381,11 +228,11 @@ export function Home() {
             Build a question board, preview both screens, and give it a room
             code.
           </p>
-          <Link to="/studio" className="button">
+          <Link to="/app/studio" className="button">
             Build your own board <Icon name="arrow" />
           </Link>
-          <Link to="/games" className="studio-demo-link">
-            Or play a Ruckus Original ↗
+          <Link to="/product#originals" className="studio-demo-link">
+            Explore the Ruckus Originals ↗
           </Link>
         </div>
         <div className="home-studio-card">
@@ -411,10 +258,10 @@ export function Home() {
           <span>ruckus.</span>
           <Star />
         </h2>
-        <Link className="button" to="/host">
-          Get your room code <Icon name="arrow" />
+        <Link className="button" to="/signup">
+          Start free <Icon name="arrow" />
         </Link>
-        <p>Workplace-friendly. Competitive by nature.</p>
+        <p>Host tools are open now. Free Ruckus accounts are coming soon.</p>
       </section>
     </>
   );

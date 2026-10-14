@@ -71,7 +71,7 @@ export default function StudioEditor() {
         boards.save(board);
         setSaved("Saved in this browser");
         if (!id || id === "new")
-          navigate(`/studio/boards/${board.id}`, { replace: true });
+          navigate(`/app/studio/boards/${board.id}`, { replace: true });
       } catch (e) {
         setSaved("Save failed");
         setError(
@@ -102,7 +102,7 @@ export default function StudioEditor() {
           in this browser.
         </h1>
         <ErrorMessage message={error} />
-        <Link to="/studio" className="button">
+        <Link to="/app/studio" className="button">
           Back to the library
         </Link>
       </section>
@@ -115,7 +115,7 @@ export default function StudioEditor() {
   function saveReturn() {
     try {
       boards.save(board!);
-      navigate("/studio/boards");
+      navigate("/app/studio/boards");
     } catch (e) {
       setError(
         e instanceof Error ? e.message : "Save failed. Export a backup.",
@@ -158,7 +158,7 @@ export default function StudioEditor() {
     <div className="studio-editor-page">
       <header className="studio-editor-top">
         <div>
-          <Link to="/studio/boards">← My boards</Link>
+          <Link to="/app/studio/boards">← My boards</Link>
           <span
             role="status"
             className={saved === "Save failed" ? "field-error" : ""}
@@ -169,7 +169,7 @@ export default function StudioEditor() {
         <div>
           <Link
             className="button small outline"
-            to={`/studio/boards/${board.id}/preview`}
+            to={`/app/studio/boards/${board.id}/preview`}
             onClick={(event) => {
               try {
                 boards.save(board);
@@ -562,7 +562,7 @@ export default function StudioEditor() {
                 try {
                   boards.save(board);
                   const copy = boards.duplicate(board.id);
-                  navigate(`/studio/boards/${copy.id}`);
+                  navigate(`/app/studio/boards/${copy.id}`);
                 } catch (e) {
                   setError(
                     e instanceof Error ? e.message : "Couldn’t duplicate.",

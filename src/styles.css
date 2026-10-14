@@ -1,6 +1,7 @@
 @import "./styles/foundation-and-marketing.css";
 @import "./styles/gameplay.css";
-@import "./styles/portfolio.css";
 @import "./styles/motion-and-responsive.css";
 @import "./styles/studio.css";
 @import "./styles/robust-layout.css";
+
+@import "./styles/app-shell.css";

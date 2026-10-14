@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { Avatar, Tag } from "../components/Visuals";
-import { DemoButton } from "./Home";
+import { Avatar, Tag } from "../../components/Visuals";
+import { DemoButton } from "../../components/DemoButton";
 const campaignLines = [
   "Your agenda just got a plot twist.",
   "The projector has a personality now.",

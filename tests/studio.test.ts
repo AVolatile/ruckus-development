@@ -6,7 +6,12 @@ import {
   boardIssues,
   questionSchema,
 } from "../shared/boards.js";
-import { CONTENT, TEMPLATES, TOPICS } from "../shared/content/library.js";
+import {
+  ARCHIVED_TEMPLATES,
+  CONTENT,
+  TEMPLATES,
+  TOPICS,
+} from "../shared/content/library.js";
 import {
   importJson,
   importCsv,
@@ -39,7 +44,12 @@ function board() {
 test("all library questions and default starters have safe, valid, unique content", () => {
   assert.equal(CONTENT.length, 168);
   assert.equal(Object.keys(TOPICS).length, 21);
-  assert.equal(TEMPLATES.length, 12);
+  assert.equal(TEMPLATES.length, 11);
+  assert.equal(
+    TEMPLATES.some((board) => board.id === "paper-moon-onboarding"),
+    false,
+  );
+  ARCHIVED_TEMPLATES.forEach(validateBoard);
   assert.equal(new Set(CONTENT.map((q) => q.id)).size, CONTENT.length);
   assert.equal(new Set(CONTENT.map((q) => q.prompt)).size, CONTENT.length);
   CONTENT.forEach((q) => {

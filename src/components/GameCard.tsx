@@ -4,13 +4,15 @@ import type { GameInfo } from "../../shared/types";
 export function GameCard({
   game,
   index = 0,
+  to,
 }: {
   game: GameInfo;
   index?: number;
+  to?: string;
 }) {
   return (
     <Link
-      to={`/games/${game.id}`}
+      to={to ?? `/app/originals/${game.id}`}
       className={`game-card game-card-${index % 3}`}
       style={{ background: game.color }}
     >

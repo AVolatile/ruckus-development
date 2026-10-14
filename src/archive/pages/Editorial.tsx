@@ -1,6 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
-import { Avatar, Icon, Star, Tag } from "../components/Visuals";
-import { StagePreview, DemoButton } from "./Home";
+import { Avatar, Icon, Star, Tag } from "../../components/Visuals";
+import { StagePreview } from "../../components/StagePreview";
+import { DemoButton } from "../../components/DemoButton";
 export function HowItWorks() {
   return (
     <>

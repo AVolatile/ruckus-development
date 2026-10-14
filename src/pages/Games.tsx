@@ -3,7 +3,7 @@ import { Link, useParams, useNavigate } from "react-router-dom";
 import { GAMES, gameById } from "../../shared/catalog";
 import { GameCard } from "../components/GameCard";
 import { Icon, Tag } from "../components/Visuals";
-import { DemoButton } from "./Home";
+import { DemoButton } from "../components/DemoButton";
 const samples: Record<string, { title: string; body: string[] }> = {
   hotwire: {
     title: "What is the tiny plastic tip of a shoelace called?",
@@ -112,7 +112,7 @@ export function Games() {
             disabled={!visible.length}
             onClick={() =>
               navigate(
-                `/games/${visible[Math.floor(Math.random() * visible.length)].id}`,
+                `/app/originals/${visible[Math.floor(Math.random() * visible.length)].id}`,
               )
             }
           >
@@ -148,13 +148,13 @@ export function Games() {
             Ruckus Studio turns your inside knowledge into live multiplayer.
           </p>
         </div>
-        <Link className="button" to="/studio">
+        <Link className="button" to="/app/studio">
           Build a board <Icon name="arrow" />
         </Link>
       </section>
       <section className="compact-cta">
         <h2>Can’t pick? Make a mix.</h2>
-        <Link className="button" to="/host">
+        <Link className="button" to="/app/host">
           Build your lineup <Icon name="arrow" />
         </Link>
       </section>
@@ -171,7 +171,7 @@ export function GameDetail() {
           <br />
           isn’t in the room.
         </h1>
-        <Link to="/games" className="button">
+        <Link to="/app/originals" className="button">
           Explore the lineup
         </Link>
       </section>
@@ -182,13 +182,13 @@ export function GameDetail() {
     <>
       <section className="game-detail-hero" style={{ background: game.color }}>
         <div>
-          <Link className="back-link" to="/games">
+          <Link className="back-link" to="/app/originals">
             ← The whole lineup
           </Link>
           <Tag>{game.energy.toUpperCase()}</Tag>
           <h1>{game.name}</h1>
           <p>{game.description}</p>
-          <Link to={`/host?game=${game.id}`} className="button">
+          <Link to={`/app/host?game=${game.id}`} className="button">
             Put it in the room <Icon name="arrow" />
           </Link>
           <div className="detail-meta">

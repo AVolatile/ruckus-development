@@ -97,7 +97,7 @@ export function HostRoom() {
           tab to control this room.
         </p>
         <ErrorMessage message={party.error} />
-        <Link className="button" to="/host">
+        <Link className="button" to="/app/host">
           Open a new room <Icon name="arrow" />
         </Link>
       </div>
@@ -117,7 +117,7 @@ export function HostRoom() {
       style={{ "--game-color": game.color } as React.CSSProperties}
     >
       <header className="host-header">
-        <Link to="/" aria-label="Ruckus home">
+        <Link to="/app" aria-label="Ruckus host home">
           <Logo light />
         </Link>
         <div className="host-breadcrumb">
@@ -422,7 +422,7 @@ export function HostRoom() {
               >
                 Same crew. Rematch. <Icon name="arrow" />
               </button>
-              <Link className="button light-outline" to="/host">
+              <Link className="button light-outline" to="/app/host">
                 New lineup
               </Link>
             </div>
@@ -434,7 +434,7 @@ export function HostRoom() {
             <Avatar id={19} size={150} />
             <h1>Good ruckus.</h1>
             <p>The host ended the room. The bragging rights live on.</p>
-            <Link to="/host" className="button yellow">
+            <Link to="/app/host" className="button yellow">
               Open a fresh room <Icon name="arrow" />
             </Link>
           </div>

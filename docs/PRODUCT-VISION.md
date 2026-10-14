@@ -33,3 +33,11 @@ Scaling needs a shared authoritative room-state model, locks/versioned transitio
 ## Business direction
 
 Validate repeat hosting and authoring usefulness before billing. Potential paid value: saved cloud libraries, branded events, shared organization workspaces and managed reliable hosting. Preserve accessible phone controls, fast joining, original illustration and candid feature boundaries. Measure pilot hosting friction and participation, not employee proficiency.
+
+## Startup development surfaces — Phase 0
+
+The public website explains Ruckus; `/app` lets hosts use it; `/join` lets players enter immediately. Studio and all six Originals live within the host application. Host tools are open access until real accounts ship. Login/signup explicitly communicate that state without collecting credentials. Commercial pricing, cloud saving, organization workspaces, and Brand Kits remain future capability.
+
+Portfolio case-study, campaign, and brand-showcase pages are archived outside production routing. The fictional employer starter is excluded from production templates. Brand assets and useful implementation remain available to build real workspace/event customization later.
+
+The next milestone is **Authentication + PostgreSQL + CloudBoardRepository**, as one working host-account-to-cloud-board-to-live-room vertical slice. See [architecture](ARCHITECTURE.md) and [roadmap](ROADMAP.md).

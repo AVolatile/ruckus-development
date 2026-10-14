@@ -20,7 +20,7 @@ export default function StudioPreview() {
     return (
       <section className="page-hero">
         <h1>Library unavailable.</h1>
-        <Link to="/studio">Return to Studio</Link>
+        <Link to="/app/studio">Return to Studio</Link>
       </section>
     );
   }
@@ -28,7 +28,7 @@ export default function StudioPreview() {
     return (
       <section className="page-hero">
         <h1>That board isn’t here.</h1>
-        <Link to="/studio" className="button">
+        <Link to="/app/studio" className="button">
           Return to Studio
         </Link>
       </section>
@@ -37,7 +37,7 @@ export default function StudioPreview() {
   return (
     <section className="studio-preview-page">
       <div className="studio-preview-toolbar">
-        <Link to={`/studio/boards/${id}`} className="button outline small">
+        <Link to={`/app/studio/boards/${id}`} className="button outline small">
           ← Back to editor
         </Link>
         <span>

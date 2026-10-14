@@ -33,19 +33,26 @@ export function Layout() {
           className="menu-toggle"
           aria-expanded={open}
           aria-label="Toggle navigation"
+          aria-controls="public-navigation"
           onClick={() => setOpen((v) => !v)}
         >
           {open ? "Close" : "Menu"} <span>☰</span>
         </button>
-        <nav className={open ? "open" : ""} aria-label="Main navigation">
-          <NavLink to="/games">The games</NavLink>
-          <NavLink to="/how-it-works">How it works</NavLink>
-          <NavLink to="/studio">Build a board</NavLink>
+        <nav
+          id="public-navigation"
+          className={open ? "open" : ""}
+          aria-label="Main navigation"
+        >
+          <NavLink to="/product">Product</NavLink>
+          <NavLink to="/teams">Teams</NavLink>
+          <NavLink to="/events">Events</NavLink>
+          <NavLink to="/pricing">Pricing</NavLink>
           <NavLink to="/join" className="nav-join">
-            Join a room <span>↗</span>
+            Join a room ↗
           </NavLink>
-          <Link className="button small" to="/host">
-            Start a ruckus <Icon name="arrow" />
+          <NavLink to="/login">Log in</NavLink>
+          <Link className="button small" to="/signup">
+            Start free <Icon name="arrow" />
           </Link>
         </nav>
       </header>
@@ -62,30 +69,29 @@ export function Layout() {
             <br />
             Questionable competition.
           </p>
-          <Link to="/host" className="button yellow">
-            Get the room going <Icon name="arrow" />
+          <Link to="/signup" className="button yellow">
+            Start free <Icon name="arrow" />
           </Link>
         </div>
         <div className="footer-links">
           <div>
-            <Link to="/games">The games</Link>
-            <Link to="/studio">Ruckus Studio</Link>
-            <Link to="/remote">Remote play</Link>
+            <Link to="/product">Explore Ruckus</Link>
+            <Link to="/teams">For teams</Link>
+            <Link to="/events">For events</Link>
             <Link to="/pricing">Pricing</Link>
-            <Link to="/resources">Host’s field guide</Link>
           </div>
           <div>
-            <Link to="/about">About Ruckus</Link>
-            <Link to="/brand">Brand world</Link>
-            <Link to="/campaign">Out in the wild</Link>
-            <Link to="/case-study">The case study</Link>
+            <Link to="/app">Host tools</Link>
+            <Link to="/resources">Host’s field guide</Link>
+            <Link to="/join">Join a room</Link>
+            <Link to="/login">Log in</Link>
           </div>
         </div>
         <div className="footer-bottom">
           <span>
-            A self-initiated concept by Anthony Volatile / Volatile Solutions.
+            Turn any shared screen into something the room can play with.
           </span>
-          <span>© 2026 Ruckus. All play, no accounts.</span>
+          <span>© 2026 Ruckus. Players join without accounts.</span>
         </div>
       </footer>
     </>

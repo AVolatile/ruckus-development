@@ -1,4 +1,4 @@
-import { boardSchema, type CustomBoard } from "../../shared/boards";
+import { boardSchema, newBoard, type CustomBoard } from "../../shared/boards";
 const KEY = "ruckus-studio-v1";
 export interface BoardRepository {
   list(): CustomBoard[];
@@ -73,3 +73,22 @@ export const boards: BoardRepository = {
     return copy;
   },
 };
+
+// A single authoring entry point for Studio and dashboard starters.
+export function createLocalBoard(source?: CustomBoard): CustomBoard {
+  const now = new Date().toISOString();
+  const board = source
+    ? {
+        ...structuredClone(source),
+        id: crypto.randomUUID(),
+        createdAt: now,
+        updatedAt: now,
+        questions: source.questions.map((question) => ({
+          ...question,
+          id: crypto.randomUUID(),
+        })),
+      }
+    : newBoard();
+  boards.save(board);
+  return board;
+}

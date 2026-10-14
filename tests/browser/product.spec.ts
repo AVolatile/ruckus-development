@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import { io } from "socket.io-client";
 import { DEFAULT_SETTINGS, GAMES } from "../../shared/catalog";
 import type { Reply } from "../../shared/types";
-test("homepage interaction, all editorial routes, responsive layouts, and console", async ({
+test("homepage interaction, production routes, responsive layouts, and console", async ({
   page,
 }) => {
   const errors: string[] = [];
@@ -17,7 +17,7 @@ test("homepage interaction, all editorial routes, responsive layouts, and consol
     page.getByText("Excellent. Upper management material."),
   ).toBeVisible();
   await page.screenshot({
-    path: "portfolio-assets/homepage-1440.png",
+    path: "test-results/phase-0/homepage-1440.png",
     fullPage: true,
     animations: "disabled",
   });
@@ -32,31 +32,29 @@ test("homepage interaction, all editorial routes, responsive layouts, and consol
   }
   await page.setViewportSize({ width: 1440, height: 1000 });
   for (const route of [
-    "/games",
-    "/how-it-works",
-    "/for-teams",
-    "/remote",
+    "/app/originals",
+    "/product",
+    "/teams",
+    "/events",
     "/pricing",
     "/resources",
-    "/about",
-    "/brand",
-    "/campaign",
-    "/case-study",
-    ...GAMES.map((g) => `/games/${g.id}`),
+    "/login",
+    "/signup",
+    "/app",
+    "/app/library",
+    "/app/events",
+    "/app/analytics",
+    "/app/workspace",
+    "/app/settings",
+    ...GAMES.map((g) => `/app/originals/${g.id}`),
   ]) {
     await page.goto(route);
-    await expect(page.locator("main h1, main .brand-hero .logo")).toBeVisible();
+    await expect(page.locator("main h1")).toBeVisible();
     expect(
       await page.evaluate(
         () => document.documentElement.scrollWidth <= innerWidth,
       ),
     ).toBe(true);
-    if (["/brand", "/campaign", "/case-study"].includes(route))
-      await page.screenshot({
-        path: `portfolio-assets/${route.slice(1)}-1440.png`,
-        fullPage: true,
-        animations: "disabled",
-      });
   }
   expect(errors).toEqual([]);
 });
@@ -66,7 +64,7 @@ test("real host lobby + phone join, avatar, submission, vote, reconnect, keyboar
 }) => {
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(e.message));
-  await page.goto("/host?game=sellout");
+  await page.goto("/app/host?game=sellout");
   await page.getByLabel("Rounds per game").selectOption("1");
   await page.getByText("Keep the party moving", { exact: true }).click();
   await page.getByRole("button", { name: "Open the room" }).click();
@@ -74,6 +72,15 @@ test("real host lobby + phone join, avatar, submission, vote, reconnect, keyboar
     page.getByRole("heading", { name: "Look who showed up." }),
   ).toBeVisible();
   const code = (await page.locator(".host-code b").textContent())!;
+  const joinUrl = new URL(
+    (await page.locator(".join-url").getAttribute("href"))!,
+  );
+  expect(joinUrl.pathname).toBe("/join");
+  expect(joinUrl.searchParams.get("room")).toBe(code);
+  await expect(
+    page.getByRole("img", { name: `Scan to join room ${code}` }),
+  ).toHaveAttribute("src", /^data:image\/png/);
+
   await page
     .getByRole("button", { name: "+ 8 demo players", exact: true })
     .click();
@@ -96,7 +103,7 @@ test("real host lobby + phone join, avatar, submission, vote, reconnect, keyboar
   }
   await page.setViewportSize({ width: 1440, height: 810 });
   await page.screenshot({
-    path: "portfolio-assets/host-lobby-1440.png",
+    path: "test-results/phase-0/host-lobby-1440.png",
     fullPage: true,
     animations: "disabled",
   });
@@ -111,7 +118,7 @@ test("real host lobby + phone join, avatar, submission, vote, reconnect, keyboar
     .getByRole("button", { name: "Choose Bandit", exact: true })
     .click();
   await phone.screenshot({
-    path: "portfolio-assets/mobile-join-390.png",
+    path: "test-results/phase-0/mobile-join-390.png",
     fullPage: true,
     animations: "disabled",
   });
@@ -125,7 +132,7 @@ test("real host lobby + phone join, avatar, submission, vote, reconnect, keyboar
     phone.getByRole("heading", { name: "Anthony, you’re in." }),
   ).toBeVisible();
   await phone.screenshot({
-    path: "portfolio-assets/mobile-lobby-390.png",
+    path: "test-results/phase-0/mobile-lobby-390.png",
     fullPage: true,
     animations: "disabled",
   });
@@ -137,7 +144,7 @@ test("real host lobby + phone join, avatar, submission, vote, reconnect, keyboar
     .getByLabel("Your one-line pitch")
     .fill("Hold it together, expensively.");
   await phone.screenshot({
-    path: "portfolio-assets/mobile-sellout-390.png",
+    path: "test-results/phase-0/mobile-sellout-390.png",
     fullPage: true,
     animations: "disabled",
   });
@@ -146,7 +153,7 @@ test("real host lobby + phone join, avatar, submission, vote, reconnect, keyboar
     phone.getByRole("heading", { name: "Locked. Loaded. Lovely." }),
   ).toBeVisible();
   await page.screenshot({
-    path: "portfolio-assets/sellout-host-1440.png",
+    path: "test-results/phase-0/sellout-host-1440.png",
     fullPage: true,
     animations: "disabled",
   });
@@ -166,14 +173,14 @@ test("real host lobby + phone join, avatar, submission, vote, reconnect, keyboar
     page.getByRole("heading", { name: "The room has spoken." }),
   ).toBeVisible();
   await page.screenshot({
-    path: "portfolio-assets/sellout-reveal-1440.png",
+    path: "test-results/phase-0/sellout-reveal-1440.png",
     fullPage: true,
     animations: "disabled",
   });
   await page.getByRole("button", { name: "Next →" }).click();
   await expect(page.getByText("OFFICIALLY THE PERSON TO BEAT.")).toBeVisible();
   await page.screenshot({
-    path: "portfolio-assets/winner-1440.png",
+    path: "test-results/phase-0/winner-1440.png",
     fullPage: true,
     animations: "disabled",
   });
@@ -238,7 +245,7 @@ test("drawing controller works with keyboard and at four phone sizes", async ({
   for (let i = 0; i < 8; i++) await page.keyboard.press("ArrowDown");
   await page.keyboard.press("Space");
   await page.screenshot({
-    path: "portfolio-assets/mobile-drawing-430.png",
+    path: "test-results/phase-0/mobile-drawing-430.png",
     fullPage: true,
     animations: "disabled",
   });

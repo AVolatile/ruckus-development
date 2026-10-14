@@ -65,7 +65,7 @@ export function PartyProvider({ children }: { children: ReactNode }) {
     [error, setError] = useState(""),
     [reactions, setReactions] = useState<PartyContext["reactions"]>([]);
   const location = useLocation();
-  const liveRoute = /^\/(host|join|room)(\/|$)/.test(location.pathname);
+  const liveRoute = /^\/(app\/host|join|room)(\/|$)/.test(location.pathname);
   const identityRef = useRef(identity);
   const reactionTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
   function accept(reply: Reply) {

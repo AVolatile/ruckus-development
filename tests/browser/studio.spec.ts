@@ -9,12 +9,13 @@ test("Studio: create, validation, autosave, reorder, preview, JSON/CSV, duplicat
   page.on("request", (r) => {
     if (r.url().includes("socket.io")) requests.push(r.url());
   });
-  await page.goto("/studio");
+  await page.goto("/app/studio");
   await expect(page.getByRole("heading", { name: "My boards." })).toBeVisible();
   assertNoSockets();
   await page
     .getByRole("button", { name: "Create question board", exact: true })
     .click();
+  await expect(page.getByLabel("Board title")).toBeVisible();
   await page.getByRole("button", { name: "Play this board" }).click();
   await expect(
     page.getByText("Give your board a title.", { exact: true }),
@@ -143,7 +144,7 @@ test("Studio: create, validation, autosave, reorder, preview, JSON/CSV, duplicat
 test("direct new-board route and immediate preview preserve the latest edits", async ({
   page,
 }) => {
-  await page.goto("/studio/boards/new");
+  await page.goto("/app/studio/boards/new");
   await expect(page.getByLabel("Board title")).toBeVisible();
   await page.getByLabel("Board title").fill("No waiting around");
   await page

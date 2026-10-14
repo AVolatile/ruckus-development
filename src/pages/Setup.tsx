@@ -11,7 +11,7 @@ import type { Settings } from "../../shared/types";
 import { Avatar, Icon, Logo, Star, Tag } from "../components/Visuals";
 import { ErrorMessage } from "../components/Layout";
 import { useParty } from "../lib/party";
-import { DemoButton } from "./Home";
+import { DemoButton } from "../components/DemoButton";
 export function HostSetup() {
   const party = useParty(),
     navigate = useNavigate();
@@ -245,7 +245,7 @@ export function HostSetup() {
           <Icon name="arrow" />
         </button>
         <p className="form-footnote">
-          2–30 players · No account · Free concept demo
+          2–30 players · Players join without accounts
         </p>
       </form>
     </div>

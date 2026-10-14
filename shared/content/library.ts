@@ -208,4 +208,5 @@ fictional.questions = [
   order,
   ...q,
 }));
-TEMPLATES.push(fictional);
+// Preserved for future content migration and historical demos; never listed in production.
+export const ARCHIVED_TEMPLATES: CustomBoard[] = [fictional];

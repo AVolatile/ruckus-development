@@ -1,0 +1,32 @@
+# Phase 0 repository audit
+
+Audited October 14, 2026 before implementation. Scope: this startup checkout only; no upstream/demo repository changes.
+
+## Existing route tree
+
+`src/main.tsx` mounts one global PartyProvider. Layout wraps `/`, `/games`, `/games/:slug`, `/host`, `/studio`, `/studio/boards`, `/studio/boards/new`, `/studio/boards/:id`, `/studio/boards/:id/preview`, `/how-it-works`, `/for-teams`, `/remote`, `/pricing`, `/resources`, `/about`, `/brand`, `/campaign`, `/case-study`, and the fallback. `/join`, `/room/:code/host`, and `/room/:code/play` bypass Layout.
+
+## Classification
+
+| Surface / implementation                                                         | Decision               | Action                                                                                                                                                                                                                |
+| -------------------------------------------------------------------------------- | ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Home, product explanation, teams, host field guide                               | REBUILD_PRESENTATION   | Retain existing visual compositions; remove portfolio and developer copy; make marketing independent of realtime state.                                                                                               |
+| Pricing                                                                          | REBUILD_PRESENTATION   | Replace portfolio pricing with honest early-access information; no commercial prices or checkout.                                                                                                                     |
+| Six Originals, discovery, game detail, host setup                                | MOVE                   | Canonical `/app/originals` and `/app/host`; preserve mechanics and catalog.                                                                                                                                           |
+| Studio library, editor, preview                                                  | MOVE                   | Canonical `/app/studio`; preserve validation, transfers, autosave, local storage key, and launch.                                                                                                                     |
+| Join, player controllers, host stage, QR, reconnect                              | KEEP                   | Keep all live paths and contracts.                                                                                                                                                                                    |
+| `server/*`, shared types/catalog/boards/content, controller and stage components | KEEP                   | Authoritative engine, timers, scoring, moderation, bots, rematches unchanged.                                                                                                                                         |
+| Brand, Campaign, CaseStudy, portfolio About                                      | REMOVE_FROM_PRODUCTION | Unroute source pages; preserve artwork, CSS, asset generators and historical reports.                                                                                                                                 |
+| Paper Moon fictional employer starter                                            | REMOVE_FROM_PRODUCTION | Preserve as archived template export; remove from production template list. Never alter saved user boards.                                                                                                            |
+| Brand Kits / enterprise demos                                                    | REBUILD_PRESENTATION   | No organization BrandKit model, persistence, or editor exists. `Brand.tsx` is the Ruckus identity showcase; board cover styles are reusable real code. Preserve both; describe organization branding only as planned. |
+
+## Shared systems and constraints
+
+- `components/Visuals.tsx`, GameCard, Layout, RoomParts, studio components, and `useDialog` hold existing visual and interaction patterns. Keep fonts, tokens, cards, shapes, illustration and focus conventions.
+- `styles/foundation-and-marketing.css` defines Bricolage Grotesque / DM Sans and the existing blue, paper, yellow, pink, green, orange and sky tokens. Gameplay, motion/responsive, Studio and robust-layout sheets layer on top. `public/brand`, `public/avatars`, `public/scenes` contain reusable product artwork. `public/campaign` and `portfolio-assets` are historical presentation assets, not application capabilities.
+- PartyProvider creates an `autoConnect: false` Socket.IO client; route matching connects only `/host`, `/join`, `/room`. Studio launches connect explicitly. Marketing does not auto-connect but Home/Editorial demo actions currently create rooms and the global provider exposes room/session state everywhere. Move the provider to a shared host/player route boundary and remove public room-creation actions.
+- `studio/repository.ts` exports a synchronous BoardRepository over the `ruckus-studio-v1` localStorage key. Preserve data and API; future cloud operations will require an asynchronous contract, ownership enforcement and explicit migration.
+- Studio and game paths are hard-coded in GameCard, Games, Setup, HostRoom, all three Studio pages, and browser specs. Update canonical links and retain parameter/query/hash-preserving compatibility redirects. QR generation uses `/join?room=CODE` in server/config.ts and must stay unchanged.
+- Large question banks are imported only by lazy Studio modules and server content. Keep marketing independent of those imports; dashboard templates must also load lazily.
+- Existing browser tests cover marketing responsiveness, live Sellout and drawing, phone join/reconnect, Studio validation/autosave/preview/transfer/live launch. Unit tests cover authoritative engine, all games, autoplay, socket contracts, validation and board transfers. Adapt route expectations and add boundary/compatibility tests.
+- Netlify already has a `/* -> /index.html` 200 SPA rewrite; Express serves the same fallback in production. No deployment/routing configuration change is needed.

@@ -1,8 +1,9 @@
 import { Link } from "react-router-dom";
-import { GAMES } from "../../shared/catalog";
-import { Avatar, Icon, Logo, Tag } from "../components/Visuals";
-import { GameCard } from "../components/GameCard";
-import { StagePreview, DemoButton } from "./Home";
+import { GAMES } from "../../../shared/catalog";
+import { Avatar, Icon, Logo, Tag } from "../../components/Visuals";
+import { GameCard } from "../../components/GameCard";
+import { StagePreview } from "../../components/StagePreview";
+import { DemoButton } from "../../components/DemoButton";
 export function CaseStudy() {
   return (
     <>

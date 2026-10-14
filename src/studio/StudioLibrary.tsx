@@ -1,14 +1,10 @@
 import { useCallback, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { CONTENT, TEMPLATES, TOPICS } from "../../shared/content/library";
-import {
-  estimatedMinutes,
-  newBoard,
-  type CustomBoard,
-} from "../../shared/boards";
+import { estimatedMinutes, type CustomBoard } from "../../shared/boards";
 import { Avatar, Icon, Tag } from "../components/Visuals";
 import { ErrorMessage } from "../components/Layout";
-import { boards } from "./repository";
+import { boards, createLocalBoard } from "./repository";
 import {
   download,
   CSV_TEMPLATE,
@@ -57,20 +53,8 @@ export default function StudioLibrary() {
   }
   function create(source?: CustomBoard) {
     run(() => {
-      const board = source
-        ? {
-            ...structuredClone(source),
-            id: crypto.randomUUID(),
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            questions: source.questions.map((q) => ({
-              ...q,
-              id: crypto.randomUUID(),
-            })),
-          }
-        : newBoard();
-      boards.save(board);
-      navigate(`/studio/boards/${board.id}`);
+      const board = createLocalBoard(source);
+      navigate(`/app/studio/boards/${board.id}`);
     });
   }
   async function play(board: CustomBoard, demo = false) {
@@ -153,7 +137,7 @@ export default function StudioLibrary() {
             >
               Download CSV template ↗
             </button>
-            <Link to="/games">Explore the Originals ↗</Link>
+            <Link to="/app/originals">Explore the Originals ↗</Link>
           </div>
         </div>
         <ErrorMessage message={error || party.error} />
@@ -176,7 +160,7 @@ export default function StudioLibrary() {
               boards.save(board);
               setItems(boards.list());
               setError("");
-              navigate(`/studio/boards/${board.id}`);
+              navigate(`/app/studio/boards/${board.id}`);
             } catch (e) {
               setError(
                 e instanceof Error
@@ -193,7 +177,7 @@ export default function StudioLibrary() {
               <article className="board-card" key={board.id}>
                 <Link
                   className="board-cover"
-                  to={`/studio/boards/${board.id}`}
+                  to={`/app/studio/boards/${board.id}`}
                   style={{
                     background: board.coverStyle.color,
                     color:
@@ -229,7 +213,7 @@ export default function StudioLibrary() {
                     </button>
                     <Link
                       className="button small outline"
-                      to={`/studio/boards/${board.id}`}
+                      to={`/app/studio/boards/${board.id}`}
                     >
                       Edit
                     </Link>

@@ -1,8 +1,8 @@
 import { Link } from "react-router-dom";
-import { AVATAR_COLORS, AVATAR_NAMES, GAMES } from "../../shared/catalog";
-import { Avatar, Icon, Logo, Star, Tag } from "../components/Visuals";
-import { GameCard } from "../components/GameCard";
-import { StagePreview } from "./Home";
+import { AVATAR_COLORS, AVATAR_NAMES, GAMES } from "../../../shared/catalog";
+import { Avatar, Icon, Logo, Star, Tag } from "../../components/Visuals";
+import { GameCard } from "../../components/GameCard";
+import { StagePreview } from "../../components/StagePreview";
 export function Brand() {
   return (
     <>

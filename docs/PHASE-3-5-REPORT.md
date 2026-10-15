@@ -224,3 +224,7 @@ Before public release, conduct the full audible scenario matrix in SONIC-DESIGN.
 **Content Platform & Packs:** formalize reusable engines separately from content packs; curate scalable topic/seasonal packs; prepare metadata, versioning, discovery and future unlock/entitlement hooks without implementing billing. Audio profiles remain approved presentation metadata, not arbitrary external URLs or customer uploads. No Phase 4 implementation began.
 
 Task-owned verification servers on 4312/4314 were stopped after checks. The pre-existing development server on 4310 and PostgreSQL on 55432 remain running. Changes are left uncommitted for review.
+
+## Subsequent Phase 3.5 overlap hotfix
+
+Manual listening found overlapping beds during creative games in a local host/player-tab setup. The [hotfix report](PHASE-3-5-AUDIO-HOTFIX.md) records the demonstrated source-ownership defect, tighter retirement and stale-request invariants, independent native source instrumentation and new verification. This remains Phase 3.5; Phase 4 has not started. Original audible approval remains pending.

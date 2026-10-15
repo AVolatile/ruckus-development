@@ -1,51 +1,9 @@
 import { test, expect, appOrigin } from "./fixtures";
-import { io, type Socket } from "socket.io-client";
-import { DEFAULT_SETTINGS } from "../../shared/catalog";
-import type { Identity, Reply } from "../../shared/types";
+import { seededRoom } from "./audio-support";
 import AxeBuilder from "@axe-core/playwright";
 import { mkdir } from "node:fs/promises";
 import type { Page } from "@playwright/test";
 const audio = (page: Page) => page.locator("[data-audio-state]");
-async function seededRoom(page: Page) {
-  const socket: Socket = io(appOrigin, {
-    transports: ["websocket"],
-    reconnection: false,
-    extraHeaders: {
-      Cookie: (await page.context().cookies())
-        .map((c) => `${c.name}=${c.value}`)
-        .join("; "),
-    },
-  });
-  await new Promise<void>((resolve, reject) => {
-    socket.once("connect", resolve);
-    socket.once("connect_error", reject);
-  });
-  const result = await new Promise<Reply>((resolve) =>
-    socket.emit(
-      "room:create",
-      {
-        settings: {
-          ...DEFAULT_SETTINGS,
-          playlist: ["hotwire"],
-          rounds: 1,
-          autoAdvance: false,
-        },
-        demo: true,
-      },
-      resolve,
-    ),
-  );
-  expect(result.ok).toBe(true);
-  const user = (await (await page.request.get("/api/v1/me")).json()).user;
-  await page.addInitScript(
-    ({ identity, owner }: { identity: Identity; owner: string }) => {
-      sessionStorage.setItem("ruckus-session", JSON.stringify(identity));
-      sessionStorage.setItem("ruckus-audio-owner-v1", owner);
-    },
-    { identity: result.identity!, owner: user.id },
-  );
-  return { socket, identity: result.identity! };
-}
 test("host gesture unlock, independent mix, countdown, muted phone and refresh baseline use real decoded audio", async ({
   page,
   browser,

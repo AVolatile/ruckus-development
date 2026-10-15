@@ -80,6 +80,12 @@ export function AudioControls() {
       data-audio-state={d.status}
       data-audio-context={d.contextState}
       data-audio-track={d.track ?? ""}
+      data-audio-engine={d.engineId}
+      data-audio-generation={d.generation}
+      data-audio-request={d.musicRequest}
+      data-audio-requested-track={d.requestedTrack ?? ""}
+      data-audio-music-current={d.musicCurrent}
+      data-audio-music-retiring={d.musicRetiring}
       data-audio-cue={d.cue ?? ""}
       data-audio-sequence={d.sequence}
       data-audio-shots={d.oneShots}

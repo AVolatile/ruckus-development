@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
+import { Link, useNavigate } from "../workspaces/navigation";
 import {
   BOARD_COLORS,
   boardIssues,
@@ -151,7 +152,12 @@ export default function StudioEditor() {
               setBusy(true);
               try {
                 const snapshot = await draft.flush();
-                const reply = await launchBoard(snapshot.board, party.create);
+                const reply = await launchBoard(
+                  snapshot.board,
+                  party.create,
+                  false,
+                  draft.repository.workspaceId,
+                );
                 if (reply.ok && reply.identity)
                   navigate(`/room/${reply.identity.code}/host`);
                 else setError(reply.error ?? "The live stage is unavailable.");

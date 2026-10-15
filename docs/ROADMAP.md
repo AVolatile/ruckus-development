@@ -1,21 +1,23 @@
 # Ruckus development roadmap
 
-## Phase 0 — Product surface separation
+## Phase 0 — Product surfaces
 
-Delivered public marketing, a host AppShell, stable guest/live routes, compatibility redirects and archived portfolio surfaces without redesigning Ruckus.
+Delivered public marketing, host AppShell, stable guest/live routes, compatibility redirects and archived portfolio surfaces without redesigning Ruckus.
 
-## Phase 1 — Real host accounts and cloud content
+## Phase 1 — Accounts and cloud content
 
-Delivered Better Auth email/password sessions, PostgreSQL migrations, server-enforced private board ownership, CloudBoardRepository, immutable revisions/optimistic concurrency, trustworthy cloud saves, explicit idempotent local import and real account-to-cloud-board-to-live-room tests. Rooms remain in memory and players remain account-free.
+Delivered Better Auth sessions, PostgreSQL, private cloud boards, immutable revisions, concurrency protection, trustworthy saves and explicit local import. Rooms stay in memory; players stay account-free.
 
-Before a public account launch, complete transactional email, verification and secure password recovery, actual HTTPS/proxy/device verification, backup/restore and retention/account deletion policies, production abuse controls and an independent security review. See AUTHENTICATION.md and the Phase 1 report for current gaps and actual verification.
+## Phase 2 — Secure collaboration and Brand Kits
 
-## Recommended Phase 2 — Organization foundation
+Delivered email verification/recovery and provider-neutral email transport; personal/shared workspaces; Owner/Admin/Host/Viewer policy; expiring email-bound invitations; safe Phase 1 migration; shared Studio boards, workspace import and cross-workspace copy; append-only activity; versioned Brand Kits, private validated image storage and accessible static experience previews. The dashboard retains Ruckus branding. No live Brand publishing or Events domain is implemented.
 
-Organizations, memberships, shared workspace ownership and the first real Ruckus Brand Kit model. Build on server-enforced access and versioned boards; preserve private user content and account-free players. Do not couple branding to auth-provider internals. No Phase 2 models or UI are implemented in Phase 1.
+## Recommended Phase 3 — Events & Experience Builder
+
+Persistent workspace events, multi-game playlists, event-specific immutable Brand revision/asset snapshots, event launch orchestration, reusable event templates and preparation for session history. Define guest-safe snapshot delivery deliberately rather than publishing private workspace assets. Preserve existing host/player capabilities and the authoritative engine.
+
+Before public account/collaboration release, complete actual SMTP/domain/DNS/TLS/proxy/cookie/device checks, backup restore, retention/account deletion, monitoring, dependency patch policy and independent security review. Local tests do not replace hosted validation.
 
 ## Later, based on real use
 
-Shared template workflows, saved session history/analytics, entitlement-based packaging, billing and event passes. Free players, paid hosts, premium workplaces remains a direction, not finalized pricing. Player progression, cosmetics, marketplace, AI authoring and external integrations follow demonstrated demand.
-
-Redis, durable room recovery and horizontal scaling require an explicit shared authoritative state design and capacity evidence; they are not implied by adding PostgreSQL for host content.
+Session history/analytics, entitlements, billing/event passes, reviewed templates, SSO if warranted, player cosmetics/progression, marketplace, AI authoring and integrations. No finalized pricing or enterprise certification is implied. Redis/horizontal scaling need an explicit durable authoritative room-state design and capacity evidence.

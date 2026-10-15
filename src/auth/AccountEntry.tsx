@@ -96,6 +96,11 @@ function AccountForm({ signup }: { signup: boolean }) {
         onSubmit={(event) => void submit(event)}
       >
         <Tag>YOUR RUCKUS ACCOUNT</Tag>
+        {!signup && (
+          <p>
+            <Link to="/forgot-password">Forgot your password?</Link>
+          </p>
+        )}
         <h2>{signup ? "Claim the host’s seat." : "Welcome back."}</h2>
         <label htmlFor="host-email">
           Email

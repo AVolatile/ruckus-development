@@ -112,7 +112,7 @@ export function Audience({ events = false }: { events?: boolean }) {
         <p>
           {events
             ? "Playing remotely? Share the host screen on your existing video call. Everyone keeps their phone as a controller. Live rooms support up to 30 players; scheduled events and reusable event branding are planned."
-            : "Custom boards and live rooms work today. Shared organization workspaces and reusable Brand Kits are planned, so future hosts can make an event feel like their own."}
+            : "Custom boards, live rooms and shared workspaces work today. Create a reusable Brand Kit and preview its look; applying branding to live events comes next."}
         </p>
       </section>
       <section className="compact-cta">

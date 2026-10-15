@@ -8,7 +8,8 @@ import express, {
 import { fromNodeHeaders, toNodeHandler } from "better-auth/node";
 import { z } from "zod/v3";
 import { sql } from "drizzle-orm";
-import { auth, db } from "../auth/config.js";
+import { installWorkspaceApi } from "./workspaces.js";
+import { auth, db, emailTransport } from "../auth/config.js";
 import { cloudEnvironment } from "../auth/environment.js";
 import { BoardService } from "../boards/service.js";
 import { boardWriteSchema, importBatchSchema } from "../../shared/cloud.js";
@@ -66,12 +67,19 @@ export function installHostApi(app: Express) {
     next();
   });
   app.use("/api/auth", (req, res, next) => {
-    const max = req.path.includes("sign-up")
-      ? 8
-      : req.path.includes("sign-in")
-        ? 20
-        : 120;
-    if (!limits.allow(`auth:${req.ip}:${req.path}`, max, 60000)) {
+    const category = /send-verification-email|request-password-reset/.test(
+      req.path,
+    )
+      ? "email-recovery"
+      : req.path.includes("sign-up")
+        ? "signup"
+        : req.path.includes("sign-in")
+          ? "signin"
+          : "other";
+    const max = { "email-recovery": 5, signup: 8, signin: 20, other: 120 }[
+      category
+    ];
+    if (!limits.allow(`auth:${req.ip}:${category}`, max, 60000)) {
       res.setHeader("Retry-After", "60");
       return next(
         new ApiError(
@@ -188,11 +196,13 @@ export function installHostApi(app: Express) {
         id: session.user.id,
         email: session.user.email,
         name: session.user.name,
+        emailVerified: session.user.emailVerified,
       };
       next();
     })().catch(next);
   });
-  // Routes below use server-derived identity only.
+  installWorkspaceApi(app, db, emailTransport, env.origin);
+  // Legacy board endpoints delegate to the authenticated personal workspace.
   app.get("/api/v1/me", (_req, res) => res.json({ user: res.locals.user }));
   app.get(
     "/api/v1/boards",
@@ -285,7 +295,7 @@ export function installHostApi(app: Express) {
     "/ready",
     safe(async (_req, res) => {
       try {
-        await db.execute(sql`select 1 from boards limit 0`);
+        await db.execute(sql`select workspace_id from boards limit 0`);
         res.json({ status: "ready" });
       } catch {
         res.status(503).json({ status: "unavailable" });
@@ -311,7 +321,7 @@ export function installHostApi(app: Express) {
               ? new ApiError(
                   413,
                   "VALIDATION_ERROR",
-                  "Keep board requests under 320 KB.",
+                  "This request exceeds its size limit. Use a smaller board or image.",
                 )
               : error instanceof SyntaxError
                 ? new ApiError(
@@ -324,6 +334,18 @@ export function installHostApi(app: Express) {
                     "INTERNAL_ERROR",
                     "Ruckus couldn’t finish this request. Try again shortly.",
                   );
+      if (
+        ["PERMISSION_DENIED", "WORKSPACE_NOT_FOUND"].includes(safeError.code) &&
+        limits.allow(`denied-log:${res.locals.user?.id}`, 5, 60000)
+      )
+        console.warn(
+          JSON.stringify({
+            event: "workspace.authorization_denied",
+            requestId: res.locals.requestId,
+            actorUserId: res.locals.user?.id,
+            code: safeError.code,
+          }),
+        );
       if (safeError.status >= 500)
         console.error(`API failure ${res.locals.requestId || "unknown"}`);
       res.status(safeError.status).json({

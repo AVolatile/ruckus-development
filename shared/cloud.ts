@@ -48,6 +48,7 @@ export interface ImportResult {
   message?: string;
 }
 export interface HostUser {
+  emailVerified: boolean;
   id: string;
   email: string;
   name: string;

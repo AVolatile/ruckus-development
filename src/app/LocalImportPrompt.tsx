@@ -1,3 +1,4 @@
+import { useWorkspace } from "../workspaces/WorkspaceContext";
 import { useState } from "react";
 import { useHostAuth } from "../auth/HostAuth";
 import { LocalBoardRepository } from "../studio/LocalBoardRepository";
@@ -8,6 +9,11 @@ import { download } from "../studio/transfer";
 const mappingKey = "ruckus-cloud-imports-v1";
 export default function LocalImportPrompt() {
   const { user } = useHostAuth();
+  const { items, current } = useWorkspace();
+  const [destination, setDestination] = useState(
+    () => items.find((w) => w.kind === "personal")!.id,
+  );
+  const mappingScope = `${user!.id}:${destination}`;
   const [initial] = useState(() => {
     try {
       const mapping: Record<string, Record<string, string>> = {};
@@ -33,12 +39,21 @@ export default function LocalImportPrompt() {
       } catch {
         /* Server import keys still prevent duplicates if this optional hint is unreadable. */
       }
-      const candidates = new LocalBoardRepository()
-        .inspect()
-        .filter((item) => !mapping[user!.id]?.[item.key]);
-      return { candidates, mapping, error: "" };
+      const candidates = new LocalBoardRepository().inspect();
+      const personal = items.find((w) => w.kind === "personal")!;
+      const personalHint =
+        mapping[`${user!.id}:${personal.id}`] || mapping[user!.id] || {};
+      const show = candidates.some(
+        (item) =>
+          !personalHint[item.key] ||
+          (current.id !== personal.id &&
+            current.permissions.includes("boards.create") &&
+            !mapping[`${user!.id}:${current.id}`]?.[item.key]),
+      );
+      return { candidates, mapping, error: "", show };
     } catch (cause) {
       return {
+        show: true,
         candidates: [],
         mapping: {} as Record<string, Record<string, string>>,
         error:
@@ -51,11 +66,16 @@ export default function LocalImportPrompt() {
   const [dismissed, setDismissed] = useState(false),
     [busy, setBusy] = useState(false),
     [results, setResults] = useState<ImportResult[]>([]);
-  if (dismissed || (!initial.candidates.length && !initial.error)) return null;
+  if (
+    dismissed ||
+    !initial.show ||
+    (!initial.candidates.length && !initial.error)
+  )
+    return null;
   async function importBoards() {
     setBusy(true);
     const imported: ImportResult[] = [];
-    const repository = new CloudBoardRepository();
+    const repository = new CloudBoardRepository(destination);
     for (const candidate of initial.candidates) {
       if (!candidate.board || !boardSchema.safeParse(candidate.board).success) {
         imported.push({
@@ -74,8 +94,8 @@ export default function LocalImportPrompt() {
         imported.push(...reply.results);
         const committed = reply.results[0];
         if (committed?.id) {
-          initial.mapping[user!.id] = {
-            ...initial.mapping[user!.id],
+          initial.mapping[mappingScope] = {
+            ...initial.mapping[mappingScope],
             [candidate.key]: committed.id,
           };
           try {
@@ -110,10 +130,30 @@ export default function LocalImportPrompt() {
         <h2 id="local-import-title">Bring your local boards along.</h2>
         <p>
           {initial.candidates.length
-            ? `${initial.candidates.length} local board${initial.candidates.length === 1 ? "" : "s"} detected on this device. Choose to copy them into ${user?.email}. The originals stay here.`
+            ? `${initial.candidates.length} local board${initial.candidates.length === 1 ? "" : "s"} detected on this device. Choose a destination for ${user?.email}. The originals stay here.`
             : initial.error}
         </p>
       </div>
+      <label>
+        Import destination
+        <select
+          value={destination}
+          disabled={busy}
+          onChange={(e) => {
+            setDestination(e.target.value);
+            setResults([]);
+          }}
+        >
+          {items
+            .filter((w) => w.permissions.includes("boards.create"))
+            .map((w) => (
+              <option key={w.id} value={w.id}>
+                {w.name}
+                {w.kind === "personal" ? " (personal)" : ""}
+              </option>
+            ))}
+        </select>
+      </label>
       <div className="hero-actions">
         {!!initial.candidates.length && (
           <button

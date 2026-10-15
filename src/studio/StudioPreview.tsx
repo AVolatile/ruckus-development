@@ -1,5 +1,7 @@
+import { useWorkspace } from "../workspaces/WorkspaceContext";
 import { useEffect, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
+import { Link, useNavigate } from "../workspaces/navigation";
 import { useBoardRepository } from "./RepositoryProvider";
 import type { CustomBoard } from "../../shared/boards";
 import { BoardPreview } from "../components/studio/BoardPreview";
@@ -7,6 +9,7 @@ import { useParty } from "../lib/party";
 import { launchBoard } from "./launch";
 import { ErrorMessage } from "../components/Layout";
 export default function StudioPreview() {
+  const { can } = useWorkspace();
   const { id } = useParams(),
     navigate = useNavigate(),
     party = useParty(),
@@ -59,39 +62,49 @@ export default function StudioPreview() {
   return (
     <section className="studio-preview-page">
       <div className="studio-preview-toolbar">
-        <Link to={`/app/studio/boards/${id}`} className="button outline small">
-          ← Back to editor
+        <Link
+          to={can("boards.update") ? `/app/studio/boards/${id}` : "/app/studio"}
+          className="button outline small"
+        >
+          {can("boards.update") ? "← Back to editor" : "← Shared library"}
         </Link>
         <span>
           PREVIEW · QUESTION {index + 1} / {board.questions.length}
         </span>
-        <button
-          className="button small"
-          disabled={busy}
-          onClick={async () => {
-            setBusy(true);
-            try {
-              const snapshot = await repository.get(board.id);
-              if (!snapshot)
-                throw new Error(
-                  "That board is no longer available in your account.",
+        {can("boards.launch") && (
+          <button
+            className="button small"
+            disabled={busy}
+            onClick={async () => {
+              setBusy(true);
+              try {
+                const snapshot = await repository.get(board.id);
+                if (!snapshot)
+                  throw new Error(
+                    "That board is no longer available in this workspace.",
+                  );
+                const reply = await launchBoard(
+                  snapshot.board,
+                  party.create,
+                  false,
+                  repository.workspaceId,
                 );
-              const reply = await launchBoard(snapshot.board, party.create);
-              if (reply.ok && reply.identity)
-                navigate(`/room/${reply.identity.code}/host`);
-              else setError(reply.error ?? "The live stage is unavailable.");
-            } catch (e) {
-              setError(
-                e instanceof Error
-                  ? e.message
-                  : "Check this board before launching.",
-              );
-            }
-            setBusy(false);
-          }}
-        >
-          Play this board ↗
-        </button>
+                if (reply.ok && reply.identity)
+                  navigate(`/room/${reply.identity.code}/host`);
+                else setError(reply.error ?? "The live stage is unavailable.");
+              } catch (e) {
+                setError(
+                  e instanceof Error
+                    ? e.message
+                    : "Check this board before launching.",
+                );
+              }
+              setBusy(false);
+            }}
+          >
+            Play this board ↗
+          </button>
+        )}
       </div>
       <h1>{board.title || "Your question board"}</h1>
       <p className="preview-disclaimer">

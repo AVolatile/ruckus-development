@@ -1,5 +1,6 @@
+import { useWorkspace } from "../workspaces/WorkspaceContext";
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "../workspaces/navigation";
 import { estimatedMinutes } from "../../shared/boards";
 import { TEMPLATES } from "../../shared/content/library";
 import { copyBoard } from "../studio/repository";
@@ -7,6 +8,7 @@ import { Icon } from "../components/Visuals";
 import { useBoardRepository } from "../studio/RepositoryProvider";
 import { ErrorMessage } from "../components/Layout";
 export default function TemplateShelf() {
+  const { can } = useWorkspace();
   const navigate = useNavigate(),
     repository = useBoardRepository();
   const [busy, setBusy] = useState(false);
@@ -39,31 +41,33 @@ export default function TemplateShelf() {
               {estimatedMinutes(template)} min
             </span>
             <div>
-              <button
-                className="button outline small"
-                disabled={busy}
-                onClick={async () => {
-                  setBusy(true);
-                  try {
-                    const draft = copyBoard(template);
-                    const { board: copy } = await repository.create(
-                      draft,
-                      `template:${draft.id}`,
-                    );
-                    navigate(`/app/studio/boards/${copy.id}`);
-                  } catch (cause) {
-                    setError(
-                      cause instanceof Error
-                        ? cause.message
-                        : "This starter couldn’t be saved. Try again in Studio.",
-                    );
-                  } finally {
-                    setBusy(false);
-                  }
-                }}
-              >
-                Make it mine <Icon name="arrow" />
-              </button>
+              {can("boards.create") && (
+                <button
+                  className="button outline small"
+                  disabled={busy}
+                  onClick={async () => {
+                    setBusy(true);
+                    try {
+                      const draft = copyBoard(template);
+                      const { board: copy } = await repository.create(
+                        draft,
+                        `template:${draft.id}`,
+                      );
+                      navigate(`/app/studio/boards/${copy.id}`);
+                    } catch (cause) {
+                      setError(
+                        cause instanceof Error
+                          ? cause.message
+                          : "This starter couldn’t be saved. Try again in Studio.",
+                      );
+                    } finally {
+                      setBusy(false);
+                    }
+                  }}
+                >
+                  Make it mine <Icon name="arrow" />
+                </button>
+              )}
             </div>
           </article>
         ))}

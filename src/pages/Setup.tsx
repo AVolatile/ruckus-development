@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
+import { Link, useNavigate } from "../workspaces/navigation";
 import {
   AVATAR_COLORS,
   AVATAR_NAMES,

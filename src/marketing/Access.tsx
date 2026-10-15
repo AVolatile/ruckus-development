@@ -52,9 +52,8 @@ export function Pricing() {
         <h2>Players stay welcome.</h2>
         <p>
           Our direction: free players, paid hosts, premium workplaces. Host
-          accounts and private cloud libraries are available now; organization
-          tools are planned. Plans and pricing will be published when they’re
-          ready.
+          accounts, personal and shared cloud libraries, and Brand Kits are
+          available now. Plans and pricing will be published when they’re ready.
         </p>
       </section>
     </>

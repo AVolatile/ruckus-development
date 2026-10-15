@@ -1,5 +1,7 @@
+import { useWorkspace } from "../workspaces/context";
 import { useState } from "react";
-import { Link, useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
+import { Link, useNavigate } from "../workspaces/navigation";
 import { GAMES, gameById } from "../../shared/catalog";
 import { GameCard } from "../components/GameCard";
 import { Icon, Tag } from "../components/Visuals";
@@ -42,6 +44,7 @@ const samples: Record<string, { title: string; body: string[] }> = {
   },
 };
 export function Games() {
+  const { can } = useWorkspace();
   const [filter, setFilter] = useState("all"),
     [energy, setEnergy] = useState("all"),
     [time, setTime] = useState("all");
@@ -154,14 +157,17 @@ export function Games() {
       </section>
       <section className="compact-cta">
         <h2>Can’t pick? Make a mix.</h2>
-        <Link className="button" to="/app/host">
-          Build your lineup <Icon name="arrow" />
-        </Link>
+        {can("boards.launch") && (
+          <Link className="button" to="/app/host">
+            Build your lineup <Icon name="arrow" />
+          </Link>
+        )}
       </section>
     </>
   );
 }
 export function GameDetail() {
+  const { can } = useWorkspace();
   const { slug } = useParams();
   if (!GAMES.some((g) => g.id === slug))
     return (
@@ -188,9 +194,11 @@ export function GameDetail() {
           <Tag>{game.energy.toUpperCase()}</Tag>
           <h1>{game.name}</h1>
           <p>{game.description}</p>
-          <Link to={`/app/host?game=${game.id}`} className="button">
-            Put it in the room <Icon name="arrow" />
-          </Link>
+          {can("boards.launch") && (
+            <Link to={`/app/host?game=${game.id}`} className="button">
+              Put it in the room <Icon name="arrow" />
+            </Link>
+          )}
           <div className="detail-meta">
             <span>2–30 players</span>
             <span>~{game.minutes} minutes</span>
@@ -256,7 +264,7 @@ export function GameDetail() {
           <h2>Looks better with people.</h2>
           <p>Our eight-person demo crew is already on standby.</p>
         </div>
-        <DemoButton />
+        {can("boards.launch") && <DemoButton />}
       </section>
     </>
   );

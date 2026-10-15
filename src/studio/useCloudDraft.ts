@@ -5,7 +5,7 @@ import {
   useState,
   type SetStateAction,
 } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "../workspaces/navigation";
 import { boardSchema, newBoard, type CustomBoard } from "../../shared/boards";
 import type { BoardRecord } from "../../shared/cloud";
 import { ApiClientError } from "../lib/api";
@@ -19,8 +19,9 @@ export function useCloudDraft(id?: string) {
   const { user } = useHostAuth();
   const ownerId = user?.id;
   const recoveryKey = useCallback(
-    (boardId: string) => `ruckus-unsaved-v1:${ownerId}:${boardId}`,
-    [ownerId],
+    (boardId: string) =>
+      `ruckus-unsaved-v1:${ownerId}:${repository.workspaceId || "personal"}:${boardId}`,
+    [ownerId, repository.workspaceId],
   );
   const [board, updateBoard] = useState<CustomBoard>(),
     [loading, setLoading] = useState(true),
@@ -59,10 +60,22 @@ export function useCloudDraft(id?: string) {
         acknowledged.current = value ? signature(value.board) : "";
         if (value) {
           try {
-            const raw = sessionStorage.getItem(recoveryKey(value.board.id));
+            const raw =
+              sessionStorage.getItem(recoveryKey(value.board.id)) ||
+              sessionStorage.getItem(
+                `ruckus-unsaved-v1:${ownerId}:${value.board.id}`,
+              );
             if (raw) {
               const recovery = JSON.parse(raw),
                 recovered = boardSchema.parse(recovery.board);
+              if (recovered.id === value.board.id) {
+                if (signature(recovered) !== acknowledged.current)
+                  sessionStorage.setItem(recoveryKey(value.board.id), raw);
+                else sessionStorage.removeItem(recoveryKey(value.board.id));
+                sessionStorage.removeItem(
+                  `ruckus-unsaved-v1:${ownerId}:${value.board.id}`,
+                );
+              }
               if (
                 recovered.id === value.board.id &&
                 signature(recovered) !== acknowledged.current
@@ -90,7 +103,7 @@ export function useCloudDraft(id?: string) {
                 signature(latest.current) !== acknowledged.current
               ? "Unsaved changes"
               : value
-                ? "Saved to your account"
+                ? "Saved to workspace"
                 : "Board unavailable",
         );
         setLoading(false);
@@ -110,7 +123,7 @@ export function useCloudDraft(id?: string) {
     return () => {
       active = false;
     };
-  }, [id, repository, navigate, recoveryKey]);
+  }, [id, repository, navigate, recoveryKey, ownerId]);
   const setBoard = useCallback(
     (value: SetStateAction<CustomBoard | undefined>) => {
       const next = typeof value === "function" ? value(latest.current) : value;
@@ -132,7 +145,7 @@ export function useCloudDraft(id?: string) {
       if (next && !blocked.current)
         setSaved(
           signature(next) === acknowledged.current && !pending.current
-            ? "Saved to your account"
+            ? "Saved to workspace"
             : pending.current
               ? "Saving…"
               : "Unsaved changes",
@@ -188,7 +201,7 @@ export function useCloudDraft(id?: string) {
         if (mounted.current) updateBoard(latest.current);
       }
       if (mounted.current) {
-        setSaved("Saved to your account");
+        setSaved("Saved to workspace");
         setError("");
       }
       return record.current!;
@@ -291,7 +304,7 @@ export function useCloudDraft(id?: string) {
       blocked.current = false;
       setConflict(false);
       setError("");
-      setSaved("Saved to your account");
+      setSaved("Saved to workspace");
       try {
         sessionStorage.removeItem(recoveryKey(value.board.id));
       } catch {

@@ -25,7 +25,9 @@ import {
 } from "./validation.js";
 import { z } from "zod/v3";
 import { installHostApi } from "./api/http.js";
-import { pool, auth } from "./auth/config.js";
+import { ApiError } from "./api/errors.js";
+import { BoardService } from "./boards/service.js";
+import { db, pool, auth } from "./auth/config.js";
 import { fromNodeHeaders } from "better-auth/node";
 const app = express();
 const http = createServer(app);
@@ -71,7 +73,7 @@ const addresses = Object.values(networkInterfaces())
 app.disable("x-powered-by");
 app.use((_req, res, next) => {
   res.setHeader("X-Content-Type-Options", "nosniff");
-  res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+  res.setHeader("Referrer-Policy", "no-referrer");
   res.setHeader("X-Frame-Options", "SAMEORIGIN");
   next();
 });
@@ -145,11 +147,34 @@ io.on("connection", (socket) => {
           settings: settingsSchema,
           demo: z.boolean().optional(),
           board: boardSchema.optional(),
+          boardReference: z
+            .object({
+              workspaceId: z.string().uuid(),
+              boardId: z.string().uuid(),
+            })
+            .strict()
+            .optional(),
         })
         .parse(data);
+      let board = parsed.board ? validateBoard(parsed.board) : undefined;
+      if (parsed.boardReference) {
+        let stored;
+        try {
+          stored = await new BoardService(db).forLaunch(
+            host.user.id,
+            parsed.boardReference.workspaceId,
+            parsed.boardReference.boardId,
+          );
+        } catch (error) {
+          if (error instanceof ApiError) throw error;
+          throw new Error(
+            "Couldn’t load this workspace board. Try again shortly.",
+          );
+        }
+        board = validateBoard(stored);
+      }
       let code = makeCode();
       while (rooms.has(code)) code = makeCode();
-      const board = parsed.board ? validateBoard(parsed.board) : undefined;
       const joinUrl = getPublicJoinUrl(
         code,
         {

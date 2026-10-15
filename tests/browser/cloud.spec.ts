@@ -30,7 +30,7 @@ test.describe("real account vertical slice", () => {
     await page.getByLabel("Email", { exact: true }).fill(email);
     await page.getByLabel("Password", { exact: true }).fill(password);
     await page.getByRole("button", { name: "Create my account" }).click();
-    await expect(page).toHaveURL(/\/app\/studio$/);
+    await expect(page).toHaveURL(/\/app\/w\/[^/]+\/studio$/);
     const cookies = await page.context().cookies();
     expect(
       cookies.some(
@@ -73,7 +73,7 @@ test.describe("real account vertical slice", () => {
         .fill(answer);
     await page.getByLabel("Mark answer A correct").check();
     await expect(page.locator('.studio-editor-top [role="status"]')).toHaveText(
-      "Saved to your account",
+      "Saved to workspace",
       { timeout: 10000 },
     );
     const editorUrl = page.url(),
@@ -112,7 +112,7 @@ test.describe("real account vertical slice", () => {
     await other.getByLabel("Board title").fill("Updated from another browser");
     await expect(
       other.locator('.studio-editor-top [role="status"]'),
-    ).toHaveText("Saved to your account");
+    ).toHaveText("Saved to workspace");
     await page.reload();
     await expect(page.getByLabel("Board title")).toHaveValue(
       "Updated from another browser",
@@ -161,7 +161,7 @@ test("stale browser edits show conflict and preserve both versions; failed saves
   await expect(page.getByLabel("Board title")).toBeVisible();
   await page.getByLabel("Board title").fill("Initial cloud version");
   await expect(page.locator('.studio-editor-top [role="status"]')).toHaveText(
-    "Saved to your account",
+    "Saved to workspace",
   );
   const url = page.url(),
     second = await context.newPage();
@@ -171,7 +171,7 @@ test("stale browser edits show conflict and preserve both versions; failed saves
   );
   await page.getByLabel("Board title").fill("Newer committed version");
   await expect(page.locator('.studio-editor-top [role="status"]')).toHaveText(
-    "Saved to your account",
+    "Saved to workspace",
   );
   await second.getByLabel("Board title").fill("My conflicting draft");
   await expect(second.locator('.studio-editor-top [role="status"]')).toHaveText(
@@ -189,7 +189,7 @@ test("stale browser edits show conflict and preserve both versions; failed saves
   await expect(second.getByLabel("Board title")).toHaveValue(
     "Newer committed version",
   );
-  await second.route("**/api/v1/boards/*", async (route) => {
+  await second.route("**/api/v1/workspaces/*/boards/*", async (route) => {
     if (route.request().method() === "PUT") await route.abort();
     else await route.continue();
   });
@@ -210,10 +210,10 @@ test("stale browser edits show conflict and preserve both versions; failed saves
   await expect(second.locator('.studio-editor-top [role="status"]')).toHaveText(
     "Save failed",
   );
-  await second.unroute("**/api/v1/boards/*");
+  await second.unroute("**/api/v1/workspaces/*/boards/*");
   await second.getByRole("button", { name: "Retry save", exact: true }).click();
   await expect(second.locator('.studio-editor-top [role="status"]')).toHaveText(
-    "Saved to your account",
+    "Saved to workspace",
   );
   await second.reload();
   await expect(second.getByLabel("Board title")).toHaveValue(
@@ -245,7 +245,7 @@ test("account B cannot render a guessed private board URL", async ({
   expect(signup.ok()).toBe(true);
   await other.goto(boardUrl);
   await expect(
-    other.getByRole("heading", { name: "That board isn’t available." }),
+    other.getByRole("heading", { name: "Workspace unavailable." }),
   ).toBeVisible();
   await expect(other.getByLabel("Board title")).toHaveCount(0);
   await contextB.close();
@@ -261,7 +261,7 @@ test("edits made while a save is in flight wait for their own acknowledgement", 
     release = resolve;
   });
   let writes = 0;
-  await page.route("**/api/v1/boards/*", async (route) => {
+  await page.route("**/api/v1/workspaces/*/boards/*", async (route) => {
     if (route.request().method() === "PUT") {
       writes++;
       if (writes === 1) await held;
@@ -275,12 +275,75 @@ test("edits made while a save is in flight wait for their own acknowledgement", 
   await page.getByLabel("Board title").fill("The latest title");
   await expect(
     page.locator('.studio-editor-top [role="status"]'),
-  ).not.toHaveText("Saved to your account");
+  ).not.toHaveText("Saved to workspace");
   release();
   await expect(page.locator('.studio-editor-top [role="status"]')).toHaveText(
-    "Saved to your account",
+    "Saved to workspace",
   );
   expect(writes).toBe(2);
   await page.reload();
   await expect(page.getByLabel("Board title")).toHaveValue("The latest title");
+});
+
+test("Phase 1 unconfirmed tab recovery migrates once into the workspace cache and retires after acknowledgement", async ({
+  page,
+}) => {
+  await page.goto("/app/studio/boards/new");
+  await expect(page.getByLabel("Board title")).toBeVisible();
+  await page.getByLabel("Board title").fill("Confirmed before recovery");
+  await expect(page.locator('.studio-editor-top [role="status"]')).toHaveText(
+    "Saved to workspace",
+  );
+  const url = new URL(page.url()),
+    parts = url.pathname.split("/"),
+    workspaceId = parts[3],
+    boardId = parts.at(-1)!;
+  const user = (await (await page.request.get("/api/v1/me")).json()).user;
+  const record = await (
+    await page.request.get(
+      `/api/v1/workspaces/${workspaceId}/boards/${boardId}`,
+    )
+  ).json();
+  const legacy = `ruckus-unsaved-v1:${user.id}:${boardId}`,
+    scoped = `ruckus-unsaved-v1:${user.id}:${workspaceId}:${boardId}`;
+  await page.evaluate(
+    ({ legacy, scoped, record }) => {
+      sessionStorage.removeItem(scoped);
+      sessionStorage.setItem(
+        legacy,
+        JSON.stringify({
+          board: { ...record.board, title: "Recovered from Phase 1" },
+          baseRevisionId: record.revisionId,
+        }),
+      );
+    },
+    { legacy, scoped, record },
+  );
+  await page.reload();
+  await expect(page.getByLabel("Board title")).toHaveValue(
+    "Recovered from Phase 1",
+  );
+  await expect(page.locator('.studio-editor-top [role="status"]')).toHaveText(
+    "Saved to workspace",
+  );
+  expect(
+    await page.evaluate(
+      ({ legacy, scoped }) => [
+        sessionStorage.getItem(legacy),
+        sessionStorage.getItem(scoped),
+      ],
+      { legacy, scoped },
+    ),
+  ).toEqual([null, null]);
+  await page.getByLabel("Board title").fill("Later confirmed workspace edit");
+  await expect(page.locator('.studio-editor-top [role="status"]')).toHaveText(
+    "Saved to workspace",
+  );
+  await page.reload();
+  await expect(page.getByLabel("Board title")).toHaveValue(
+    "Later confirmed workspace edit",
+  );
+  await expect(page.locator('.studio-editor-top [role="status"]')).toHaveText(
+    "Saved to workspace",
+  );
 });

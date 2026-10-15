@@ -3,6 +3,7 @@ import type { BoardPage, BoardRecord, ImportResult } from "../../shared/cloud";
 import { newBoard } from "../../shared/boards";
 import { request, ApiClientError } from "../lib/api";
 export interface BoardRepository {
+  workspaceId?: string;
   list(cursor?: string): Promise<BoardPage>;
   get(id: string): Promise<BoardRecord | undefined>;
   create(board: CustomBoard, clientKey?: string): Promise<BoardRecord>;
@@ -11,15 +12,27 @@ export interface BoardRepository {
   duplicate(id: string): Promise<BoardRecord>;
 }
 export class CloudBoardRepository implements BoardRepository {
+  constructor(readonly workspaceId?: string) {}
+  get endpoint() {
+    return this.workspaceId
+      ? `/api/v1/workspaces/${this.workspaceId}/boards`
+      : "/api/v1/boards";
+  }
+  copy(id: string, targetWorkspaceId: string) {
+    return request<BoardRecord>(`${this.endpoint}/${id}/copy`, {
+      method: "POST",
+      body: JSON.stringify({ targetWorkspaceId }),
+    });
+  }
   list(cursor?: string) {
     return request<BoardPage>(
-      `/api/v1/boards${cursor ? "?cursor=" + encodeURIComponent(cursor) : ""}`,
+      `${this.endpoint}${cursor ? "?cursor=" + encodeURIComponent(cursor) : ""}`,
     );
   }
   async get(id: string) {
     try {
       return await request<BoardRecord>(
-        `/api/v1/boards/${encodeURIComponent(id)}`,
+        `${this.endpoint}/${encodeURIComponent(id)}`,
       );
     } catch (error) {
       if (error instanceof ApiClientError && error.status === 404)
@@ -28,19 +41,19 @@ export class CloudBoardRepository implements BoardRepository {
     }
   }
   create(board: CustomBoard, clientKey?: string) {
-    return request<BoardRecord>("/api/v1/boards", {
+    return request<BoardRecord>(this.endpoint, {
       method: "POST",
       body: JSON.stringify({ board, clientKey }),
     });
   }
   save(board: CustomBoard, baseRevisionId: string) {
-    return request<BoardRecord>(`/api/v1/boards/${board.id}`, {
+    return request<BoardRecord>(`${this.endpoint}/${board.id}`, {
       method: "PUT",
       body: JSON.stringify({ board, baseRevisionId }),
     });
   }
   delete(id: string) {
-    return request<void>(`/api/v1/boards/${id}`, { method: "DELETE" });
+    return request<void>(`${this.endpoint}/${id}`, { method: "DELETE" });
   }
   async duplicate(id: string) {
     const source = await this.get(id);
@@ -50,7 +63,7 @@ export class CloudBoardRepository implements BoardRepository {
     return this.create(board, `duplicate:${board.id}`);
   }
   import(items: { key: string; board: unknown }[]) {
-    return request<{ results: ImportResult[] }>("/api/v1/boards/import", {
+    return request<{ results: ImportResult[] }>(`${this.endpoint}/import`, {
       method: "POST",
       body: JSON.stringify({ boards: items }),
     });

@@ -34,6 +34,9 @@ interface PartyContext {
   connected: boolean;
   error: string;
   clearError: () => void;
+  eventAction: (
+    action: import("../../shared/events").EventCommand,
+  ) => Promise<Reply>;
   create: (
     settings: Settings,
     demo?: boolean,
@@ -86,7 +89,8 @@ export function PartyProvider({ children }: { children: ReactNode }) {
     } else setError(reply.error ?? "Try again in a moment.");
     return reply;
   }
-  function resume(saved: Identity) {
+  async function resume(saved: Identity) {
+    await ensureConnection();
     return new Promise<Reply>((resolve) =>
       socket.timeout(7000).emit("room:resume", saved, (err, reply) =>
         resolve(
@@ -246,9 +250,15 @@ export function PartyProvider({ children }: { children: ReactNode }) {
     );
   const action = (action: HostAction, count?: number, playerId?: string) =>
     new Promise<Reply>((resolve) =>
-      socket
-        .timeout(7000)
-        .emit("host:action", { action, count, playerId }, (err, reply) =>
+      socket.timeout(7000).emit(
+        "host:action",
+        {
+          action,
+          count,
+          playerId,
+          expectedKey: room?.event ? room.roundKey : undefined,
+        },
+        (err, reply) =>
           resolve(
             accept(
               err
@@ -259,7 +269,7 @@ export function PartyProvider({ children }: { children: ReactNode }) {
                 : reply,
             ),
           ),
-        ),
+      ),
     );
   const input = (input: Input) =>
     new Promise<Reply>((resolve) =>
@@ -294,6 +304,27 @@ export function PartyProvider({ children }: { children: ReactNode }) {
         connected,
         error,
         clearError: () => setError(""),
+        eventAction: (action) =>
+          new Promise<Reply>((resolve) =>
+            socket
+              .timeout(7000)
+              .emit(
+                "event:action",
+                { action, sequence: room?.event?.sequence ?? 0 },
+                (err, reply) =>
+                  resolve(
+                    accept(
+                      err
+                        ? {
+                            ok: false,
+                            error:
+                              "The event did not respond. Reconnect and check its current state.",
+                          }
+                        : reply,
+                    ),
+                  ),
+              ),
+          ),
         create,
         join,
         resume,

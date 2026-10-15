@@ -64,7 +64,11 @@ const io = new Server<ClientEvents, ServerEvents>(http, {
     }
   },
 });
-const rooms = new Map<string, Room>();
+import { EventRuntime } from "./events/runtime.js";
+import { EventService } from "./events/service.js";
+import { eventCommandSchema } from "../shared/events.js";
+type LiveRoom = Room | EventRuntime;
+const rooms = new Map<string, LiveRoom>();
 const limiter = new RateLimiter();
 const addresses = Object.values(networkInterfaces())
   .flatMap((n) => n ?? [])
@@ -80,8 +84,52 @@ app.use((_req, res, next) => {
 app.get(["/api/health", "/health"], (_req, res) =>
   res.json({ status: "ok", service: "ruckus", rooms: rooms.size }),
 );
-installHostApi(app);
-function broadcast(room: Room) {
+installHostApi(app, {
+  capacity: () => rooms.size < 500,
+  available: (id) =>
+    [...rooms.values()].some(
+      (r) =>
+        r instanceof EventRuntime &&
+        r.snapshot.id === id &&
+        r.phase !== "ended",
+    ),
+  open: (snapshot, req) => {
+    if (rooms.size >= 500)
+      throw new ApiError(
+        503,
+        "STAGE_UNAVAILABLE",
+        "All stages are occupied. Try again shortly.",
+      );
+    let code = makeCode();
+    while (rooms.has(code)) code = makeCode();
+    const joinUrl = getPublicJoinUrl(
+      code,
+      {
+        host: req.headers.host ?? `localhost:${port}`,
+        origin: req.headers.origin,
+      },
+      port,
+    );
+    const room = new EventRuntime(
+      code,
+      snapshot,
+      joinUrl,
+      () => broadcast(room),
+      (reason) => {
+        void new EventService(db)
+          .ended(snapshot, reason)
+          .catch(() => console.error("Event end audit unavailable."));
+      },
+    );
+    rooms.set(code, room);
+    return {
+      ok: true,
+      identity: { code, token: room.hostToken, role: "host" },
+      state: room.view(),
+    };
+  },
+});
+function broadcast(room: LiveRoom) {
   for (const socket of io.sockets.sockets.values()) {
     const identity = socket.data.identity as Identity | undefined;
     if (identity?.code === room.code) {
@@ -261,13 +309,36 @@ io.on("connection", (socket) => {
       ack(fail(error));
     }
   });
+  socket.on("event:action", (data, ack) => {
+    if (typeof ack !== "function") return;
+    try {
+      const { room } = getRoom(true);
+      if (!(room instanceof EventRuntime))
+        throw new Error("This room is not an event.");
+      limit("event-action", 30, 5000);
+      const parsed = eventCommandSchema.parse(data);
+      room.command(parsed.action, parsed.sequence);
+      ack({ ok: true });
+    } catch (error) {
+      ack(fail(error));
+    }
+  });
   socket.on("host:action", (data, ack) => {
     if (typeof ack !== "function") return;
     try {
       if (!limiter.allow(`host:${socket.id}`, 20, 5000))
         throw new Error("Give the stage a moment to catch up.");
       const { room } = getRoom(true);
-      const parsed = actionSchema.parse(data);
+      const parsed = actionSchema
+        .extend({ expectedKey: z.string().max(80).optional() })
+        .parse(data);
+      if (
+        room instanceof EventRuntime &&
+        parsed.expectedKey !== room.view().roundKey
+      )
+        throw new Error("The event moved on. Use the current controls.");
+      if (room instanceof EventRuntime && parsed.action === "end")
+        throw new Error("Confirm End event in the event console.");
       if (parsed.action === "bots") room.addBots(parsed.count ?? 4);
       else if (parsed.action === "remove") {
         if (!parsed.playerId) throw new Error("Choose a player to remove.");
@@ -302,7 +373,7 @@ io.on("connection", (socket) => {
       const p = room.playerByToken(identity.token);
       if (!p) throw new Error("Player session not found.");
       const payload = z
-        .object({ input: inputSchema, roundKey: z.string().max(40) })
+        .object({ input: inputSchema, roundKey: z.string().max(80) })
         .parse(data);
       if (payload.roundKey !== room.view().roundKey)
         throw new Error(

@@ -9,6 +9,7 @@ import { HostGallery } from "../components/HostGallery";
 import { ErrorMessage } from "../components/Layout";
 import { BoardSummary } from "../components/studio/BoardSummary";
 import { RoundReveal } from "../components/RoundReveal";
+import { EventLive, EventBanner } from "../events/EventLive";
 export function HostRoom() {
   const party = useParty(),
     { code } = useParams(),
@@ -51,7 +52,7 @@ export function HostRoom() {
       void document.documentElement.requestFullscreen().catch(() => undefined);
   }, []);
   useEffect(() => {
-    if (!room) return;
+    if (!room || room.event) return;
     if (!muted) {
       if (room.phase !== previous.current.phase)
         playSound(
@@ -73,6 +74,7 @@ export function HostRoom() {
         e.metaKey
       )
         return;
+      if (room?.event && room.event.state !== "GAME_ACTIVE") return;
       if (e.key === " ") {
         e.preventDefault();
         void party.action(room?.phase === "lobby" ? "start" : "next");
@@ -84,7 +86,7 @@ export function HostRoom() {
     };
     window.addEventListener("keydown", key);
     return () => window.removeEventListener("keydown", key);
-  }, [party, room?.phase, fullscreen]);
+  }, [party, room?.phase, room?.event, fullscreen]);
   if (!room || room.code !== code || party.identity?.role !== "host")
     return (
       <div className="room-recovery">
@@ -102,6 +104,8 @@ export function HostRoom() {
         </Link>
       </div>
     );
+  if (room.event && room.event.state !== "GAME_ACTIVE")
+    return <EventLive room={room} host />;
   const game = gameForRoom(room);
   const nextGame = gameById(
     room.settings.playlist[room.gameIndex + 1] ?? game.id,
@@ -116,6 +120,7 @@ export function HostRoom() {
       className={`host-screen phase-${room.phase}`}
       style={{ "--game-color": game.color } as React.CSSProperties}
     >
+      {room.event && <EventBanner room={room} host />}
       <header className="host-header">
         <Link to="/app" aria-label="Ruckus host home">
           <Logo light />
@@ -566,7 +571,8 @@ export function HostRoom() {
               className="button danger"
               autoFocus
               onClick={() => {
-                void party.action("end");
+                if (room.event) void party.eventAction("end");
+                else void party.action("end");
                 setEnding(false);
                 setDrawer(false);
               }}

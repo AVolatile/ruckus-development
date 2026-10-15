@@ -2,7 +2,7 @@
 
 Turn any shared screen into something the room can play with. Six multiplayer Originals meet Studio for custom trivia, True / False and polls. Hosts have personal and shared workspaces; players join from phones without accounts.
 
-This is `AVolatile/ruckus-development`, the startup repository, separate from the original portfolio/demo. Phase 2 adds verified collaboration, workspace permissions and versioned Brand Kits while preserving Ruckus’s identity and gameplay.
+This is `AVolatile/ruckus-development`, the startup repository, separate from the original portfolio/demo. Phase 3 adds persisted, branded multi-game Events to verified collaboration, workspace permissions and versioned Brand Kits while preserving Ruckus’s identity and gameplay.
 
 ## Run locally
 
@@ -38,13 +38,14 @@ The compiled Node service serves pages/auth/API/Socket.IO under one public origi
 | Accounts             | `/login`, `/signup`, `/verify-email`, `/forgot-password`, `/reset-password`                   | Real sessions, verification and secure recovery                                              |
 | Workspace app        | `/app/w/:workspaceId`, `/host`, `/originals/*`, `/studio/*`, `/library` beneath it            | Validated membership, role-aware board library, existing Studio and Originals                |
 | Workspace management | `/app/w/:workspaceId/workspace`, `/members`, `/brand`, `/brand/:id`, `/activity`, `/settings` | General settings, membership/invites, real Brand Kits, bounded activity and account controls |
+| Events               | `/app/w/:workspaceId/events`, `/events/new`, `/events/:id`, `/events/:id/preview`             | Saved lineups, immutable launches, branded stages and one-join multi-game flow               |
 | Create/accept        | `/app/workspaces/new`, `/app/invitations/:token`                                              | Verified-email organization creation and matching-email invitation acceptance                |
 | Compatibility        | `/app/*`, old `/studio/*`, `/games/*`, `/host`                                                | Deterministic personal-workspace redirect; suffix/query/hash preserved                       |
 | Guests/live          | `/join`, `/room/:code/play`, `/room/:code/host`                                               | Account-free players, existing room capabilities and host stage                              |
 
 Every account has one personal workspace. Existing Phase 1 boards migrate there without changing identities, revisions, content, timestamps or deletion state. Shared workspaces have Owner/Admin/Host/Viewer permissions enforced on the server. Local imports default to personal space with an explicit writable target; originals in `ruckus-studio-v1` remain untouched. Cross-workspace copy starts a new board and revision history.
 
-Brand Kits persist names, colors, private uploaded logo/background and footer with immutable revisions/conflict protection. Owners/Admins manage; Hosts/Viewers read. Preview lobby, join/QR, leaderboard and results using labeled sample data. Branding does not reskin the app or publish to live rooms yet. [Roles and invitations](docs/WORKSPACES.md) · [Brand Kits and assets](docs/BRAND-KITS.md).
+Brand Kits persist names, colors, private uploaded logo/background and footer with immutable revisions/conflict protection. Owners/Admins manage; Hosts/Viewers read. Preview lobby, join/QR, leaderboard and results using labeled sample data. Branding does not reskin the app; Events pin the selected kit and copied imagery at launch. [Roles and invitations](docs/WORKSPACES.md) · [Brand Kits and assets](docs/BRAND-KITS.md).
 
 Studio retains templates, question libraries, JSON/CSV import/export, serialized autosave, revision conflicts, unsaved recovery, previews and live launch. Six Originals, QR, phone controllers, scoring, moderation, bots, pause/rematch and reconnect remain. Rooms are still in memory and do not survive server restarts. Cloud acknowledgement is authoritative; optional tab recovery cannot guarantee durability of unconfirmed edits.
 
@@ -61,13 +62,15 @@ PLAYWRIGHT_BASE_URL=http://localhost:4312 npm run test:e2e
 TEST_ORIGIN=http://localhost:4312 AUTOPLAY_ORIGIN=http://localhost:4312 npm test
 ```
 
-Tests require an explicit isolated local/CI ruckus_test database; development data is never reset. Browser fixtures use real accounts and captured transactional email. Without live origins, three socket/autoplay tests intentionally skip. Screenshots and local mail remain ignored. CI extends the existing quality workflow and does not deploy.
+Tests require an explicit isolated local/CI ruckus_test database; development data is never reset. Browser fixtures use real accounts and captured transactional email. Without live origins, four socket/autoplay tests intentionally skip. Screenshots and local mail remain ignored. CI extends the existing quality workflow and does not deploy.
 
 ## Boundaries and next milestone
 
-No billing, subscriptions, persistent Events, analytics, account deletion, player accounts/progression, SSO or distributed room state is implemented. [Portfolio presentations](src/archive/README.md), original artwork and historical reports remain preserved. Before public release, verify actual-domain SMTP/TLS/proxy/cookies/devices, backups/restores, retention/account deletion, abuse monitoring and independent security review.
+No billing, subscriptions, analytics, account deletion, player accounts/progression, SSO or distributed room state is implemented. [Portfolio presentations](src/archive/README.md), original artwork and historical reports remain preserved. Before public release, verify actual-domain SMTP/TLS/proxy/cookies/devices, backups/restores, retention/account deletion, abuse monitoring and independent security review.
 
-Recommended Phase 3: **Events & Experience Builder** with workspace events, multi-game playlists, immutable event Brand snapshots, launch orchestration and event templates. No Phase 3 domain is implemented here.
+Phase 3 delivers **Events & Experience Builder**: persisted workspace lineups of Originals and Studio boards, six editable starters, immutable launch snapshots and guest-safe copied imagery, one room code through every game, host-led intermissions and a cumulative finale. Open `/app/w/:workspaceId/events`. [Events](docs/EVENTS.md) · [Runtime and scoring](docs/EVENT-RUNTIME.md) · [Phase 3 report](docs/PHASE-3-REPORT.md).
+
+Next: **Phase 3.5 — Ruckus Audio & Game Feel**. Typed authoritative semantic cues are ready; no new audio engine or music/SFX was added.
 
 - [Phase 2 report](docs/PHASE-2-REPORT.md) and [audit](docs/PHASE-2-AUDIT.md)
 - [Architecture/API](docs/ARCHITECTURE.md)

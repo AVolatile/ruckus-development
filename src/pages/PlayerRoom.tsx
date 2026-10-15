@@ -6,6 +6,7 @@ import { Avatar, Confetti, Icon, Logo, Tag } from "../components/Visuals";
 import { Timer, Scoreboard } from "../components/RoomParts";
 import { PlayerInput, PlayerVoting } from "../components/ControllerInputs";
 import { ErrorMessage } from "../components/Layout";
+import { EventLive, EventBanner } from "../events/EventLive";
 export function PlayerRoom() {
   const party = useParty(),
     { code } = useParams(),
@@ -25,6 +26,8 @@ export function PlayerRoom() {
         </Link>
       </div>
     );
+  if (room.event && room.event.state !== "GAME_ACTIVE")
+    return <EventLive room={room} />;
   const player = room.players.find((p) => p.id === room.you);
   const game = gameForRoom(room);
   if (!player) return null;
@@ -34,6 +37,7 @@ export function PlayerRoom() {
       .findIndex((p) => p.id === player.id) + 1;
   return (
     <div className={`player-screen phase-${room.phase}`}>
+      {room.event && <EventBanner room={room} />}
       <header className="player-header">
         <Logo />
         <span>
@@ -116,7 +120,10 @@ export function PlayerRoom() {
                 alt={room.prompt.title}
               />
             )}
-            <PlayerInput room={room} key={`${room.gameIndex}-${room.round}`} />
+            <PlayerInput
+              room={room}
+              key={`${room.event?.segmentIndex ?? 0}-${room.gameIndex}-${room.round}`}
+            />
           </>
         )}
         {room.phase === "voting" && (
@@ -133,7 +140,10 @@ export function PlayerRoom() {
             <p className="voting-help">
               Anonymous entries. One vote. Make it count.
             </p>
-            <PlayerVoting room={room} key={`${room.gameIndex}-${room.round}`} />
+            <PlayerVoting
+              room={room}
+              key={`${room.event?.segmentIndex ?? 0}-${room.gameIndex}-${room.round}`}
+            />
           </>
         )}
         {room.phase === "results" && (

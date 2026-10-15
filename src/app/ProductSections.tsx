@@ -56,44 +56,6 @@ export function Library() {
   );
 }
 
-export function HostEvents() {
-  const { can } = useWorkspace();
-  return (
-    <>
-      <section className="page-hero">
-        <Tag>GIVE THE CALENDAR A BETTER IDEA</Tag>
-        <h1>
-          Bring your
-          <br />
-          <span>occasion.</span>
-        </h1>
-        <p>
-          Run a live room for your next team social, offsite, party, or
-          gathering. Up to 30 players can join from their phones.
-        </p>
-        <div className="hero-actions">
-          {can("boards.launch") && (
-            <Link className="button" to="/app/host">
-              Start an event room <Icon name="arrow" />
-            </Link>
-          )}
-          <Link className="button outline" to="/app/studio">
-            Prepare a custom board
-          </Link>
-        </div>
-      </section>
-      <section className="section practical-note">
-        <h2>A room now. Event planning later.</h2>
-        <p>
-          Rooms open when you start them. Saved event schedules, invitations,
-          and event branding are planned; there’s no booking or event history to
-          manage yet.
-        </p>
-      </section>
-    </>
-  );
-}
-
 const future = {
   analytics: {
     title: "The bigger picture.",

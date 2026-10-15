@@ -2,7 +2,7 @@
 
 Turn any shared screen into something the room can play with. Six multiplayer Originals meet Studio for custom trivia, True / False and polls. Hosts have personal and shared workspaces; players join from phones without accounts.
 
-This is `AVolatile/ruckus-development`, the startup repository, separate from the original portfolio/demo. Phase 3 adds persisted, branded multi-game Events to verified collaboration, workspace permissions and versioned Brand Kits while preserving Ruckus’s identity and gameplay.
+This is `AVolatile/ruckus-development`, the startup repository, separate from the original portfolio/demo. Phase 3.5 adds authoritative host music/cues, quiet phone feedback and persistent independent audio controls to branded multi-game Events, while preserving Ruckus’s identity and gameplay.
 
 ## Run locally
 
@@ -62,7 +62,7 @@ PLAYWRIGHT_BASE_URL=http://localhost:4312 npm run test:e2e
 TEST_ORIGIN=http://localhost:4312 AUTOPLAY_ORIGIN=http://localhost:4312 npm test
 ```
 
-Tests require an explicit isolated local/CI ruckus_test database; development data is never reset. Browser fixtures use real accounts and captured transactional email. Without live origins, four socket/autoplay tests intentionally skip. Screenshots and local mail remain ignored. CI extends the existing quality workflow and does not deploy.
+Tests require an explicit isolated local/CI ruckus_test database; development data is never reset. Browser fixtures use real accounts and captured transactional email. Without live origins, five socket/autoplay tests intentionally skip. Screenshots and local mail remain ignored. CI extends the existing quality workflow and does not deploy.
 
 ## Boundaries and next milestone
 
@@ -70,7 +70,11 @@ No billing, subscriptions, analytics, account deletion, player accounts/progress
 
 Phase 3 delivers **Events & Experience Builder**: persisted workspace lineups of Originals and Studio boards, six editable starters, immutable launch snapshots and guest-safe copied imagery, one room code through every game, host-led intermissions and a cumulative finale. Open `/app/w/:workspaceId/events`. [Events](docs/EVENTS.md) · [Runtime and scoring](docs/EVENT-RUNTIME.md) · [Phase 3 report](docs/PHASE-3-REPORT.md).
 
-Next: **Phase 3.5 — Ruckus Audio & Game Feel**. Typed authoritative semantic cues are ready; no new audio engine or music/SFX was added.
+Phase 3.5 delivers **Audio & Game Feel**: one lazy Web Audio engine, all six game profiles plus Studio/polls, phase-aligned music, fades/ducking/countdown, reconnect-safe cues and separate host/phone controls. Start/Enable sound unlocks playback; M mutes the host. Account settings and the live mixer preserve music/effects preferences in this browser. Phones never mirror the soundtrack. Public/editor/preview pages fetch no soundtrack assets.
+
+The 27 original procedural assets are a **pre-release reference pack** pending human audible approval. No sampled/downloaded music was added. Validate with `npm run audio:validate`; optional regeneration uses Python/NumPy and ffmpeg. [Audio architecture](docs/AUDIO-ARCHITECTURE.md) · [Sonic design](docs/SONIC-DESIGN.md) · [Provenance](audio/ASSET-PROVENANCE.md) · [Phase 3.5 report](docs/PHASE-3-5-REPORT.md).
+
+Next: **Phase 4 — Content Platform & Packs**, separating reusable engines from curated/versioned topic and seasonal content, discovery and future entitlement hooks. Billing remains out of scope.
 
 - [Phase 2 report](docs/PHASE-2-REPORT.md) and [audit](docs/PHASE-2-AUDIT.md)
 - [Architecture/API](docs/ARCHITECTURE.md)

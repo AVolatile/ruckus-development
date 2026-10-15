@@ -1,4 +1,4 @@
-import { test, expect, appOrigin } from "./fixtures";
+import { test, expect, appOrigin, signupWithRetry } from "./fixtures";
 import { randomUUID } from "node:crypto";
 import { TEMPLATES } from "../../shared/content/library";
 
@@ -226,23 +226,18 @@ test("account B cannot render a guessed private board URL", async ({
   page,
   browser,
 }) => {
+  test.setTimeout(90000);
   await page.goto("/app/studio/boards/new");
   await expect(page.getByLabel("Board title")).toBeVisible();
   const boardUrl = page.url();
   const contextB = await browser.newContext(),
     other = await contextB.newPage();
-  const signup = await other.request.post(
-    appOrigin + "/api/auth/sign-up/email",
-    {
-      headers: { Origin: appOrigin },
-      data: {
-        email: `other-${randomUUID()}@example.test`,
-        name: "Other host",
-        password: "Other host test passphrase!",
-      },
-    },
-  );
-  expect(signup.ok()).toBe(true);
+  const signup = await signupWithRetry(other.request, {
+    email: `other-${randomUUID()}@example.test`,
+    name: "Other host",
+    password: "Other host test passphrase!",
+  });
+  expect(signup.ok(), `Second host signup (${signup.status()})`).toBe(true);
   await other.goto(boardUrl);
   await expect(
     other.getByRole("heading", { name: "Workspace unavailable." }),

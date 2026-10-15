@@ -16,9 +16,13 @@ Delivered email verification/recovery and provider-neutral email transport; pers
 
 Delivered persisted workspace events/revisions, mixed Original/Studio playlists, readiness/preview, six editable starters, immutable Event/board/Original/Brand/image launch snapshots, guest-safe copied imagery, one-room audience continuity, host progression, intermissions and cumulative placement points. Existing standalone engines/capabilities remain. Launch records prepare future history; live state remains in memory.
 
-## Recommended Phase 3.5 — Ruckus Audio & Game Feel
+## Phase 3.5 — Ruckus Audio & Game Feel
 
-Build a central AudioEngine around existing authoritative semantic cue timestamps/sequences. Add licensed/original music, transition stings, countdown tension, leaderboard/finale cues, fades/ducking, phone feedback, autoplay handling and accessible persistent host volume preferences. No new audio engine or music/SFX implementation is included in Phase 3.
+Delivered a central lazy AudioEngine, normalized standalone/Event cues, all Original/Studio profiles, host phase-aligned music/stings, countdown, crossfades/ducking, quiet phone feedback, gesture unlock and independent persistent controls. Refresh/reconnect baseline prevents stale stings. The original generated pack is a shipping pre-release reference; human listening/device approval remains outstanding. See [report](PHASE-3-5-REPORT.md) and [sonic design](SONIC-DESIGN.md).
+
+## Recommended Phase 4 — Content Platform & Packs
+
+Formalize game engines separately from content packs. Add curated topic/seasonal packs, metadata, versioning and discovery, with future unlock/entitlement hooks and stable approved audio profile IDs. No billing implementation is included in this milestone.
 
 Before public account/collaboration release, complete actual SMTP/domain/DNS/TLS/proxy/cookie/device checks, backup restore, retention/account deletion, monitoring, dependency patch policy and independent security review. Local tests do not replace hosted validation.
 

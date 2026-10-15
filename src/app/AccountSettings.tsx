@@ -1,3 +1,4 @@
+import { AudioSettings } from "../audio/AudioControls";
 import VerificationNotice from "../auth/VerificationNotice";
 import { useState } from "react";
 import { Link, useNavigate } from "../workspaces/navigation";
@@ -23,6 +24,7 @@ export function AccountSettings() {
           follow you when you sign in on another device.
         </p>
       </section>
+      {auth.user && <AudioSettings accountId={auth.user.id} />}
       <section className="section">
         <VerificationNotice />
         <div className="studio-empty">

@@ -45,6 +45,7 @@ jobs:
       - run: npm run db:migrate
       - run: npm run typecheck
       - run: npm run lint
+      - run: npm run audio:validate
       - run: npm run test:integration
       - run: npm run build
       - run: npx playwright install --with-deps chromium

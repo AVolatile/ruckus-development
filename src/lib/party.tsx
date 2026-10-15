@@ -7,6 +7,7 @@ import {
   type ReactNode,
 } from "react";
 import { useLocation } from "react-router-dom";
+import { localAudioFeedback } from "../audio/feedback";
 import type { CustomBoard } from "../../shared/boards";
 import { realtimeUrl } from "./runtime";
 import { io, type Socket } from "socket.io-client";
@@ -32,6 +33,8 @@ interface PartyContext {
   room: RoomView | null;
   identity: Identity | null;
   connected: boolean;
+  synchronized: boolean;
+  audioEpoch: number;
   error: string;
   clearError: () => void;
   eventAction: (
@@ -66,6 +69,8 @@ export function PartyProvider({ children }: { children: ReactNode }) {
   const [room, setRoom] = useState<RoomView | null>(null),
     [identity, setIdentity] = useState<Identity | null>(readIdentity),
     [connected, setConnected] = useState(false),
+    [synchronized, setSynchronized] = useState(false),
+    [audioEpoch, setAudioEpoch] = useState(0),
     [error, setError] = useState(""),
     [reactions, setReactions] = useState<PartyContext["reactions"]>([]);
   const location = useLocation();
@@ -85,12 +90,19 @@ export function PartyProvider({ children }: { children: ReactNode }) {
           JSON.stringify(reply.identity),
         );
       }
-      if (reply.state) setRoom(reply.state);
+      if (reply.state) {
+        setRoom(reply.state);
+        if (reply.identity) {
+          setSynchronized(true);
+          setAudioEpoch((n) => n + 1);
+        }
+      }
     } else setError(reply.error ?? "Try again in a moment.");
     return reply;
   }
   async function resume(saved: Identity) {
     await ensureConnection();
+    setSynchronized(false);
     return new Promise<Reply>((resolve) =>
       socket.timeout(7000).emit("room:resume", saved, (err, reply) =>
         resolve(
@@ -115,6 +127,8 @@ export function PartyProvider({ children }: { children: ReactNode }) {
         socket.emit("room:resume", saved, (reply) => {
           if (reply.ok && reply.state) {
             setRoom(reply.state);
+            setSynchronized(true);
+            setAudioEpoch((n) => n + 1);
             setError("");
           } else {
             setError(reply.error ?? "Session expired.");
@@ -125,8 +139,12 @@ export function PartyProvider({ children }: { children: ReactNode }) {
           }
         });
     };
-    const onDisconnect = () => setConnected(false);
+    const onDisconnect = () => {
+      setConnected(false);
+      setSynchronized(false);
+    };
     const onRemoved = (message: string) => {
+      setSynchronized(false);
       setError(message);
       setRoom(null);
       setIdentity(null);
@@ -271,27 +289,31 @@ export function PartyProvider({ children }: { children: ReactNode }) {
           ),
       ),
     );
-  const input = (input: Input) =>
-    new Promise<Reply>((resolve) =>
+  const input = (input: Input) => {
+    if ("choice" in input) localAudioFeedback("select");
+    return new Promise<Reply>((resolve) =>
       socket
         .timeout(7000)
         .emit(
           "player:input",
           { input, roundKey: room?.roundKey ?? "" },
-          (err, reply) =>
-            resolve(
-              accept(
-                err
-                  ? {
-                      ok: false,
-                      error:
-                        "We didn’t get confirmation. Check your connection before trying again.",
-                    }
-                  : reply,
-              ),
-            ),
+          (err, reply) => {
+            const result = accept(
+              err
+                ? {
+                    ok: false,
+                    error:
+                      "We didn’t get confirmation. Check your connection before trying again.",
+                  }
+                : reply,
+            );
+            if (result.ok)
+              localAudioFeedback("vote" in input ? "vote" : "confirm");
+            resolve(result);
+          },
         ),
     );
+  };
   const reaction = (emoji: string) =>
     socket.emit("player:reaction", { emoji }, (reply) => {
       if (!reply.ok) setError(reply.error ?? "Reaction unavailable.");
@@ -302,6 +324,8 @@ export function PartyProvider({ children }: { children: ReactNode }) {
         room,
         identity,
         connected,
+        synchronized,
+        audioEpoch,
         error,
         clearError: () => setError(""),
         eventAction: (action) =>

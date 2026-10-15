@@ -7,6 +7,7 @@ import {
   useRef,
   type ReactNode,
 } from "react";
+import { rememberAudioOwner } from "../audio/AudioPreferences";
 import type { HostUser } from "../../shared/cloud";
 import { ApiClientError, request } from "../lib/api";
 interface AuthState {
@@ -27,6 +28,7 @@ export function HostAuthProvider({ children }: { children: ReactNode }) {
     try {
       const data = await request<{ user: HostUser }>("/api/v1/me");
       if (current !== generation.current) return;
+      rememberAudioOwner(data.user.id);
       setUser(data.user);
       setError("");
     } catch (cause) {
@@ -72,6 +74,7 @@ export function HostAuthProvider({ children }: { children: ReactNode }) {
     generation.current++;
     await request("/api/auth/sign-out", { method: "POST", body: "{}" });
     setUser(null);
+    rememberAudioOwner(null);
     if (typeof BroadcastChannel !== "undefined") {
       const channel = new BroadcastChannel("ruckus-auth");
       channel.postMessage("changed");

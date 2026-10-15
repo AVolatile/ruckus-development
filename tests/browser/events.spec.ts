@@ -153,6 +153,11 @@ test("build, preview and launch an immutable branded three-segment event with a 
   await expect(page.getByLabel("Event title")).toHaveValue(
     "Holiday Party 2027",
   );
+  const soundtrackRequests: string[] = [];
+  page.on("request", (r) => {
+    if (new URL(r.url()).pathname.startsWith("/audio/"))
+      soundtrackRequests.push(r.url());
+  });
   const sockets: string[] = [];
   page.on("websocket", (s) => sockets.push(s.url()));
   await page.getByRole("button", { name: "Preview", exact: false }).click();
@@ -166,6 +171,7 @@ test("build, preview and launch an immutable branded three-segment event with a 
     }),
   ).toBeVisible();
   expect(sockets).toHaveLength(0);
+  expect(soundtrackRequests).toHaveLength(0);
   await widths(page, "Event preview");
   await clean(page);
   await page.getByRole("button", { name: "Launch event" }).click();
@@ -180,6 +186,10 @@ test("build, preview and launch an immutable branded three-segment event with a 
     fullPage: true,
   });
   await page.getByRole("button", { name: "Add 4 demo players" }).click();
+  await expect(page.locator("[data-audio-state]")).toHaveAttribute(
+    "data-audio-track",
+    "lobby",
+  );
   const guestContext = await browser.newContext({
       viewport: { width: 390, height: 844 },
     }),
@@ -238,6 +248,10 @@ test("build, preview and launch an immutable branded three-segment event with a 
         .click();
       await page.getByRole("button", { name: "We’re ready" }).click();
       await expect(page.locator(".host-round")).toBeVisible();
+      await expect(page.locator("[data-audio-state]")).toHaveAttribute(
+        "data-audio-track",
+        ["room-temperature", "studio", "caption-this"][index],
+      );
       if (index === 1) {
         await expect(
           guest.getByRole("heading", {
@@ -295,6 +309,22 @@ test("build, preview and launch an immutable branded three-segment event with a 
           page.getByRole("heading", { name: "A little room to breathe." }),
         ).toBeVisible();
         if (index === 0) {
+          await expect(page.locator("[data-audio-state]")).toHaveAttribute(
+            "data-audio-track",
+            "intermission",
+          );
+          await page.reload();
+          await page
+            .getByRole("button", { name: "Enable sound", exact: true })
+            .click();
+          await expect(page.locator("[data-audio-state]")).toHaveAttribute(
+            "data-audio-track",
+            "intermission",
+          );
+          await expect(page.locator("[data-audio-state]")).toHaveAttribute(
+            "data-audio-shots",
+            "0",
+          );
           await widths(page, "Host intermission");
           await widths(guest, "Guest intermission");
           await clean(guest);

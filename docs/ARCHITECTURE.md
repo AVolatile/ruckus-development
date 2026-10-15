@@ -1,4 +1,4 @@
-# Ruckus architecture — Phase 3
+# Ruckus architecture — Phase 3.5
 
 Public marketing/account routes remain separate from host tools and guest capability routes. `/app` requires a server session. `/app/w/:workspaceId/...` additionally resolves an active membership before rendering a workspace-scoped repository and the existing AppShell/Studio. Compatibility `/app/*` and Phase 0 redirects preserve suffix/query/hash and deterministically open the personal workspace. Invitations resume through validated app-only login/signup return paths. Account forms and workspace settings remain lazy; public routes avoid question banks and realtime connections.
 
@@ -13,6 +13,12 @@ Better Auth owns credentials, cookies, verification signatures/expiry, password 
 Brand Kits have stable workspace ownership and immutable revisions; private raster assets live behind `BrandAssetStore`. A pure validated frozen BrandSnapshot resolver feeds immutable Event launch presentation. [Brand and asset details](BRAND-KITS.md). Selected customer colors never change the dashboard.
 
 SessionRoutes retains lazy PartyProvider continuity into live stages. It connects only on host setup/join/live routes or explicit launch, never settings/Brand previews. Cloud board launch optionally sends `{workspaceId, boardId}` to `room:create`; the socket adapter checks membership/launch capability and reads authorized content before passing a validated snapshot to the existing engine. Legacy authenticated raw-board launch remains available for portable content. All subsequent room authority uses unchanged host/player capabilities. Guests need neither accounts nor membership. The engine, scoring, player controller, bots, rematches, reconnect and QR join flow remain independent of workspace data. Rooms remain in memory.
+
+## Live audio presentation
+
+`RoomView.audio` normalizes standalone and Event semantic cues with a stable room identity, sequence, stage/profile and authoritative elapsed/remaining timing. It contains no filenames/private answers. A lazy live-route AudioProvider delegates to one per-tab engine, independent music/SFX/UI/master buses, bounded cached decoding and room-scoped baseline/deduplication. Hosts own the soundtrack; phones only play quiet local/acknowledged feedback. Existing gameplay timers and access boundaries remain authoritative. Public, account, Studio and Event editor/preview surfaces fetch no audio; account settings only load preference controls. Production serves hashed `/audio` files with immutable caching.
+
+The original sample-free procedural pack is included as a pre-release reference with human listening pending. Preferences are versioned local data, account-scoped for hosts where available and device-scoped for players; they grant no authorization and add no database model. [Audio architecture](AUDIO-ARCHITECTURE.md) · [Sonic design](SONIC-DESIGN.md) · [Provenance](../audio/ASSET-PROVENANCE.md).
 
 ## Product API
 

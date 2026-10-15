@@ -251,7 +251,7 @@
 }
 .game-intro h1 {
   font-size: clamp(55px, 7.7vw, 110px);
-  color: var(--game-color);
+  color: var(--cream);
 }
 .game-intro > p {
   font-size: clamp(19px, 2vw, 28px);

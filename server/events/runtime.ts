@@ -1,5 +1,10 @@
 import { randomUUID } from "node:crypto";
 import { Room } from "../engine.js";
+import type {
+  AudioStage,
+  AudioState,
+  AudioProfileId,
+} from "../../shared/audio.js";
 import type { HostAction, Input, RoomView } from "../../shared/types.js";
 import {
   placementPoints,
@@ -131,7 +136,8 @@ export class EventRuntime {
         else if (phase === "voting") this.emitCue("ANSWER_LOCKED");
         else if (phase === "results") {
           this.emitCue("REVEAL_ENTER");
-          this.cue.names.unshift("ANSWER_LOCKED");
+          if (this.previousPhase !== "voting")
+            this.cue.names.unshift("ANSWER_LOCKED");
         }
         this.previousPhase = phase;
       }
@@ -364,8 +370,54 @@ export class EventRuntime {
       b = this.snapshot.brand;
     const active =
       this.state === "GAME_ACTIVE" || this.state === "GAME_RESULTS";
+    const stage: AudioStage =
+      this.state === "GAME_ACTIVE"
+        ? view.audio!.stage
+        : (
+            {
+              LOBBY: "lobby",
+              EVENT_INTRO: "intro",
+              SEGMENT_INTRO: "intro",
+              GAME_RESULTS: this.snapshot.definition.eventSettings
+                .carryScoresAcrossGames
+                ? "leaderboard"
+                : "results",
+              INTERMISSION: "intermission",
+              EVENT_FINAL: "finale",
+              ENDED: "ended",
+            } as const
+          )[this.state];
+    const upcoming = this.snapshot.segments[this.nextIndex()];
+    const audio: AudioState = {
+      ...view.audio!,
+      roomId: this.snapshot.id,
+      sequence: this.cue.sequence,
+      names: this.cue.names,
+      occurredAt: this.cue.at,
+      phase: this.state === "GAME_ACTIVE" ? view.phase : this.state,
+      phaseStartedAt:
+        this.state === "GAME_ACTIVE" ? view.audio!.phaseStartedAt : this.cue.at,
+      elapsedMs:
+        this.state === "GAME_ACTIVE"
+          ? view.audio!.elapsedMs
+          : Date.now() - this.cue.at,
+      remainingMs:
+        this.state === "GAME_ACTIVE" ? view.audio!.remainingMs : null,
+      paused: this.state === "GAME_ACTIVE" && view.paused,
+      stage,
+      nextProfile: upcoming
+        ? ((upcoming.board
+            ? upcoming.board.questions.every(
+                (q) => q.type === "poll" || q.scoreMode === "no-score",
+              )
+              ? "studio-poll"
+              : "studio"
+            : upcoming.settings.playlist[0]) as AudioProfileId)
+        : undefined,
+    };
     return {
       ...view,
+      audio,
       phase: this.phase,
       roundKey: `${this.segmentIndex}:${this.sequence}:${view.roundKey}`,
       deadline: this.state === "GAME_ACTIVE" ? view.deadline : null,

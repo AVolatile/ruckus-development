@@ -56,6 +56,7 @@ const HostSetup = lazy(() =>
 const Join = lazy(() =>
   import("../pages/Setup").then((m) => ({ default: m.Join })),
 );
+const LiveAudioBoundary = lazy(() => import("../audio/AudioProvider"));
 const HostRoom = lazy(() =>
   import("../pages/HostRoom").then((m) => ({ default: m.HostRoom })),
 );
@@ -212,8 +213,10 @@ export function AppRoutes() {
             <Route path="app/*" element={<PersonalWorkspaceRedirect />} />
           </Route>
           <Route path="join" element={<Join />} />
-          <Route path="room/:code/host" element={<HostRoom />} />
-          <Route path="room/:code/play" element={<PlayerRoom />} />
+          <Route element={<LiveAudioBoundary />}>
+            <Route path="room/:code/host" element={<HostRoom />} />
+            <Route path="room/:code/play" element={<PlayerRoom />} />
+          </Route>
         </Route>
         <Route
           path="studio/*"

@@ -199,6 +199,8 @@ test(
         await gameNext();
         assert.equal(state.phase, "active");
         assert.equal(state.event!.segmentIndex, i);
+        assert.equal(state.audio!.roomId, launch.state!.audio!.roomId);
+        assert.equal(state.audio!.stage, "gameplay");
         if (i === 4) await new Promise((resolve) => setTimeout(resolve, 5100));
         checkpoint = `segment ${i} player resume`;
         const fresh = await emit(a, "room:resume", joinedA.identity);
@@ -291,9 +293,17 @@ test(
               })
             ).ok,
           );
+          // A Studio board may auto-reveal on the other socket before its
+          // broadcast reaches the host. Read the authoritative host snapshot
+          // before deciding whether a manual close is still necessary.
+          const current = await emit(host, "room:resume", launch.identity);
+          assert.ok(current.ok, current.error);
+          state = current.state!;
           if (state.phase === "active") await gameNext();
         }
         assert.equal(state.phase, "results");
+        assert.ok(state.audio!.names.includes("REVEAL_ENTER"));
+        if (creative) assert.ok(!state.audio!.names.includes("ANSWER_LOCKED"));
         await gameNext();
         assert.equal(state.event!.state, "GAME_RESULTS");
         await command("advance");

@@ -4,7 +4,9 @@ import { CONTENT, TEMPLATES, TOPICS } from "../../shared/content/library";
 import { estimatedMinutes, type CustomBoard } from "../../shared/boards";
 import { Avatar, Icon, Tag } from "../components/Visuals";
 import { ErrorMessage } from "../components/Layout";
-import { boards, createLocalBoard } from "./repository";
+import { copyBoard } from "./repository";
+import { useBoardLibrary } from "./useBoardLibrary";
+import type { BoardSummary } from "../../shared/cloud";
 import {
   download,
   CSV_TEMPLATE,
@@ -15,58 +17,61 @@ import {
 import { useParty } from "../lib/party";
 import { launchBoard } from "./launch";
 import { useDialog } from "../lib/useDialog";
-function load() {
-  try {
-    return { items: boards.list(), error: "" };
-  } catch (e) {
-    return {
-      items: [],
-      error:
-        e instanceof Error ? e.message : "Couldn’t read your board library.",
-    };
-  }
-}
 export default function StudioLibrary() {
-  const initial = useRef(load()),
-    [items, setItems] = useState(initial.current.items),
-    [error, setError] = useState(initial.current.error),
+  const library = useBoardLibrary();
+  const { items, repository } = library;
+  const [error, setError] = useState(""),
     [busy, setBusy] = useState(""),
-    [pendingDelete, setPendingDelete] = useState<CustomBoard | null>(null),
+    [pendingDelete, setPendingDelete] = useState<BoardSummary | null>(null),
     [filter, setFilter] = useState("all");
   const file = useRef<HTMLInputElement>(null),
     navigate = useNavigate(),
     party = useParty();
   const dismissDelete = useCallback(() => setPendingDelete(null), []);
   useDialog(!!pendingDelete, dismissDelete);
-  function run(fn: () => void) {
+  async function run(fn: () => void | Promise<unknown>) {
     try {
-      fn();
-      setItems(boards.list());
+      await fn();
+      await library.reload();
       setError("");
-    } catch (e) {
+    } catch (cause) {
       setError(
-        e instanceof Error
-          ? e.message
+        cause instanceof Error
+          ? cause.message
           : "That action didn’t finish. Try again.",
       );
     }
   }
-  function create(source?: CustomBoard) {
-    run(() => {
-      const board = createLocalBoard(source);
-      navigate(`/app/studio/boards/${board.id}`);
-    });
+  async function create(source?: CustomBoard) {
+    setBusy("creating");
+    try {
+      const board = copyBoard(source);
+      const record = await repository.create(board, `create:${board.id}`);
+      navigate(`/app/studio/boards/${record.board.id}`);
+    } catch (cause) {
+      setError(
+        cause instanceof Error ? cause.message : "Couldn’t create your board.",
+      );
+    } finally {
+      setBusy("");
+    }
   }
-  async function play(board: CustomBoard, demo = false) {
+  async function play(board: CustomBoard | BoardSummary, demo = false) {
     setBusy(board.id);
     try {
-      const reply = await launchBoard(board, party.create, demo);
+      const snapshot =
+        "questions" in board ? board : (await repository.get(board.id))?.board;
+      if (!snapshot)
+        throw new Error("This board is no longer in your account.");
+      const reply = await launchBoard(snapshot, party.create, demo);
       if (reply.ok && reply.identity)
         navigate(`/room/${reply.identity.code}/host`);
       else setError(reply.error ?? "The live stage is unavailable.");
-    } catch (e) {
+    } catch (cause) {
       setError(
-        e instanceof Error ? e.message : "Check your board before launching.",
+        cause instanceof Error
+          ? cause.message
+          : "Check your board before launching.",
       );
     }
     setBusy("");
@@ -92,7 +97,11 @@ export default function StudioLibrary() {
             competitive. Build your own. Or start with one of ours.
           </p>
           <div className="hero-actions">
-            <button className="button" onClick={() => create()}>
+            <button
+              className="button"
+              disabled={!!busy}
+              onClick={() => void create()}
+            >
               Create question board <Icon name="arrow" />
             </button>
             <button
@@ -103,7 +112,7 @@ export default function StudioLibrary() {
             </button>
           </div>
           <p className="studio-storage-note">
-            Saved in this browser. Export a copy to move it to another device.
+            Saved to your Ruckus account. Open your boards on any device.
           </p>
         </div>
         <div className="studio-hero-art">
@@ -140,7 +149,7 @@ export default function StudioLibrary() {
             <Link to="/app/originals">Explore the Originals ↗</Link>
           </div>
         </div>
-        <ErrorMessage message={error || party.error} />
+        <ErrorMessage message={error || library.error || party.error} />
         <input
           ref={file}
           type="file"
@@ -157,10 +166,9 @@ export default function StudioLibrary() {
               const board = f.name.toLowerCase().endsWith(".csv")
                 ? importCsv(text)
                 : importJson(text);
-              boards.save(board);
-              setItems(boards.list());
+              const record = await repository.create(board, `file:${board.id}`);
               setError("");
-              navigate(`/app/studio/boards/${board.id}`);
+              navigate(`/app/studio/boards/${record.board.id}`);
             } catch (e) {
               setError(
                 e instanceof Error
@@ -171,6 +179,15 @@ export default function StudioLibrary() {
             e.target.value = "";
           }}
         />
+        {library.loading && <p role="status">Loading your boards…</p>}
+        {library.error && (
+          <button
+            className="button outline"
+            onClick={() => void library.reload()}
+          >
+            Try loading again
+          </button>
+        )}
         {items.length ? (
           <div className="board-grid">
             {items.map((board) => (
@@ -192,8 +209,7 @@ export default function StudioLibrary() {
                 </Link>
                 <div className="board-card-details">
                   <span>
-                    {board.questions.length} questions · ~
-                    {estimatedMinutes(board)} min
+                    {board.questionCount} questions · ~{board.minutes} min
                   </span>
                   <small>
                     Edited{" "}
@@ -222,13 +238,24 @@ export default function StudioLibrary() {
                     <button
                       onClick={() =>
                         run(() => {
-                          boards.duplicate(board.id);
+                          return repository.duplicate(board.id);
                         })
                       }
                     >
                       Duplicate board
                     </button>
-                    <button onClick={() => run(() => exportBoard(board))}>
+                    <button
+                      onClick={() =>
+                        run(async () => {
+                          const record = await repository.get(board.id);
+                          if (!record)
+                            throw new Error(
+                              "That board is no longer available.",
+                            );
+                          exportBoard(record.board);
+                        })
+                      }
+                    >
                       Export
                     </button>
                     <button onClick={() => setPendingDelete(board)}>
@@ -240,18 +267,34 @@ export default function StudioLibrary() {
             ))}
           </div>
         ) : (
-          <div className="studio-empty">
-            <Avatar id={2} size={95} />
-            <div>
-              <h3>A blank board. Big potential.</h3>
-              <p>
-                Create your first question board, or make a starter your own.
-              </p>
-              <button className="button" onClick={() => create()}>
-                Build your first board <Icon name="arrow" />
-              </button>
+          !library.loading &&
+          !library.error && (
+            <div className="studio-empty">
+              <Avatar id={2} size={95} />
+              <div>
+                <h3>A blank board. Big potential.</h3>
+                <p>
+                  Create your first question board, or make a starter your own.
+                </p>
+                <button
+                  className="button"
+                  disabled={!!busy}
+                  onClick={() => void create()}
+                >
+                  Build your first board <Icon name="arrow" />
+                </button>
+              </div>
             </div>
-          </div>
+          )
+        )}
+        {library.cursor && (
+          <button
+            className="button outline"
+            disabled={library.loading}
+            onClick={() => void library.loadMore()}
+          >
+            Load more boards
+          </button>
         )}
       </section>
       <section className="section studio-templates">
@@ -305,7 +348,7 @@ export default function StudioLibrary() {
             className="button outline"
             disabled={!visible.length}
             onClick={() =>
-              create(visible[Math.floor(Math.random() * visible.length)])
+              void create(visible[Math.floor(Math.random() * visible.length)])
             }
           >
             Surprise me <Icon name="asterisk" />
@@ -317,7 +360,11 @@ export default function StudioLibrary() {
               No starter board uses this topic yet. Create a board and add
               questions from the library.
             </p>
-            <button className="button" onClick={() => create()}>
+            <button
+              className="button"
+              disabled={!!busy}
+              onClick={() => void create()}
+            >
               Build with this topic
             </button>
           </div>
@@ -342,7 +389,8 @@ export default function StudioLibrary() {
               </span>
               <div>
                 <button
-                  onClick={() => create(t)}
+                  disabled={!!busy}
+                  onClick={() => void create(t)}
                   className="button outline small"
                 >
                   Make it mine <Icon name="arrow" />
@@ -370,13 +418,13 @@ export default function StudioLibrary() {
             <h2 id="delete-title">Retire this board?</h2>
             <p>
               “{pendingDelete.title || "Untitled board"}” will leave this
-              browser’s library. Export a backup first if you want to keep it.
+              account’s library. Export a backup first if you want to keep it.
             </p>
             <button
               className="button danger"
               autoFocus
               onClick={() => {
-                run(() => boards.delete(pendingDelete.id));
+                void run(() => repository.delete(pendingDelete.id));
                 setPendingDelete(null);
               }}
             >

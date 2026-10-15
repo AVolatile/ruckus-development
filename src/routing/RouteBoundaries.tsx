@@ -1,6 +1,8 @@
 import { lazy, Suspense } from "react";
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 
+const HostBoundary = lazy(() => import("../auth/HostBoundary"));
+
 const RealtimeProvider = lazy(async () => {
   const { PartyProvider } = await import("../lib/party");
   return { default: PartyProvider };
@@ -25,9 +27,9 @@ export function SessionRoutes() {
   );
 }
 
-// Phase 1 inserts the host auth guard here, outside every guest/player route.
+// Host authentication stays outside every guest/player capability route.
 export function AppRoute() {
-  return <Outlet />;
+  return <HostBoundary />;
 }
 
 // Keep room parameters, import links, and saved preview links usable.

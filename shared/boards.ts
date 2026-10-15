@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "zod/v3";
 export const TIMER_OPTIONS = [5, 10, 15, 20, 30, 45, 60] as const;
 export const BOARD_COLORS = [
   "#2548f4",

@@ -1,16 +1,16 @@
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import {
   BOARD_COLORS,
   boardIssues,
-  newBoard,
   newQuestion,
   questionIssues,
   TIMER_OPTIONS,
   type CustomBoard,
 } from "../../shared/boards";
 import { CONTENT, TOPICS } from "../../shared/content/library";
-import { boards } from "./repository";
+import { useCloudDraft } from "./useCloudDraft";
+import { download } from "./transfer";
 import { exportBoard } from "./transfer";
 import { launchBoard } from "./launch";
 import { useParty } from "../lib/party";
@@ -18,89 +18,28 @@ import { ErrorMessage } from "../components/Layout";
 import { Icon, Tag } from "../components/Visuals";
 import { QuestionEditor } from "../components/studio/QuestionEditor";
 import { BoardPreview } from "../components/studio/BoardPreview";
-function initial(id?: string) {
-  try {
-    return {
-      board: !id || id === "new" ? newBoard() : boards.get(id),
-      error: "",
-    };
-  } catch (e) {
-    return {
-      board: undefined,
-      error: e instanceof Error ? e.message : "Couldn’t load this board.",
-    };
-  }
-}
 export default function StudioEditor() {
   const { id } = useParams(),
     navigate = useNavigate(),
     party = useParty();
-  const [start] = useState(() => initial(id)),
-    [board, setBoard] = useState(start.board),
-    [selected, setSelected] = useState(0),
-    [saved, setSaved] = useState("Saved in this browser"),
-    [error, setError] = useState(start.error),
+  const draft = useCloudDraft(id);
+  const { board, setBoard, saved, error, setError } = draft;
+  const [selected, setSelected] = useState(0),
     [tried, setTried] = useState(false),
     [busy, setBusy] = useState(false),
     [library, setLibrary] = useState(false),
     [topic, setTopic] = useState("all"),
     [search, setSearch] = useState("");
-  const latest = useRef(board);
-  latest.current = board;
-  useEffect(() => {
-    const flush = () => {
-      if (latest.current) {
-        try {
-          boards.save(latest.current);
-        } catch {
-          /* The editor already presents failed-save feedback. */
-        }
-      }
-    };
-    window.addEventListener("pagehide", flush);
-    return () => {
-      window.removeEventListener("pagehide", flush);
-      flush();
-    };
-  }, []);
-  useEffect(() => {
-    if (!board) return;
-    setSaved("Saving…");
-    const timeout = setTimeout(() => {
-      try {
-        boards.save(board);
-        setSaved("Saved in this browser");
-        if (!id || id === "new")
-          navigate(`/app/studio/boards/${board.id}`, { replace: true });
-      } catch (e) {
-        setSaved("Save failed");
-        setError(
-          e instanceof Error
-            ? e.message
-            : "Couldn’t autosave. Export a backup.",
-        );
-      }
-    }, 550);
-    return () => clearTimeout(timeout);
-  }, [board, id, navigate]);
-  useEffect(() => {
-    if (id && id !== "new" && board?.id !== id) {
-      try {
-        setBoard(boards.get(id));
-        setSelected(0);
-      } catch (e) {
-        setError(e instanceof Error ? e.message : "Couldn’t load this board.");
-      }
-    }
-  }, [id, board?.id]);
+  if (draft.loading)
+    return (
+      <section className="page-hero">
+        <p role="status">Loading your board…</p>
+      </section>
+    );
   if (!board)
     return (
       <section className="page-hero">
-        <h1>
-          That board isn’t
-          <br />
-          in this browser.
-        </h1>
+        <h1>That board isn’t available.</h1>
         <ErrorMessage message={error} />
         <Link to="/app/studio" className="button">
           Back to the library
@@ -112,13 +51,15 @@ export default function StudioEditor() {
     issues = boardIssues(board),
     patch = (p: Partial<CustomBoard>) =>
       setBoard((b) => (b ? { ...b, ...p } : b));
-  function saveReturn() {
+  async function saveReturn() {
     try {
-      boards.save(board!);
+      await draft.flush();
       navigate("/app/studio/boards");
-    } catch (e) {
+    } catch (cause) {
       setError(
-        e instanceof Error ? e.message : "Save failed. Export a backup.",
+        cause instanceof Error
+          ? cause.message
+          : "Save failed. Export a copy to keep your edits.",
       );
     }
   }
@@ -171,21 +112,27 @@ export default function StudioEditor() {
             className="button small outline"
             to={`/app/studio/boards/${board.id}/preview`}
             onClick={(event) => {
-              try {
-                boards.save(board);
-              } catch (e) {
-                event.preventDefault();
-                setError(
-                  e instanceof Error
-                    ? e.message
-                    : "Couldn’t save this preview.",
+              event.preventDefault();
+              void draft
+                .flush()
+                .then((value) =>
+                  navigate(`/app/studio/boards/${value.board.id}/preview`),
+                )
+                .catch((cause) =>
+                  setError(
+                    cause instanceof Error
+                      ? cause.message
+                      : "Couldn’t save before preview.",
+                  ),
                 );
-              }
             }}
           >
             Preview
           </Link>
-          <button className="button small outline" onClick={saveReturn}>
+          <button
+            className="button small outline"
+            onClick={() => void saveReturn()}
+          >
             Save & return
           </button>
           <button
@@ -203,8 +150,8 @@ export default function StudioEditor() {
               }
               setBusy(true);
               try {
-                boards.save(board);
-                const reply = await launchBoard(board, party.create);
+                const snapshot = await draft.flush();
+                const reply = await launchBoard(snapshot.board, party.create);
                 if (reply.ok && reply.identity)
                   navigate(`/room/${reply.identity.code}/host`);
                 else setError(reply.error ?? "The live stage is unavailable.");
@@ -304,6 +251,45 @@ export default function StudioEditor() {
         </div>
       </section>
       <ErrorMessage message={error || party.error} />
+      {draft.dirty && (draft.conflict || saved === "Save failed") && (
+        <div className="cloud-save-recovery" role="alert">
+          <p>
+            {draft.conflict
+              ? "This board changed elsewhere. Export your edits before loading the latest version."
+              : "Your latest edits haven’t been confirmed by the server yet."}
+          </p>
+          <button
+            className="button small outline"
+            onClick={() =>
+              download(
+                "ruckus-unsaved-draft.json",
+                JSON.stringify(board, null, 2),
+                "application/json",
+              )
+            }
+          >
+            Export my current draft
+          </button>
+          {draft.conflict ? (
+            <button
+              className="button small outline"
+              onClick={() => void draft.reloadLatest()}
+            >
+              Load latest and replace these edits
+            </button>
+          ) : (
+            saved === "Save failed" && (
+              <button
+                className="button small"
+                onClick={() => void draft.retry()}
+              >
+                Retry save
+              </button>
+            )
+          )}
+        </div>
+      )}
+
       <div className="studio-workbench">
         <aside className="question-rail">
           <div>
@@ -558,11 +544,11 @@ export default function StudioEditor() {
             </button>
             <button
               className="button outline"
-              onClick={() => {
+              onClick={async () => {
                 try {
-                  boards.save(board);
-                  const copy = boards.duplicate(board.id);
-                  navigate(`/app/studio/boards/${copy.id}`);
+                  await draft.flush();
+                  const copy = await draft.repository.duplicate(board.id);
+                  navigate(`/app/studio/boards/${copy.board.id}`);
                 } catch (e) {
                   setError(
                     e instanceof Error ? e.message : "Couldn’t duplicate.",

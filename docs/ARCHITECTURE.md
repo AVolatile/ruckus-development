@@ -1,57 +1,76 @@
-# Ruckus product architecture
+# Ruckus architecture — Phase 1
 
-## Boundaries
+## Product boundaries
 
-`main.tsx` owns the browser router and error boundary. `routing/AppRoutes.tsx` declares three responsibilities:
+Public Layout renders `/`, `/product`, `/teams`, `/events`, `/pricing`, `/resources`, `/login` and `/signup`. Marketing does not mount PartyProvider or import question banks. Account forms lazy-load only their small browser auth/session code. Shared fonts, catalog/topic metadata and visual assets remain lightweight product primitives.
 
-1. **Public:** `components/Layout` renders only marketing navigation and footer. `marketing/*` never imports PartyProvider, Socket.IO, board repositories, or large question banks. Static interactive StagePreview is shared UI, not a session. Fonts, catalog metadata, topic names, assets, and visual tokens remain shared.
-2. **Host:** `AppRoute` wraps `/app` and is the Phase 1 guard insertion point. `app/AppShell` provides host navigation and a truthful open-access/local-storage notice. Originals, setup, Studio, and dashboard use existing game and authoring implementations. Future workspace/analytics sections give an honest explanation and working next action.
-3. **Live session / guest:** a lazy `SessionRoutes` mounts PartyProvider around both host application and live/guest routes. This preserves context across a Studio/Original launch into the stage, without exposing live state to public marketing. `/join` and player routes sit outside AppRoute and AppShell; keep them outside future host authentication. The full-screen host stage also bypasses dashboard chrome. In Phase 1, host-stage authorization needs a separate owner check, not an account requirement on every socket.
+AppRoute lazy-loads HostBoundary. HostAuth resolves `/api/v1/me` before any host content renders, then the account-scoped RepositoryProvider supplies CloudBoardRepository. `/app` and all its descendants require a valid server session. The dashboard and Studio use cloud summaries/documents; they never silently fall back to a separate local authoritative copy. Account settings display actual email and revoke the session on sign out. Workspace/analytics remain explicit future states.
 
-The provider connects automatically only on `/app/host`, `/join`, and `/room/*`. Studio launches connect explicitly via the existing create API. Returning to non-live routes disconnects; leaving the session route group also cleans up listeners. Existing `ruckus-session` sessionStorage identity and reconnect tokens are unchanged. A public visit never mounts or eagerly loads the provider.
+SessionRoutes preserves one lazy PartyProvider across host app → live stage transitions. `/join`, `/room/:code/play` and `/room/:code/host` remain outside the host guard and dashboard. New room creation checks host authentication at the socket adapter; all other live host/player authority remains the existing room capability model. Players never need accounts. Live tokens still use `ruckus-session` sessionStorage; those are distinct from account sessions, whose primary tokens exist only in HttpOnly cookies.
 
-Public pages, host features, Studio, and live screens have lazy module boundaries. Home uses only lightweight catalog metadata; question libraries load on host/Studio surfaces. TemplateShelf is lazy and creates boards through the same `createLocalBoard` operation used in Studio.
+`server/engine.ts` and socket payload contracts are unchanged. Existing validation, scoring, timers, bots, leaderboards, pause, rematches, player redaction and snapshot cloning remain authoritative. Cloud launch flushes/loads an authorized board and passes its validated immutable content to the existing adapter/engine. Subsequent board edits cannot mutate that room.
 
-## Routes before and after
+## Authentication and API
 
-Before Phase 0, a global PartyProvider wrapped marketing and product pages. A single Layout handled everything except joining and active rooms.
+Better Auth owns password hashing, signed cookies and revocable PostgreSQL sessions at `/api/auth/*`. Host email/password flows and seven-day sessions are real; no external auth SaaS is required. Email verification and password recovery are pre-public-launch work, not simulated controls. See [AUTHENTICATION.md](AUTHENTICATION.md).
 
-| Before                                          | Canonical now                                          | Compatibility                                                            |
-| ----------------------------------------------- | ------------------------------------------------------ | ------------------------------------------------------------------------ |
-| `/`                                             | `/`                                                    | Marketing copy cleaned; existing visual composition preserved.           |
-| `/how-it-works`                                 | `/product`                                             | Client redirect.                                                         |
-| `/for-teams`, `/remote`                         | `/teams`                                               | Client redirects; remote play also explained on `/events`.               |
-| `/pricing`                                      | `/pricing`                                             | Honest development/early-access state.                                   |
-| `/resources`                                    | `/resources`                                           | Host guide with customer-facing copy.                                    |
-| `/about`                                        | `/product`                                             | Client redirect; old portfolio About archived.                           |
-| `/host`                                         | `/app/host`                                            | Client redirect, including `?game=slug`.                                 |
-| `/games`, `/games/:slug`                        | `/app/originals`, `/app/originals/:slug`               | Prefix redirect. Six game implementations unchanged.                     |
-| `/studio`, `/studio/boards`                     | `/app/studio`, `/app/studio/boards`                    | Prefix redirect.                                                         |
-| `/studio/boards/new`                            | `/app/studio/boards/new`                               | Prefix redirect.                                                         |
-| `/studio/boards/:id`                            | `/app/studio/boards/:id`                               | Prefix redirect.                                                         |
-| `/studio/boards/:id/preview`                    | `/app/studio/boards/:id/preview`                       | Prefix redirect.                                                         |
-| `/join`, `/room/:code/play`, `/room/:code/host` | Same                                                   | QR links and session contracts unchanged.                                |
-| `/brand`, `/campaign`, `/case-study`            | No production route                                    | Normal not-found screen. Source archived.                                |
-| None                                            | `/events`, `/login`, `/signup`                         | New marketing/account-entry surfaces.                                    |
-| None                                            | `/app`, `/app/library`, `/app/events`, `/app/settings` | Host dashboard, discovery, live event entry, and local storage guidance. |
-| None                                            | `/app/analytics`, `/app/workspace`                     | Explicitly future-facing; no fabricated metrics/workspaces.              |
+The authenticated product API is versioned separately:
 
-`LegacyRedirect` uses replacement navigation and preserves the full suffix, query, and hash. Saved board IDs and exported files do not change. Redirects are client-side, not HTTP 301s. Unknown public and app paths have appropriate recovery links.
+| Method | Route                   | Behavior                                                                      |
+| ------ | ----------------------- | ----------------------------------------------------------------------------- |
+| GET    | `/api/v1/me`            | Session-derived minimal host identity.                                        |
+| GET    | `/api/v1/boards`        | Private summaries, default 30/max 50, keyset cursor.                          |
+| POST   | `/api/v1/boards`        | Validate draft; stable identity + revision 1 atomically. Optional retry key.  |
+| GET    | `/api/v1/boards/:id`    | Owned current document and revision metadata.                                 |
+| PUT    | `/api/v1/boards/:id`    | Require `baseRevisionId`; append revision atomically or conflict.             |
+| DELETE | `/api/v1/boards/:id`    | Owned soft deletion; retain history.                                          |
+| POST   | `/api/v1/boards/import` | Validated batch envelope; owner-scoped keys and per-board outcomes.           |
+| GET    | `/ready`                | Database/schema readiness, separate from process `/health` and `/api/health`. |
 
-Netlify's existing `/* -> /index.html` 200 rewrite serves all direct links. Express’s production SPA fallback covers the same route shape locally. No rewrite, deployment, server engine, CORS, origin validation, or socket event change was needed. Local production verification exercises the compiled app; an actual Netlify deploy remains a separate action.
+Ownership is derived only from the server session. IDs from URLs are scoped by owner in every query; another owner's board is indistinguishable from a nonexistent board. Client timestamps/IDs in imported documents are never authoritative. Private responses are no-store. Unsafe authenticated requests require the configured Origin/Host; malformed JSON, oversized bodies, credential bounds and rate limits are enforced. Errors use `{ error: { code, message, requestId, details? } }` with safe details; Better Auth retains its own endpoint response format.
 
-## Persistence and Phase 1 hooks
+The principal codes are AUTH_REQUIRED, VALIDATION_ERROR, BOARD_NOT_FOUND, BOARD_CONFLICT, IMPORT_RETIRED, RATE_LIMITED, ORIGIN_REJECTED and INTERNAL_ERROR. Import responses use 207 for mixed validation outcomes and provide per-board codes rather than claiming a failed board was saved. Unexpected failures log only correlation IDs, never credential/content payloads.
 
-`studio/repository.ts` keeps the existing synchronous BoardRepository API and `boards` local implementation. The `ruckus-studio-v1` storage key, schemas, corrupt-data preservation, and limits remain unchanged. `createLocalBoard` is the shared template/draft creation operation. The UI never pretends a local board has cloud ownership.
+## Database and revisions
 
-Phase 1 should introduce asynchronous repository operations and explicit loading/error states alongside the authenticated API. Do not implement a cloud repository behind this synchronous contract or silently switch storage. Migrate local boards only with explicit ownership, import validation, duplicate handling, recovery/export, and user-visible confirmation. Preserve local export and recovery paths.
+Better Auth's generated user/session/account/verification tables are separate from `boards` and `board_revisions`. Boards are validated JSONB documents, not relational question/answer rows. The stable board owns private identity/list metadata and a current revision pointer. Every revision is immutable and belongs to that board. A deferred same-board FK makes create + revision 1 one atomic transaction; a trigger rejects revision update/delete. Ordinary deletion is soft.
 
-Authenticate host HTTP CRUD and enforce owner/organization access on the server. PostgreSQL should model users, sessions, boards, and immutable board revisions before shared organization features. Live rooms should consume a validated immutable revision snapshot. The authoritative realtime engine remains independent of account-provider internals; guest joining retains room-scoped identity tokens.
+Updates lock the owned row, compare the base revision, validate content, insert the next revision and move the pointer in one transaction. A stale base receives HTTP 409 with safe current-revision metadata. Canonical server SHA-256 hashes skip identical-content revisions. No user-provided timestamp or owner is trusted. See [DATABASE.md](DATABASE.md) for migration/index details and local/CI setup.
 
-Auth entry routes intentionally contain no credential form or provider buttons yet. Replace their content with a real provider integration in Phase 1, then protect AppRoute. No fake login state, stored passwords, fake cloud records, entitlement framework, database, or checkout was added.
+## Repository and Studio state
 
-## Visual and source preservation
+`studio/repository.ts` defines the async BoardRepository contract and CloudBoardRepository. List/get/create/save/delete/duplicate operations call the same-origin authenticated API. `RepositoryProvider` is recreated for a changed host account; there is no shared cross-account board cache. List responses update on library entry/import/action, not after every editor keystroke.
 
-Existing tokens, typography, responsive sheets, gameplay/editor CSS, illustrations, and interaction conventions remain the product language. `styles/app-shell.css` adds only surface composition and adapts the existing menu pattern to the longer navigation. `components/StagePreview` and `components/DemoButton` split static marketing visuals from actual room creation. Original and Studio game rules and scoring remain untouched.
+`studio/localRepository.ts` retains the original synchronous store, key, validation and recovery/export behavior. `LocalBoardRepository` is its Promise-compatible adapter. It is used for legacy detection/import, not normal authenticated saves. Valid and invalid local entries are inspected separately without modifying the source payload.
 
-See [the audit](PHASE-0-AUDIT.md) for KEEP/MOVE/REMOVE_FROM_PRODUCTION/REBUILD_PRESENTATION classifications, and [the archive notes](../src/archive/README.md) for retained demo assets. The portfolio stylesheet is retained in source and excluded from the production CSS entry point.
+`useCloudDraft` owns asynchronous loading and save coordination outside the visual editor. Saves debounce 750ms and serialize against the last acknowledged revision. Edits during a request stay in the current draft and save next; older responses cannot claim newer text is saved. Returning exactly to acknowledged content restores the confirmed status without creating unnecessary revisions. Preview, launch, return and duplication explicitly flush first. Internal link navigation flushes or stays in the editor on failure; browser unload warns about unconfirmed edits.
+
+On network/save failure, autosave pauses and offers retry/export. A 409 keeps local edits and the server version separate, offers raw draft export and explicit latest-version replacement, and never performs a silent merge/overwrite. A separate account/board-scoped sessionStorage cache stores only unconfirmed draft edits plus base revision. It retires on confirmation, restores same-base edits after refresh/re-auth, and reports a conflict if the server advanced. It never stores auth credentials or becomes the cloud source of truth.
+
+## Local-to-cloud import
+
+AppShell shows a nonblocking prompt for unimported `ruckus-studio-v1` entries and the destination account. Hosts choose import or Not now, and can export the exact raw local backup. Valid boards are checked before sending; invalid entries receive precise per-board feedback. Requests are bounded (the UI imports one board per request); the API also accepts bounded batches.
+
+PostgreSQL's `(owner_user_id, client_import_key)` uniqueness and transaction-scoped advisory locks make concurrent/retried imports return the committed identity. A separate optional `ruckus-cloud-imports-v1` mapping is only a UI hint keyed by account/local ID. Mapping failures cannot create duplicates. The source library is never cleared, rewritten or marked in place.
+
+## Route compatibility
+
+| Earlier route                                      | Canonical route                          | Behavior                                                                                                                              |
+| -------------------------------------------------- | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `/host`                                            | `/app/host`                              | Preserve `?game=slug`; login first when needed.                                                                                       |
+| `/games`, `/games/:slug`                           | `/app/originals`, `/app/originals/:slug` | Prefix redirect, then host guard.                                                                                                     |
+| `/studio`, `/studio/boards`                        | `/app/studio`, `/app/studio/boards`      | Prefix redirect, then host guard.                                                                                                     |
+| `/studio/boards/new`                               | `/app/studio/boards/new`                 | New cloud draft after sign-in.                                                                                                        |
+| `/studio/boards/:id`, `/studio/boards/:id/preview` | Same suffix under `/app/studio`          | Preserve suffix/query/hash. Local IDs require explicit local import; do not silently query another owner's data or auto-map to cloud. |
+| `/how-it-works`, `/about`                          | `/product`                               | Public redirects.                                                                                                                     |
+| `/for-teams`, `/remote`                            | `/teams`                                 | Public redirects.                                                                                                                     |
+| `/join`, `/room/:code/host`, `/room/:code/play`    | Same                                     | Live capability URLs unchanged.                                                                                                       |
+| `/brand`, `/campaign`, `/case-study`               | No production route                      | Source remains archived; ordinary not-found.                                                                                          |
+
+Client redirects replace browser history and preserve suffixes, query strings and fragments. Unknown app/public pages have recovery links. Express serves compiled SPA deep links; marketing remains available without a host session. Netlify's old static fallback alone is insufficient for the authenticated API.
+
+## Deployment and future scope
+
+The supported Phase 1 topology is a combined Node application on one public origin, with PostgreSQL behind it and the existing in-memory Socket.IO rooms. Unrelated Netlify/Render third-party cookies are unsupported. A future split topology needs an intentional same-origin proxy or reviewed same-site domain configuration. Production fails closed without database/auth configuration and HTTPS APP_ORIGIN; see [DEPLOYMENT.md](DEPLOYMENT.md).
+
+Organizations, memberships, workspace-owned boards, Brand Kits, entitlements, billing and analytics remain separate future domains. They are not encoded into authentication internals or overloaded into board revisions. Future workspace ownership should extend the service authorization boundary; current owner-scoped repositories do not pretend organizations already exist.

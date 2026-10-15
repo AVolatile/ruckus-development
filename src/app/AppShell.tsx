@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
+import { useHostAuth } from "../auth/HostAuth";
+import LocalImportPrompt from "./LocalImportPrompt";
 import { Logo, Icon } from "../components/Visuals";
 
 const navigation = [
@@ -11,6 +13,7 @@ const navigation = [
 ];
 
 export function AppShell() {
+  const { user } = useHostAuth();
   const [open, setOpen] = useState(false);
   const { pathname } = useLocation();
   useEffect(() => {
@@ -50,10 +53,10 @@ export function AppShell() {
         </nav>
       </header>
       <div className="app-access-note">
-        Host tools are open access while accounts are being built. Boards stay
-        in this browser.
+        Your private host library · {user?.email}
       </div>
       <main id="main">
+        <LocalImportPrompt />
         <Outlet />
       </main>
       <footer className="app-footer">

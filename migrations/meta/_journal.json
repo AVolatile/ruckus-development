@@ -1,0 +1,20 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1792011175246,
+      "tag": "0000_host_cloud_foundation",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1792011230177,
+      "tag": "0001_revision_invariants",
+      "breakpoints": true
+    }
+  ]
+}

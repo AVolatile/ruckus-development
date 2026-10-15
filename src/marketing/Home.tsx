@@ -261,7 +261,7 @@ export function Home() {
         <Link className="button" to="/signup">
           Start free <Icon name="arrow" />
         </Link>
-        <p>Host tools are open now. Free Ruckus accounts are coming soon.</p>
+        <p>Your host account. Their phones. Let’s make a Ruckus.</p>
       </section>
     </>
   );

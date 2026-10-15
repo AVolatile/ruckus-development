@@ -8,7 +8,7 @@ Six authored mechanics offer instant starts: speed trivia, majority opinions, cr
 
 ## Ruckus Studio
 
-Studio turns an author’s questions into the same shared-screen experience. The browser library, starter boards, question bank, editor, previews and live launch form one practical loop. Multiple choice, True / False and polls cover a useful first release without turning Ruckus into a learning-management system. Templates are invitations to personalize, not simulations of real employer training.
+Studio turns an author’s questions into the same shared-screen experience. The private cloud library, starter boards, question bank, editor, previews and live launch form one practical loop. Multiple choice, True / False and polls cover a useful first release without turning Ruckus into a learning-management system. Templates are invitations to personalize, not simulations of real employer training.
 
 ## Why both exist
 
@@ -20,13 +20,13 @@ Office hosts and managers who want a meeting warmup or Friday break; teams makin
 
 ## Current boundaries
 
-Boards autosave locally and transfer via files. Sessions support 2–30 players on one in-memory realtime server. Reconnect survives a refresh or short interruption, not a server restart. Summary CSV contains display names, scores and aggregate question counts. Accounts, shared board editing, organization reporting and guaranteed uptime are not implemented.
+Authenticated hosts own PostgreSQL-backed boards with immutable revisions; existing local boards can be explicitly copied into an account and still transfer via files. Sessions support 2–30 players on one in-memory realtime server. Reconnect survives a refresh or short interruption, not a server restart. Summary CSV contains display names, scores and aggregate question counts. Host email/password accounts are implemented. Email verification/recovery, shared board editing, organization reporting and guaranteed uptime are not implemented.
 
 ## Future organization capabilities — not implemented
 
-Authenticated workspaces and owner roles; PostgreSQL-backed boards with revision history; sharing permissions; reviewed content workflows; SSO if pilots establish a need; explicit retention controls; audit logging; persistent room recovery; observability and capacity-tested horizontal scale. Security/privacy/legal review precedes employee-data or confidential-content pilots.
+Organization workspaces and membership roles; shared ownership; sharing permissions; reviewed content workflows; SSO if pilots establish a need; explicit retention controls; audit logging; persistent room recovery; observability and capacity-tested horizontal scale. Security/privacy/legal review precedes employee-data or confidential-content pilots.
 
-Keep the UI independent of persistence through `BoardRepository`. A future API implementation should authenticate board CRUD and enforce ownership on the server. PostgreSQL tables can represent boards, ordered questions, options and revisions. Live gameplay should consume an immutable board revision instead of the mutable author document.
+The async `BoardRepository` keeps Studio independent of persistence. The versioned API authenticates private board CRUD and enforces server-derived ownership. PostgreSQL stores boards as validated JSONB revisions; live gameplay consumes an isolated validated snapshot. Future organizations should extend these authorization/service boundaries without normalizing every question prematurely.
 
 Scaling needs a shared authoritative room-state model, locks/versioned transitions, durable recovery and a scheduler strategy. The Socket.IO Redis adapter coordinates event delivery but does not persist this Room class. Add Redis/shared state and load balancing only alongside demonstrated capacity needs. Avoid deploying multiple independent instances with separate room maps.
 
@@ -34,10 +34,10 @@ Scaling needs a shared authoritative room-state model, locks/versioned transitio
 
 Validate repeat hosting and authoring usefulness before billing. Potential paid value: saved cloud libraries, branded events, shared organization workspaces and managed reliable hosting. Preserve accessible phone controls, fast joining, original illustration and candid feature boundaries. Measure pilot hosting friction and participation, not employee proficiency.
 
-## Startup development surfaces — Phase 0
+## Startup development surfaces — Phase 1
 
-The public website explains Ruckus; `/app` lets hosts use it; `/join` lets players enter immediately. Studio and all six Originals live within the host application. Host tools are open access until real accounts ship. Login/signup explicitly communicate that state without collecting credentials. Commercial pricing, cloud saving, organization workspaces, and Brand Kits remain future capability.
+The public website explains Ruckus; authenticated `/app` lets hosts use it; `/join` lets players enter immediately without accounts. Studio and all six Originals live within the host application. Real host accounts, private cloud saving, immutable revisions and local-to-cloud import exist. Commercial pricing, organizations and Brand Kits remain future capability.
 
-Portfolio case-study, campaign, and brand-showcase pages are archived outside production routing. The fictional employer starter is excluded from production templates. Brand assets and useful implementation remain available to build real workspace/event customization later.
+Portfolio case-study, campaign and brand-showcase pages remain archived outside production routing. The fictional employer starter remains excluded from production templates. Brand assets and useful implementation remain available for future workspace/event customization.
 
-The next milestone is **Authentication + PostgreSQL + CloudBoardRepository**, as one working host-account-to-cloud-board-to-live-room vertical slice. See [architecture](ARCHITECTURE.md) and [roadmap](ROADMAP.md).
+The recommended next milestone is **Organizations + memberships + shared workspace ownership + the first real Brand Kit model**, after addressing the pre-public-launch account/security gaps. See [architecture](ARCHITECTURE.md), [authentication](AUTHENTICATION.md), and [roadmap](ROADMAP.md).

@@ -1,5 +1,5 @@
 import { TOPICS } from "../shared/content/library.js";
-import { z } from "zod";
+import { z } from "zod/v3";
 import { GAME_IDS } from "../shared/types.js";
 export const settingsSchema = z.object({
   playlist: z.array(z.enum(GAME_IDS)).min(1).max(6),

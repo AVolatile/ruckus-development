@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./fixtures";
 import fs from "node:fs/promises";
 test("Studio: create, validation, autosave, reorder, preview, JSON/CSV, duplicate/delete and live launch", async ({
   page,

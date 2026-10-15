@@ -2,11 +2,14 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { estimatedMinutes } from "../../shared/boards";
 import { TEMPLATES } from "../../shared/content/library";
-import { createLocalBoard } from "../studio/repository";
+import { copyBoard } from "../studio/repository";
 import { Icon } from "../components/Visuals";
+import { useBoardRepository } from "../studio/RepositoryProvider";
 import { ErrorMessage } from "../components/Layout";
 export default function TemplateShelf() {
-  const navigate = useNavigate();
+  const navigate = useNavigate(),
+    repository = useBoardRepository();
+  const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   return (
     <section className="section studio-templates">
@@ -38,9 +41,15 @@ export default function TemplateShelf() {
             <div>
               <button
                 className="button outline small"
-                onClick={() => {
+                disabled={busy}
+                onClick={async () => {
+                  setBusy(true);
                   try {
-                    const copy = createLocalBoard(template);
+                    const draft = copyBoard(template);
+                    const { board: copy } = await repository.create(
+                      draft,
+                      `template:${draft.id}`,
+                    );
                     navigate(`/app/studio/boards/${copy.id}`);
                   } catch (cause) {
                     setError(
@@ -48,6 +57,8 @@ export default function TemplateShelf() {
                         ? cause.message
                         : "This starter couldn’t be saved. Try again in Studio.",
                     );
+                  } finally {
+                    setBusy(false);
                   }
                 }}
               >

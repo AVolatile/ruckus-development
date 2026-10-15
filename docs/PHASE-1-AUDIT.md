@@ -1,0 +1,17 @@
+# Phase 1 audit and implementation decisions
+
+Audited October 14, 2026. Git working tree was clean. Read Phase 0 README, architecture, audit/report, product vision, roadmap, route boundaries, shell/dashboard/library/settings, Studio editor/library/preview/repository/transfer/launch, board schemas, PartyProvider, server/config/validation/engine, tests, SPA rules and deployment notes.
+
+- AppRoute is the host guard insertion point; guest and live capability routes must stay outside it. SessionRoutes already preserves live launch context and avoids marketing connections.
+- LocalBoardRepository is currently a synchronous `boards` object over `ruckus-studio-v1`. Preserve its payload/key and validation. Adapt it behind an async repository for migration; cloud data is the sole authenticated source of truth.
+- Studio currently writes during a 550ms debounce, on pagehide/unmount, and before preview/launch/return/duplicate. Network conversion requires one serialized save controller with acknowledged revisions, explicit flush, conflict recovery and route-leave protection; blindly replacing synchronous calls with fetch would lose edits.
+- Shared `boardSchema` accepts safe incomplete drafts; `validateBoard` adds launch/export completeness rules. Persist drafts with the former and keep launch validation with the latter. Preserve engine snapshot cloning.
+- The existing RateLimiter can protect HTTP endpoints too; security headers/origin allowlists already exist. Add trusted-origin/host checks to unsafe cookie-authenticated requests without relaxing socket policy.
+- No auth/database dependency, migrations, Compose or CI exists. Docker, psql and postgres executables are absent here. Provide pinned Compose for ordinary development/CI and an optional real embedded PostgreSQL binary for local verification; never substitute an in-memory SQL emulator.
+- The former Netlify/Render split guide targets the original portfolio repository and is unsuitable for cookie auth. Prefer combined Express static pages + auth/API + Socket.IO on one public origin. Keep legacy deployment configuration isolated/documented; no deployment in this phase.
+
+Chosen stack: current stable Better Auth 1.7.8 with its supported Express handler, PostgreSQL Drizzle adapter and generated auth schema; Drizzle SQL/migrations and node-postgres for typed transactions. Better Auth owns password hashing and session cryptography. Use database-backed revocable cookies, no session cookie cache, and no localStorage auth tokens. Google/Microsoft, email verification and recovery are deliberately not advertised without real providers.
+
+Boards use UUID identity and owner FK, immutable JSONB revisions, a deferred current-revision FK, server timestamps, owner-scoped import keys, soft deletion and optimistic base-revision comparisons under row locks. All operations derive ownership from the authenticated server session. No organization/billing schema is added.
+
+References verified against official documentation: https://better-auth.com/docs/integrations/express, https://better-auth.com/docs/adapters/drizzle, https://better-auth.com/docs/concepts/session-management, https://better-auth.com/docs/concepts/cookies. PostgreSQL support: https://www.postgresql.org/support/versioning/. Optional development binary: https://github.com/leinelissen/embedded-postgres. Exact installed versions and verification results will be recorded in the Phase 1 report.

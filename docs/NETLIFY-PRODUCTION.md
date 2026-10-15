@@ -1,3 +1,7 @@
+# Historical split deployment guide — Phase 0
+
+**Superseded for authenticated Phase 1 hosting.** This guide describes the original static demo topology. Do not follow its upstream-repository or deploy commands for the startup application. Use [DEPLOYMENT.md](DEPLOYMENT.md): one application origin for pages, authentication, API and Socket.IO. Unrelated netlify.app/onrender.com cookies are not a supported authentication architecture. No deployment has been performed during Phase 1.
+
 # Netlify frontend + Render realtime production guide
 
 **READY FOR DEPLOYMENT — EXTERNAL SETUP REQUIRED.** The repo contains both deploy targets. Netlify access was available, but no Render account/API authorization was available. A public two-service deployment and physical office/cellular joining have not been verified. All hostnames below are examples until you replace them with provider-issued URLs.

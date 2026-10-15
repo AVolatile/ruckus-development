@@ -8,3 +8,5 @@ test-results
 playwright-report
 portfolio-assets/*.png
 .venv
+
+.local

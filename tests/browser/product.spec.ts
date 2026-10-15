@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, appOrigin } from "./fixtures";
 import { io } from "socket.io-client";
 import { DEFAULT_SETTINGS, GAMES } from "../../shared/catalog";
 import type { Reply } from "../../shared/types";
@@ -199,7 +199,14 @@ test("drawing controller works with keyboard and at four phone sizes", async ({
   page,
   browser,
 }) => {
-  const host = io("http://localhost:4310", { transports: ["websocket"] });
+  const host = io(appOrigin, {
+    transports: ["websocket"],
+    extraHeaders: {
+      Cookie: (await page.context().cookies())
+        .map((cookie) => `${cookie.name}=${cookie.value}`)
+        .join("; "),
+    },
+  });
   await new Promise<void>((r) => host.on("connect", r));
   const create = await new Promise<Reply>((r) =>
     host.emit(

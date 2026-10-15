@@ -18,9 +18,7 @@ const Audience = lazy(() =>
 const Pricing = lazy(() =>
   import("../marketing/Access").then((m) => ({ default: m.Pricing })),
 );
-const AccountEntry = lazy(() =>
-  import("../marketing/Access").then((m) => ({ default: m.AccountEntry })),
-);
+const AccountEntry = lazy(() => import("../auth/AccountEntry"));
 const Resources = lazy(() =>
   import("../marketing/Resources").then((m) => ({ default: m.Resources })),
 );
@@ -59,7 +57,9 @@ const FutureSection = lazy(() =>
   import("../app/ProductSections").then((m) => ({ default: m.FutureSection })),
 );
 const Settings = lazy(() =>
-  import("../app/ProductSections").then((m) => ({ default: m.Settings })),
+  import("../app/AccountSettings").then((m) => ({
+    default: m.AccountSettings,
+  })),
 );
 
 function NotFound({ host = false }: { host?: boolean }) {

@@ -1,19 +1,23 @@
+# Configuration only; no deployment or database provisioning was performed.
+# Run reviewed migrations explicitly before releasing a new app version.
 services:
   - type: web
-    name: ruckus-realtime
+    name: ruckus
     runtime: node
     plan: starter
-    buildCommand: npm ci --include=dev && npm run build:server
-    startCommand: npm run start:server
+    buildCommand: npm ci --include=dev && npm run build
+    startCommand: npm start
     healthCheckPath: /health
     envVars:
       - key: NODE_VERSION
-        value: 22.16.0
+        value: "22"
       - key: NODE_ENV
         value: production
-      - key: REALTIME_ONLY
-        value: "true"
-      - key: CLIENT_ORIGIN
+      - key: APP_ORIGIN
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: AUTH_SECRET
         sync: false
       - key: PUBLIC_APP_URL
         sync: false

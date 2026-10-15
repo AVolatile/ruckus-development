@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { boards } from "./repository";
+import { useBoardRepository } from "./RepositoryProvider";
+import type { CustomBoard } from "../../shared/boards";
 import { BoardPreview } from "../components/studio/BoardPreview";
 import { useParty } from "../lib/party";
 import { launchBoard } from "./launch";
@@ -13,21 +14,42 @@ export default function StudioPreview() {
     [reveal, setReveal] = useState(false),
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false);
-  let board;
-  try {
-    board = boards.get(id ?? "");
-  } catch {
+  const repository = useBoardRepository();
+  const [board, setBoard] = useState<CustomBoard>(),
+    [loading, setLoading] = useState(true);
+  useEffect(() => {
+    let active = true;
+    void repository
+      .get(id ?? "")
+      .then((value) => {
+        if (active) setBoard(value?.board);
+      })
+      .catch((cause) => {
+        if (active)
+          setError(
+            cause instanceof Error
+              ? cause.message
+              : "Couldn’t load your board.",
+          );
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [id, repository]);
+  if (loading)
     return (
       <section className="page-hero">
-        <h1>Library unavailable.</h1>
-        <Link to="/app/studio">Return to Studio</Link>
+        <p role="status">Loading board preview…</p>
       </section>
     );
-  }
   if (!board)
     return (
       <section className="page-hero">
-        <h1>That board isn’t here.</h1>
+        <h1>That board isn’t available.</h1>
+        <ErrorMessage message={error} />
         <Link to="/app/studio" className="button">
           Return to Studio
         </Link>
@@ -49,7 +71,12 @@ export default function StudioPreview() {
           onClick={async () => {
             setBusy(true);
             try {
-              const reply = await launchBoard(board, party.create);
+              const snapshot = await repository.get(board.id);
+              if (!snapshot)
+                throw new Error(
+                  "That board is no longer available in your account.",
+                );
+              const reply = await launchBoard(snapshot.board, party.create);
               if (reply.ok && reply.identity)
                 navigate(`/room/${reply.identity.code}/host`);
               else setError(reply.error ?? "The live stage is unavailable.");

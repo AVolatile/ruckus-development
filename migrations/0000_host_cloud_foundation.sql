@@ -1,0 +1,88 @@
+CREATE TABLE "account" (
+	"id" text PRIMARY KEY NOT NULL,
+	"account_id" text NOT NULL,
+	"provider_id" text NOT NULL,
+	"user_id" text NOT NULL,
+	"access_token" text,
+	"refresh_token" text,
+	"id_token" text,
+	"access_token_expires_at" timestamp with time zone,
+	"refresh_token_expires_at" timestamp with time zone,
+	"scope" text,
+	"password" text,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"updated_at" timestamp with time zone NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "session" (
+	"id" text PRIMARY KEY NOT NULL,
+	"expires_at" timestamp with time zone NOT NULL,
+	"token" text NOT NULL,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"updated_at" timestamp with time zone NOT NULL,
+	"ip_address" text,
+	"user_agent" text,
+	"user_id" text NOT NULL,
+	CONSTRAINT "session_token_unique" UNIQUE("token")
+);
+--> statement-breakpoint
+CREATE TABLE "user" (
+	"id" text PRIMARY KEY NOT NULL,
+	"name" text NOT NULL,
+	"email" text NOT NULL,
+	"email_verified" boolean DEFAULT false NOT NULL,
+	"image" text,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
+	CONSTRAINT "user_email_unique" UNIQUE("email")
+);
+--> statement-breakpoint
+CREATE TABLE "verification" (
+	"id" text PRIMARY KEY NOT NULL,
+	"identifier" text NOT NULL,
+	"value" text NOT NULL,
+	"expires_at" timestamp with time zone NOT NULL,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"updated_at" timestamp with time zone DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "boards" (
+	"id" uuid PRIMARY KEY NOT NULL,
+	"owner_user_id" text NOT NULL,
+	"title" text NOT NULL,
+	"description" text NOT NULL,
+	"status" text DEFAULT 'draft' NOT NULL,
+	"schema_version" integer DEFAULT 1 NOT NULL,
+	"current_revision_id" uuid NOT NULL,
+	"client_import_key" text,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"deleted_at" timestamp with time zone,
+	CONSTRAINT "boards_schema_version_check" CHECK ("boards"."schema_version" = 1),
+	CONSTRAINT "boards_status_check" CHECK ("boards"."status" in ('draft', 'ready'))
+);
+--> statement-breakpoint
+CREATE TABLE "board_revisions" (
+	"id" uuid PRIMARY KEY NOT NULL,
+	"board_id" uuid NOT NULL,
+	"revision_number" integer NOT NULL,
+	"content" jsonb NOT NULL,
+	"content_hash" text NOT NULL,
+	"created_by_user_id" text NOT NULL,
+	"source" text NOT NULL,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	CONSTRAINT "board_revisions_board_number_unique" UNIQUE("board_id","revision_number"),
+	CONSTRAINT "board_revisions_board_id_id_unique" UNIQUE("board_id","id"),
+	CONSTRAINT "board_revisions_number_check" CHECK ("board_revisions"."revision_number" > 0)
+);
+--> statement-breakpoint
+ALTER TABLE "account" ADD CONSTRAINT "account_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "session" ADD CONSTRAINT "session_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "boards" ADD CONSTRAINT "boards_owner_user_id_user_id_fk" FOREIGN KEY ("owner_user_id") REFERENCES "public"."user"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "board_revisions" ADD CONSTRAINT "board_revisions_board_id_boards_id_fk" FOREIGN KEY ("board_id") REFERENCES "public"."boards"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "board_revisions" ADD CONSTRAINT "board_revisions_created_by_user_id_user_id_fk" FOREIGN KEY ("created_by_user_id") REFERENCES "public"."user"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+CREATE INDEX "account_userId_idx" ON "account" USING btree ("user_id");--> statement-breakpoint
+CREATE INDEX "session_userId_idx" ON "session" USING btree ("user_id");--> statement-breakpoint
+CREATE INDEX "verification_identifier_idx" ON "verification" USING btree ("identifier");--> statement-breakpoint
+CREATE INDEX "boards_active_owner_updated_idx" ON "boards" USING btree ("owner_user_id","updated_at","id") WHERE "boards"."deleted_at" is null;--> statement-breakpoint
+CREATE UNIQUE INDEX "boards_owner_import_key_idx" ON "boards" USING btree ("owner_user_id","client_import_key") WHERE "boards"."client_import_key" is not null;

@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Avatar, Icon, Tag } from "../components/Visuals";
+import { Icon, Tag } from "../components/Visuals";
 
 export function Library() {
   return (
@@ -30,7 +30,7 @@ export function Library() {
             <Icon name="screen" />
             <h2>My boards</h2>
             <p>
-              Your browser’s saved boards, plus real starter templates and a
+              Your account’s saved boards, plus real starter templates and a
               searchable question library.
             </p>
             <span>Open Studio ↗</span>
@@ -96,7 +96,7 @@ const future = {
   workspace: {
     title: "Room for your team.",
     description:
-      "Shared libraries, organization memberships, and reusable Brand Kits are planned. For now, host a room or build a board in this browser.",
+      "Shared libraries, organization memberships, and reusable Brand Kits are planned. For now, host a room or build a board in your account.",
     action: "Build a board",
     to: "/app/studio",
   },
@@ -117,43 +117,5 @@ export function FutureSection({ section }: { section: keyof typeof future }) {
         </Link>
       </div>
     </section>
-  );
-}
-export function Settings() {
-  return (
-    <>
-      <section className="page-hero">
-        <Tag>YOUR HOST SETUP</Tag>
-        <h1>
-          Keep your
-          <br />
-          <span>good stuff.</span>
-        </h1>
-        <p>
-          Boards save on this device, in this browser. Export them from Studio
-          before switching devices or clearing browser data.
-        </p>
-      </section>
-      <section className="section">
-        <div className="studio-empty">
-          <Avatar id={3} size={95} />
-          <div>
-            <h2>Local library. Real boards.</h2>
-            <p>
-              Accounts, cloud sync, and account settings are coming soon. No
-              account is connected to these boards yet.
-            </p>
-            <div className="hero-actions">
-              <Link className="button" to="/app/studio">
-                Manage and export boards ↗
-              </Link>
-              <Link className="button outline" to="/signup">
-                About accounts
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
-    </>
   );
 }

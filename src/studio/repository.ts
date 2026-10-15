@@ -1,94 +1,73 @@
-import { boardSchema, newBoard, type CustomBoard } from "../../shared/boards";
-const KEY = "ruckus-studio-v1";
+import type { CustomBoard } from "../../shared/boards";
+import type { BoardPage, BoardRecord, ImportResult } from "../../shared/cloud";
+import { newBoard } from "../../shared/boards";
+import { request, ApiClientError } from "../lib/api";
 export interface BoardRepository {
-  list(): CustomBoard[];
-  get(id: string): CustomBoard | undefined;
-  save(board: CustomBoard): void;
-  delete(id: string): void;
-  duplicate(id: string): CustomBoard;
+  list(cursor?: string): Promise<BoardPage>;
+  get(id: string): Promise<BoardRecord | undefined>;
+  create(board: CustomBoard, clientKey?: string): Promise<BoardRecord>;
+  save(board: CustomBoard, baseRevisionId: string): Promise<BoardRecord>;
+  delete(id: string): Promise<void>;
+  duplicate(id: string): Promise<BoardRecord>;
 }
-export const boards: BoardRepository = {
-  list() {
-    const raw = localStorage.getItem(KEY);
-    if (!raw) return [];
-    let data: unknown;
-    try {
-      data = JSON.parse(raw);
-    } catch {
-      throw new Error(
-        "Your saved library couldn’t be read. Export a backup before clearing browser data.",
-      );
-    }
-    const parsed = boardSchema.array().safeParse(data);
-    if (!parsed.success)
-      throw new Error(
-        "The saved library has an unsupported format. Your data has been preserved.",
-      );
-    return parsed.data.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
-  },
-  get(id) {
-    return this.list().find((b) => b.id === id);
-  },
-  save(board) {
-    const parsed = boardSchema.parse({
-      ...board,
-      updatedAt: new Date().toISOString(),
-    });
-    const all = this.list();
-    const other = all.filter((b) => b.id !== board.id);
-    if (other.length >= 100)
-      throw new Error(
-        "Your library has 100 boards. Export and remove one before adding another.",
-      );
-    try {
-      localStorage.setItem(KEY, JSON.stringify([...other, parsed]));
-    } catch {
-      throw new Error(
-        "Your browser couldn’t save this board. Free some storage or export a backup.",
-      );
-    }
-  },
-  delete(id) {
-    localStorage.setItem(
-      KEY,
-      JSON.stringify(this.list().filter((b) => b.id !== id)),
+export class CloudBoardRepository implements BoardRepository {
+  list(cursor?: string) {
+    return request<BoardPage>(
+      `/api/v1/boards${cursor ? "?cursor=" + encodeURIComponent(cursor) : ""}`,
     );
-  },
-  duplicate(id) {
-    const source = this.get(id);
+  }
+  async get(id: string) {
+    try {
+      return await request<BoardRecord>(
+        `/api/v1/boards/${encodeURIComponent(id)}`,
+      );
+    } catch (error) {
+      if (error instanceof ApiClientError && error.status === 404)
+        return undefined;
+      throw error;
+    }
+  }
+  create(board: CustomBoard, clientKey?: string) {
+    return request<BoardRecord>("/api/v1/boards", {
+      method: "POST",
+      body: JSON.stringify({ board, clientKey }),
+    });
+  }
+  save(board: CustomBoard, baseRevisionId: string) {
+    return request<BoardRecord>(`/api/v1/boards/${board.id}`, {
+      method: "PUT",
+      body: JSON.stringify({ board, baseRevisionId }),
+    });
+  }
+  delete(id: string) {
+    return request<void>(`/api/v1/boards/${id}`, { method: "DELETE" });
+  }
+  async duplicate(id: string) {
+    const source = await this.get(id);
     if (!source) throw new Error("This board is no longer in your library.");
-    const now = new Date().toISOString();
-    const copy = {
-      ...structuredClone(source),
-      id: crypto.randomUUID(),
-      title: `${source.title || "Untitled board"} (copy)`.slice(0, 60),
-      createdAt: now,
-      updatedAt: now,
-      questions: source.questions.map((q) => ({
-        ...q,
-        id: crypto.randomUUID(),
-      })),
-    };
-    this.save(copy);
-    return copy;
-  },
-};
-
-// A single authoring entry point for Studio and dashboard starters.
-export function createLocalBoard(source?: CustomBoard): CustomBoard {
+    const board = copyBoard(source.board);
+    board.title = `${board.title || "Untitled board"} (copy)`.slice(0, 60);
+    return this.create(board, `duplicate:${board.id}`);
+  }
+  import(items: { key: string; board: unknown }[]) {
+    return request<{ results: ImportResult[] }>("/api/v1/boards/import", {
+      method: "POST",
+      body: JSON.stringify({ boards: items }),
+    });
+  }
+}
+export function copyBoard(source?: CustomBoard): CustomBoard {
   const now = new Date().toISOString();
-  const board = source
+  return source
     ? {
         ...structuredClone(source),
         id: crypto.randomUUID(),
         createdAt: now,
         updatedAt: now,
-        questions: source.questions.map((question) => ({
-          ...question,
+        questions: source.questions.map((q) => ({
+          ...q,
           id: crypto.randomUUID(),
         })),
       }
     : newBoard();
-  boards.save(board);
-  return board;
 }

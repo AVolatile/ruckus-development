@@ -23,7 +23,10 @@ import {
   RateLimiter,
   settingsSchema,
 } from "./validation.js";
-import { z } from "zod";
+import { z } from "zod/v3";
+import { installHostApi } from "./api/http.js";
+import { pool, auth } from "./auth/config.js";
+import { fromNodeHeaders } from "better-auth/node";
 const app = express();
 const http = createServer(app);
 const port = Number(process.env.PORT) || 4310;
@@ -75,6 +78,7 @@ app.use((_req, res, next) => {
 app.get(["/api/health", "/health"], (_req, res) =>
   res.json({ status: "ok", service: "ruckus", rooms: rooms.size }),
 );
+installHostApi(app);
 function broadcast(room: Room) {
   for (const socket of io.sockets.sockets.values()) {
     const identity = socket.data.identity as Identity | undefined;
@@ -120,10 +124,20 @@ io.on("connection", (socket) => {
     socket.data.identity = identity;
     socket.join(identity.code);
   }
-  socket.on("room:create", (data, ack) => {
+  socket.on("room:create", async (data, ack) => {
     if (typeof ack !== "function") return;
     try {
       limit("create", 8, 60000);
+      let host;
+      try {
+        host = await auth.api.getSession({
+          headers: fromNodeHeaders(socket.handshake.headers),
+        });
+      } catch {
+        throw new Error("Couldn’t check your host account. Try again shortly.");
+      }
+      if (!host)
+        throw new Error("Sign in to your host account to create a room.");
       if (rooms.size >= 500)
         throw new Error("All stages are occupied. Try again shortly.");
       const parsed = z
@@ -350,7 +364,9 @@ function shutdown() {
   clearInterval(cleanup);
   for (const room of rooms.values()) room.dispose();
   io.close();
-  http.close(() => process.exit(0));
+  http.close(() => {
+    void pool.end().finally(() => process.exit(0));
+  });
   setTimeout(() => process.exit(0), 3000).unref();
 }
 process.on("SIGTERM", shutdown);

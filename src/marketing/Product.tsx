@@ -107,7 +107,7 @@ export function Product() {
             Explore Studio <Icon name="arrow" />
           </Link>
           <p className="studio-storage-note">
-            Boards save in this browser today. Cloud saving is planned.
+            Boards save to your private Ruckus account.
           </p>
         </div>
         <div className="home-studio-card">

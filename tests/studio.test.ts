@@ -18,7 +18,7 @@ import {
   parseCsv,
   CSV_TEMPLATE,
 } from "../src/studio/transfer.js";
-import { boards } from "../src/studio/repository.js";
+import { boards } from "../src/studio/localRepository.js";
 import { Room } from "../server/engine.js";
 import { DEFAULT_SETTINGS } from "../shared/catalog.js";
 import {

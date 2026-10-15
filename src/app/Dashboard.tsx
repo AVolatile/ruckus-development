@@ -1,26 +1,14 @@
-import { lazy, Suspense, useState } from "react";
+import { lazy, Suspense } from "react";
 import { Link } from "react-router-dom";
 import { GAMES } from "../../shared/catalog";
-import { boards } from "../studio/repository";
+import { useBoardLibrary } from "../studio/useBoardLibrary";
 import { GameCard } from "../components/GameCard";
 import { Avatar, Icon, Tag } from "../components/Visuals";
 import { ErrorMessage } from "../components/Layout";
 const TemplateShelf = lazy(() => import("./TemplateShelf"));
 
 export default function Dashboard() {
-  const [library] = useState(() => {
-    try {
-      return { items: boards.list().slice(0, 3), error: "" };
-    } catch (error) {
-      return {
-        items: [],
-        error:
-          error instanceof Error
-            ? error.message
-            : "Your boards couldn’t be read. Open Studio to try again.",
-      };
-    }
-  });
+  const library = useBoardLibrary();
   return (
     <>
       <section className="studio-hero dashboard-hero">
@@ -59,9 +47,18 @@ export default function Dashboard() {
           </Link>
         </div>
         <ErrorMessage message={library.error} />
+        {library.loading && <p role="status">Loading recent boards…</p>}
+        {library.error && (
+          <button
+            className="button outline"
+            onClick={() => void library.reload()}
+          >
+            Try loading again
+          </button>
+        )}
         {library.items.length ? (
           <div className="board-grid">
-            {library.items.map((board) => (
+            {library.items.slice(0, 3).map((board) => (
               <article className="board-card" key={board.id}>
                 <Link
                   className="board-cover"
@@ -79,9 +76,7 @@ export default function Dashboard() {
                   <h3>{board.title || "Untitled board"}</h3>
                 </Link>
                 <div className="board-card-details">
-                  <p>
-                    {board.questions.length} questions · Saved in this browser
-                  </p>
+                  <p>{board.questionCount} questions · Saved to your account</p>
                   <Link
                     className="button small outline"
                     to={`/app/studio/boards/${board.id}`}
@@ -93,6 +88,7 @@ export default function Dashboard() {
             ))}
           </div>
         ) : (
+          !library.loading &&
           !library.error && (
             <div className="studio-empty">
               <Avatar id={2} size={95} />
@@ -100,7 +96,7 @@ export default function Dashboard() {
                 <h3>Your first board starts here.</h3>
                 <p>
                   Bring your own trivia, try a poll, or make a starter your own.
-                  Your work saves in this browser.
+                  Your work saves to your account.
                 </p>
                 <Link className="button" to="/app/studio/boards/new">
                   Create my first board <Icon name="arrow" />

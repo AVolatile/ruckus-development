@@ -14,6 +14,7 @@
   text-underline-offset: 7px;
 }
 .app-access-note {
+  overflow-wrap: anywhere;
   padding: 12px 5%;
   background: var(--yellow);
   border-bottom: 1px solid var(--ink);
@@ -119,4 +120,43 @@
   .site-header .nav-join {
     margin-left: 0;
   }
+}
+.account-entry .setup-form > label {
+  width: 100%;
+}
+.account-entry .setup-form > label > input {
+  display: block;
+}
+.local-import-prompt,
+.cloud-save-recovery {
+  margin: 28px auto;
+  padding: 24px;
+  max-width: 1400px;
+  border: 1px solid var(--ink);
+  border-radius: 10px;
+  background: var(--paper);
+}
+.local-import-prompt {
+  margin-inline: 5%;
+  background: var(--yellow);
+}
+.local-import-prompt h2 {
+  font-size: clamp(25px, 3vw, 36px);
+  margin-block: 12px;
+}
+.local-import-prompt p,
+.cloud-save-recovery p {
+  max-width: 85ch;
+}
+.local-import-prompt .hero-actions,
+.cloud-save-recovery .button {
+  margin-top: 16px;
+}
+.local-import-prompt ul {
+  padding-left: 20px;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+.cloud-save-recovery .button {
+  margin-right: 12px;
 }

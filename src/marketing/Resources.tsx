@@ -40,7 +40,7 @@ export function Resources() {
           ],
           [
             "Keep a copy of your boards",
-            "Boards save in this browser. Export a backup in Studio before clearing browser data or moving to another device.",
+            "Boards save to your account. Export a backup in Studio whenever you want a portable copy.",
           ],
         ].map(([title, body], i) => (
           <article key={title}>

@@ -1,3 +1,4 @@
+import { hostCookie } from "./support/host-session.js";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { io, type Socket } from "socket.io-client";
@@ -18,9 +19,11 @@ test(
   "real sockets: host authority, two controllers, reconnect, all six game loops, late join, room lock and end",
   { skip: !origin, timeout: 60000 },
   async () => {
+    const cookie = await hostCookie(origin!);
     const sockets: Socket<ServerEvents, ClientEvents>[] = [];
     async function client() {
       const socket: Socket<ServerEvents, ClientEvents> = io(origin!, {
+        extraHeaders: { Cookie: cookie },
         transports: ["websocket"],
         forceNew: true,
         reconnection: false,

@@ -20,7 +20,7 @@ Office hosts and managers who want a meeting warmup or Friday break; teams makin
 
 ## Current boundaries
 
-Personal and organization workspaces own PostgreSQL-backed boards with immutable revisions; existing local boards can be explicitly copied into a writable workspace and still transfer via files. Sessions support 2–30 players on one in-memory realtime server. Reconnect survives a refresh or short interruption, not a server restart. Summary CSV contains display names, scores and aggregate question counts. Host accounts, verification/recovery, role-based organization collaboration and Brand Kit authoring/preview are implemented. Organization reporting, live event branding and guaranteed uptime are not implemented.
+Personal and organization workspaces own PostgreSQL-backed boards with immutable revisions; existing local boards can be explicitly copied into a writable workspace and still transfer via files. Sessions support 2–30 players on one in-memory realtime server. Reconnect survives a refresh or short interruption, not a server restart. Summary CSV contains display names, scores and aggregate question counts. Host accounts, verification/recovery, role-based organization collaboration and Brand Kit authoring/preview are implemented. Persisted mixed-game Events and frozen live event branding are implemented. Organization reporting and guaranteed uptime are not implemented.
 
 ## Organization foundation and future capabilities
 
@@ -34,10 +34,10 @@ Scaling needs a shared authoritative room-state model, locks/versioned transitio
 
 Validate repeat hosting and authoring usefulness before billing. Potential paid value: saved cloud libraries, branded events, shared organization workspaces and managed reliable hosting. Preserve accessible phone controls, fast joining, original illustration and candid feature boundaries. Measure pilot hosting friction and participation, not employee proficiency.
 
-## Startup development surfaces — Phase 2
+## Startup development surfaces — Phase 3
 
 The public website explains Ruckus; authenticated `/app/w/:workspaceId` lets hosts use it; `/join` lets players enter immediately without accounts. Studio and all six Originals live within the host application. Real host accounts, private cloud saving, immutable revisions and local-to-cloud import exist. Organization collaboration and Brand Kits are real Phase 2 capabilities; commercial pricing remains future work.
 
 Portfolio case-study, campaign and brand-showcase pages remain archived outside production routing. The fictional employer starter remains excluded from production templates. Brand assets and useful implementation remain available for future workspace/event customization.
 
-The recommended next milestone is **Events & Experience Builder**, using workspace ownership and immutable Brand revisions without exposing private assets to guests. See [architecture](ARCHITECTURE.md), [authentication](AUTHENTICATION.md), and [roadmap](ROADMAP.md).
+Events & Experience Builder now uses workspace ownership and immutable launch revisions, with separate guest-safe image copies. One room code carries guests through Originals and Studio to a cumulative event finale. The next milestone is **Phase 3.5 — Ruckus Audio & Game Feel**, using authoritative semantic cues without changing game scoring. See [architecture](ARCHITECTURE.md), [authentication](AUTHENTICATION.md), and [roadmap](ROADMAP.md).

@@ -89,6 +89,7 @@ export interface Prompt {
   scoreMode?: "casual" | "quick-draw" | "no-score";
 }
 export interface RoomView {
+  event?: import("./events.js").EventLiveView;
   board?: {
     title: string;
     description: string;
@@ -152,6 +153,10 @@ export interface Reply {
   state?: RoomView;
 }
 export interface ClientEvents {
+  "event:action": (
+    data: { action: import("./events.js").EventCommand; sequence: number },
+    ack: (reply: Reply) => void,
+  ) => void;
   "room:create": (
     data: {
       settings: Settings;
@@ -167,7 +172,12 @@ export interface ClientEvents {
   ) => void;
   "room:resume": (data: Identity, ack: (reply: Reply) => void) => void;
   "host:action": (
-    data: { action: HostAction; count?: number; playerId?: string },
+    data: {
+      action: HostAction;
+      count?: number;
+      playerId?: string;
+      expectedKey?: string;
+    },
     ack: (reply: Reply) => void,
   ) => void;
   "player:input": (

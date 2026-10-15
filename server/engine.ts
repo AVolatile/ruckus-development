@@ -81,6 +81,7 @@ export class Room {
     readonly joinUrl: string,
     private onChange: () => void,
     readonly board?: CustomBoard,
+    private readonly frozenPrompts?: Question[],
   ) {
     if (board) this.board = structuredClone(board);
   }
@@ -430,12 +431,14 @@ export class Room {
         explanation: source.explanation,
       };
     } else
-      this.prompt = getPrompt(
-        this.settings.playlist[this.gameIndex],
-        this.round,
-        this.settings.pack,
-        this.offset,
-      );
+      this.prompt = this.frozenPrompts?.[this.round]
+        ? structuredClone(this.frozenPrompts[this.round])
+        : getPrompt(
+            this.settings.playlist[this.gameIndex],
+            this.round,
+            this.settings.pack,
+            this.offset,
+          );
     this.setPhase("active", this.roundDuration());
   }
   advance() {

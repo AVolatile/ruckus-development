@@ -68,9 +68,9 @@ const StudioPreview = lazy(() => import("../studio/StudioPreview"));
 const Library = lazy(() =>
   import("../app/ProductSections").then((m) => ({ default: m.Library })),
 );
-const HostEvents = lazy(() =>
-  import("../app/ProductSections").then((m) => ({ default: m.HostEvents })),
-);
+const HostEvents = lazy(() => import("../events/EventList"));
+const EventNew = lazy(() => import("../events/EventNew"));
+const EventBuilder = lazy(() => import("../events/EventBuilder"));
 const FutureSection = lazy(() =>
   import("../app/ProductSections").then((m) => ({ default: m.FutureSection })),
 );
@@ -167,6 +167,26 @@ export function AppRoutes() {
                 />
                 <Route path="library" element={<Library />} />
                 <Route path="events" element={<HostEvents />} />
+                <Route
+                  path="events/new"
+                  element={
+                    <WorkspaceCapability permission="events.create">
+                      <EventNew />
+                    </WorkspaceCapability>
+                  }
+                />
+                <Route
+                  path="events/:eventId"
+                  element={
+                    <WorkspaceCapability permission="events.update">
+                      <EventBuilder />
+                    </WorkspaceCapability>
+                  }
+                />
+                <Route
+                  path="events/:eventId/preview"
+                  element={<EventBuilder preview />}
+                />
                 <Route
                   path="analytics"
                   element={<FutureSection section="analytics" />}

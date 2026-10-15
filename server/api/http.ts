@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { networkInterfaces } from "node:os";
 import express, {
   type Express,
   type Request,
@@ -15,6 +16,11 @@ import { BoardService } from "../boards/service.js";
 import { boardWriteSchema, importBatchSchema } from "../../shared/cloud.js";
 import { RateLimiter } from "../validation.js";
 import { ApiError } from "./errors.js";
+import {
+  installEventApi,
+  installEventAssets,
+  type EventAdapter,
+} from "./events.js";
 const env = cloudEnvironment();
 const service = new BoardService(db);
 const limits = new RateLimiter();
@@ -29,7 +35,7 @@ const uuid = z.string().uuid();
 const cursorSchema = z
   .object({ updatedAt: z.string().datetime(), id: uuid })
   .strict();
-export function installHostApi(app: Express) {
+export function installHostApi(app: Express, eventAdapter?: EventAdapter) {
   if (process.env.TRUST_PROXY) {
     if (process.env.TRUST_PROXY !== "loopback")
       throw new Error(
@@ -41,7 +47,26 @@ export function installHostApi(app: Express) {
     res.locals.requestId = randomUUID();
     res.setHeader("X-Request-ID", res.locals.requestId);
     res.setHeader("Cache-Control", "no-store");
-    if (req.headers.host !== new URL(env.origin).host)
+    const configured = new URL(env.origin);
+    const localAddresses = Object.values(networkInterfaces())
+      .flatMap((v) => v ?? [])
+      .map((v) => v.address);
+    let localGuestImage = false;
+    if (
+      !env.production &&
+      ["GET", "HEAD"].includes(req.method) &&
+      /^\/v1\/event-assets\/[a-f0-9-]+$/.test(req.path)
+    ) {
+      try {
+        const requested = new URL(`http://${req.headers.host}`);
+        localGuestImage =
+          requested.port === configured.port &&
+          localAddresses.includes(requested.hostname);
+      } catch {
+        /* Unrecognized hosts remain rejected. */
+      }
+    }
+    if (req.headers.host !== configured.host && !localGuestImage)
       return next(
         new ApiError(
           403,
@@ -174,6 +199,7 @@ export function installHostApi(app: Express) {
   app.all("/api/auth/*", (req, res, next) => {
     void handler(req, res).catch(next);
   });
+  installEventAssets(app, db, eventAdapter);
   app.use("/api/v1", express.json({ limit: "320kb", strict: true }));
   app.use("/api/v1", (req, res, next) => {
     void (async () => {
@@ -202,6 +228,7 @@ export function installHostApi(app: Express) {
     })().catch(next);
   });
   installWorkspaceApi(app, db, emailTransport, env.origin);
+  installEventApi(app, db, eventAdapter);
   // Legacy board endpoints delegate to the authenticated personal workspace.
   app.get("/api/v1/me", (_req, res) => res.json({ user: res.locals.user }));
   app.get(
@@ -295,7 +322,7 @@ export function installHostApi(app: Express) {
     "/ready",
     safe(async (_req, res) => {
       try {
-        await db.execute(sql`select workspace_id from boards limit 0`);
+        await db.execute(sql`select workspace_id from events limit 0`);
         res.json({ status: "ready" });
       } catch {
         res.status(503).json({ status: "unavailable" });
@@ -315,7 +342,7 @@ export function installHostApi(app: Express) {
             ? new ApiError(
                 400,
                 "VALIDATION_ERROR",
-                "Check the request fields and board format.",
+                "Check the request fields and content format.",
               )
             : (error as { type?: string })?.type === "entity.too.large"
               ? new ApiError(

@@ -1,4 +1,4 @@
-# Ruckus architecture — Phase 2
+# Ruckus architecture — Phase 3
 
 Public marketing/account routes remain separate from host tools and guest capability routes. `/app` requires a server session. `/app/w/:workspaceId/...` additionally resolves an active membership before rendering a workspace-scoped repository and the existing AppShell/Studio. Compatibility `/app/*` and Phase 0 redirects preserve suffix/query/hash and deterministically open the personal workspace. Invitations resume through validated app-only login/signup return paths. Account forms and workspace settings remain lazy; public routes avoid question banks and realtime connections.
 
@@ -10,7 +10,7 @@ Better Auth owns credentials, cookies, verification signatures/expiry, password 
 
 `CloudBoardRepository` operates in one validated workspace. There is one Studio editor and one 750ms serialized autosave coordinator for personal/shared boards. Pending edits, in-flight changes, explicit flush, conflict export/latest recovery and account/workspace/board-scoped tab recovery remain intact. Local storage is only a legacy import/recovery boundary; `ruckus-studio-v1` is unchanged. Import defaults to personal space with explicit writable target selection. Copy requires source read and target create and starts a new identity/history.
 
-Brand Kits have stable workspace ownership and immutable revisions; private raster assets live behind `BrandAssetStore`. A pure validated frozen BrandSnapshot resolver prepares future presentation without adding Events. [Brand and asset details](BRAND-KITS.md). Selected customer colors never change the dashboard.
+Brand Kits have stable workspace ownership and immutable revisions; private raster assets live behind `BrandAssetStore`. A pure validated frozen BrandSnapshot resolver feeds immutable Event launch presentation. [Brand and asset details](BRAND-KITS.md). Selected customer colors never change the dashboard.
 
 SessionRoutes retains lazy PartyProvider continuity into live stages. It connects only on host setup/join/live routes or explicit launch, never settings/Brand previews. Cloud board launch optionally sends `{workspaceId, boardId}` to `room:create`; the socket adapter checks membership/launch capability and reads authorized content before passing a validated snapshot to the existing engine. Legacy authenticated raw-board launch remains available for portable content. All subsequent room authority uses unchanged host/player capabilities. Guests need neither accounts nor membership. The engine, scoring, player controller, bots, rematches, reconnect and QR join flow remain independent of workspace data. Rooms remain in memory.
 
@@ -42,3 +42,11 @@ All below use `/api/v1`, safe errors/correlation IDs, bounded input, exact Origi
 | `/boards*`                                                    | Deprecated Phase 1 compatibility, personal workspace only    |
 
 `/api/auth/*` retains Better Auth routes including send-verification-email, verify-email, request-password-reset and reset-password. `/ready` checks database/schema separately from existing liveness. No credentials, invitation links, token values, uploaded bytes or board documents enter routine logs. No wildcard credentialed CORS or third-party cookie topology is added. Use the combined same-origin Node service; no deployment occurred.
+
+## Events and live orchestration
+
+[Events](EVENTS.md) describes workspace definitions, immutable revisions, readiness and launch. [EventRuntime](EVENT-RUNTIME.md) wraps existing Room engines with stable room/player capabilities, explicit lifecycle states, placement points and typed semantic cue context. Frozen Original prompts and Studio/Brand revisions protect active events from edits. Snapshot image bytes are separate bearer assets gated by active in-memory room availability; private workspace asset routes remain session-protected. Event settings/preview create no realtime connection.
+
+Workspace API adds `/workspaces/:workspaceId/events` (GET keyset summaries, POST), `/events/templates` (GET), `/events/validate` (POST read-only readiness), `/events/:eventId` (GET/PUT base revision), and POST suffixes `/archive`, `/copy`, `/launch`. Guest GET `/event-assets/:assetId` returns only an immutable attached image while its Event room is available. This route precedes the account guard but retains request IDs, bounded per-IP access and production Host checks. Development additionally allows the current machine’s actual interface addresses on the configured port for guest images only.
+
+Canonical host routes: `/app/w/:workspaceId/events`, `/events/new`, `/events/:eventId`, `/events/:eventId/preview`. Existing `/app/events` redirects into personal space. No account requirement is added to joining or guest controllers.

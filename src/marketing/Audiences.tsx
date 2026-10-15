@@ -111,8 +111,8 @@ export function Audience({ events = false }: { events?: boolean }) {
         </h2>
         <p>
           {events
-            ? "Playing remotely? Share the host screen on your existing video call. Everyone keeps their phone as a controller. Live rooms support up to 30 players; scheduled events and reusable event branding are planned."
-            : "Custom boards, live rooms and shared workspaces work today. Create a reusable Brand Kit and preview its look; applying branding to live events comes next."}
+            ? "Playing remotely? Share the host screen on your existing video call. Everyone keeps their phone as a controller. Build a branded multi-game event and bring up to 30 players through one shared room."
+            : "Custom boards, live rooms and shared workspaces work today. Build a reusable Brand Kit, choose a lineup, and launch a branded event with one room code."}
         </p>
       </section>
       <section className="compact-cta">

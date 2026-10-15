@@ -10,11 +10,15 @@ Delivered Better Auth sessions, PostgreSQL, private cloud boards, immutable revi
 
 ## Phase 2 — Secure collaboration and Brand Kits
 
-Delivered email verification/recovery and provider-neutral email transport; personal/shared workspaces; Owner/Admin/Host/Viewer policy; expiring email-bound invitations; safe Phase 1 migration; shared Studio boards, workspace import and cross-workspace copy; append-only activity; versioned Brand Kits, private validated image storage and accessible static experience previews. The dashboard retains Ruckus branding. No live Brand publishing or Events domain is implemented.
+Delivered email verification/recovery and provider-neutral email transport; personal/shared workspaces; Owner/Admin/Host/Viewer policy; expiring email-bound invitations; safe Phase 1 migration; shared Studio boards, workspace import and cross-workspace copy; append-only activity; versioned Brand Kits, private validated image storage and accessible static experience previews. The dashboard retains Ruckus branding. Events builds on this foundation.
 
-## Recommended Phase 3 — Events & Experience Builder
+## Phase 3 — Events & Experience Builder
 
-Persistent workspace events, multi-game playlists, event-specific immutable Brand revision/asset snapshots, event launch orchestration, reusable event templates and preparation for session history. Define guest-safe snapshot delivery deliberately rather than publishing private workspace assets. Preserve existing host/player capabilities and the authoritative engine.
+Delivered persisted workspace events/revisions, mixed Original/Studio playlists, readiness/preview, six editable starters, immutable Event/board/Original/Brand/image launch snapshots, guest-safe copied imagery, one-room audience continuity, host progression, intermissions and cumulative placement points. Existing standalone engines/capabilities remain. Launch records prepare future history; live state remains in memory.
+
+## Recommended Phase 3.5 — Ruckus Audio & Game Feel
+
+Build a central AudioEngine around existing authoritative semantic cue timestamps/sequences. Add licensed/original music, transition stings, countdown tension, leaderboard/finale cues, fades/ducking, phone feedback, autoplay handling and accessible persistent host volume preferences. No new audio engine or music/SFX implementation is included in Phase 3.
 
 Before public account/collaboration release, complete actual SMTP/domain/DNS/TLS/proxy/cookie/device checks, backup restore, retention/account deletion, monitoring, dependency patch policy and independent security review. Local tests do not replace hosted validation.
 

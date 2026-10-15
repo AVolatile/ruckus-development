@@ -1,0 +1,13 @@
+# Phase 3 audit — October 15, 2026
+
+The requested branch is `feat/phase-3-events-experience-builder`; the initial tree was clean. Phase 2 provides workspace row locking, shared capabilities, immutable board/Brand revisions, safe HTTP errors and private processed raster images. Existing migrations and local board data must remain unchanged.
+
+The room engine owns authoritative timers, round validation, creative voting, bots and game scoring. A thin EventRuntime will delegate each segment to a fresh Room, sharing the original player/token map and host capability. Segment generations will qualify round keys. The existing six scoring algorithms remain unchanged. Creative scores scale with votes, trivia rewards speed, and polls can be scoreless: event points therefore use tied placement (0–1000), separately from game scores. Only participants in a scored segment receive event points.
+
+Event definitions need independent immutable revisions and optimistic saves. Launch must hold the workspace lock while checking permissions and resolving current source revisions. Launch records will contain validated board documents, frozen Original prompts/configuration and frozen Brand presentation. Only the two referenced image byte streams will be copied to immutable snapshot assets. Random snapshot-asset IDs are bearer URLs; delivery is allowed only while the corresponding in-memory event is available. Source workspace assets remain session-protected.
+
+Host progression will use explicit lifecycle states and expected transition/round keys. Reconnect returns current state and current cue, never a cue replay. The host alone advances event boundaries; existing game timers continue to govern rounds. Persistent launch records prepare future history, but rooms, answers and event scores remain in memory. No restart recovery or analytics is implied.
+
+Events will use the existing AppShell, workspace navigation, typefaces, colors, cards and accessible forms. Preview uses the saved/working definition and current authorized sources without creating a socket or room. Cross-workspace copy will copy board sources and clear private Brand selection rather than retain inaccessible references. Templates will use actual Originals; hosts can add their own Studio boards.
+
+Inspection covers README, Phase 2 report and architecture/database/workspace/Brand docs; auth and API middleware; centralized policy and audit; database schema/migrations; room lifecycle and socket adapters; host/player stages/controllers; Studio repository/autosave/launch; workspace routes; current quality workflow. Existing tests will be retained and extended. No deployment, credentials, remotes, database reset or demo repository changes are authorized.

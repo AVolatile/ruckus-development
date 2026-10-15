@@ -73,3 +73,5 @@ export const revisionsTable = pgTable(
     check("board_revisions_number_check", sql`${table.revisionNumber} > 0`),
   ],
 );
+
+export * from "./event-schema.js";

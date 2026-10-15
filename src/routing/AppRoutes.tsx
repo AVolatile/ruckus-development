@@ -25,6 +25,24 @@ const Resources = lazy(() =>
 const AppShell = lazy(() =>
   import("../app/AppShell").then((m) => ({ default: m.AppShell })),
 );
+const WorkspaceCapability = lazy(() =>
+  import("../workspaces/WorkspaceContext").then((m) => ({
+    default: m.WorkspaceCapability,
+  })),
+);
+const WorkspaceBoundary = lazy(() =>
+  import("../workspaces/WorkspaceContext").then((m) => ({
+    default: m.WorkspaceBoundary,
+  })),
+);
+const PersonalWorkspaceRedirect = lazy(() =>
+  import("../workspaces/WorkspaceContext").then((m) => ({
+    default: m.PersonalWorkspaceRedirect,
+  })),
+);
+const WorkspacePages = lazy(() => import("../workspaces/WorkspacePages"));
+const BrandPage = lazy(() => import("../brand/BrandPage"));
+const SecurityFlow = lazy(() => import("../auth/SecurityFlow"));
 const Dashboard = lazy(() => import("../app/Dashboard"));
 const Games = lazy(() =>
   import("../pages/Games").then((m) => ({ default: m.Games })),
@@ -90,37 +108,88 @@ export function AppRoutes() {
           <Route path="pricing" element={<Pricing />} />
           <Route path="login" element={<AccountEntry />} />
           <Route path="signup" element={<AccountEntry signup />} />
+          <Route
+            path="forgot-password"
+            element={<SecurityFlow mode="forgot" />}
+          />
+          <Route
+            path="reset-password"
+            element={<SecurityFlow mode="reset" />}
+          />
+          <Route path="verify-email" element={<SecurityFlow mode="verify" />} />
           <Route path="resources" element={<Resources />} />
           <Route path="*" element={<NotFound />} />
         </Route>
         <Route element={<SessionRoutes />}>
           <Route element={<AppRoute />}>
-            <Route path="app" element={<AppShell />}>
-              <Route index element={<Dashboard />} />
-              <Route path="host" element={<HostSetup />} />
-              <Route path="originals" element={<Games />} />
-              <Route path="originals/:slug" element={<GameDetail />} />
-              <Route path="studio" element={<StudioLibrary />} />
-              <Route path="studio/boards" element={<StudioLibrary />} />
-              <Route path="studio/boards/new" element={<StudioEditor />} />
-              <Route path="studio/boards/:id" element={<StudioEditor />} />
-              <Route
-                path="studio/boards/:id/preview"
-                element={<StudioPreview />}
-              />
-              <Route path="library" element={<Library />} />
-              <Route path="events" element={<HostEvents />} />
-              <Route
-                path="analytics"
-                element={<FutureSection section="analytics" />}
-              />
-              <Route
-                path="workspace"
-                element={<FutureSection section="workspace" />}
-              />
-              <Route path="settings" element={<Settings />} />
-              <Route path="*" element={<NotFound host />} />
+            <Route
+              path="app/workspaces/new"
+              element={<WorkspacePages mode="create" />}
+            />
+            <Route
+              path="app/invitations/:token"
+              element={<WorkspacePages mode="accept" />}
+            />
+            <Route path="app/w/:workspaceId" element={<WorkspaceBoundary />}>
+              <Route element={<AppShell />}>
+                <Route index element={<Dashboard />} />
+                <Route
+                  path="host"
+                  element={
+                    <WorkspaceCapability permission="boards.launch">
+                      <HostSetup />
+                    </WorkspaceCapability>
+                  }
+                />
+                <Route path="originals" element={<Games />} />
+                <Route path="originals/:slug" element={<GameDetail />} />
+                <Route path="studio" element={<StudioLibrary />} />
+                <Route path="studio/boards" element={<StudioLibrary />} />
+                <Route
+                  path="studio/boards/new"
+                  element={
+                    <WorkspaceCapability permission="boards.update">
+                      <StudioEditor />
+                    </WorkspaceCapability>
+                  }
+                />
+                <Route
+                  path="studio/boards/:id"
+                  element={
+                    <WorkspaceCapability permission="boards.update">
+                      <StudioEditor />
+                    </WorkspaceCapability>
+                  }
+                />
+                <Route
+                  path="studio/boards/:id/preview"
+                  element={<StudioPreview />}
+                />
+                <Route path="library" element={<Library />} />
+                <Route path="events" element={<HostEvents />} />
+                <Route
+                  path="analytics"
+                  element={<FutureSection section="analytics" />}
+                />
+                <Route
+                  path="workspace"
+                  element={<WorkspacePages mode="general" />}
+                />
+                <Route
+                  path="members"
+                  element={<WorkspacePages mode="members" />}
+                />
+                <Route
+                  path="activity"
+                  element={<WorkspacePages mode="activity" />}
+                />
+                <Route path="brand" element={<BrandPage />} />
+                <Route path="brand/:brandKitId" element={<BrandPage />} />
+                <Route path="settings" element={<Settings />} />
+                <Route path="*" element={<NotFound host />} />
+              </Route>
             </Route>
+            <Route path="app/*" element={<PersonalWorkspaceRedirect />} />
           </Route>
           <Route path="join" element={<Join />} />
           <Route path="room/:code/host" element={<HostRoom />} />

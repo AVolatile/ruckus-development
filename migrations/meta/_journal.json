@@ -15,6 +15,13 @@
       "when": 1792011230177,
       "tag": "0001_revision_invariants",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792029390163,
+      "tag": "0002_workspaces_brand_kits",
+      "breakpoints": true
     }
   ]
 }

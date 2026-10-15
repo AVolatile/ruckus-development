@@ -1,3 +1,10 @@
+import {
+  authorize,
+  lockWorkspace,
+  personalWorkspace,
+  type Transaction,
+} from "../workspaces/policy.js";
+import { audit } from "../workspaces/audit.js";
 import { randomUUID } from "node:crypto";
 import { and, desc, eq, isNull, lt, or, sql } from "drizzle-orm";
 import { boardIssues, type CustomBoard } from "../../shared/boards.js";
@@ -17,17 +24,23 @@ const missing = () =>
   new ApiError(
     404,
     "BOARD_NOT_FOUND",
-    "That board isn’t available in your account.",
+    "That board isn’t available in this workspace.",
   );
 const scope = (owner: string, id?: string) =>
   and(
-    eq(boards.ownerUserId, owner),
+    eq(boards.workspaceId, owner),
     isNull(boards.deletedAt),
     id ? eq(boards.id, id) : undefined,
   );
 export class BoardService {
   constructor(private db: Database) {}
-  async get(owner: string, id: string): Promise<BoardRecord> {
+  async get(
+    owner: string,
+    id: string,
+    workspaceId?: string,
+  ): Promise<BoardRecord> {
+    const wid = workspaceId || (await personalWorkspace(this.db, owner));
+    await authorize(this.db, owner, wid, "boards.read");
     const [row] = await this.db
       .select({
         board: revisions.content,
@@ -36,15 +49,35 @@ export class BoardService {
       })
       .from(boards)
       .innerJoin(revisions, eq(boards.currentRevisionId, revisions.id))
-      .where(scope(owner, id));
+      .where(scope(wid, id));
     if (!row) throw missing();
     return row;
+  }
+  async forLaunch(
+    actor: string,
+    wid: string,
+    id: string,
+  ): Promise<CustomBoard> {
+    return this.db.transaction(async (tx) => {
+      await lockWorkspace(tx, wid);
+      await authorize(tx, actor, wid, "boards.launch");
+      const [row] = await tx
+        .select({ board: revisions.content })
+        .from(boards)
+        .innerJoin(revisions, eq(boards.currentRevisionId, revisions.id))
+        .where(scope(wid, id));
+      if (!row) throw missing();
+      return row.board;
+    });
   }
   async list(
     owner: string,
     limit = 30,
     cursor?: { updatedAt: string; id: string },
+    workspaceId?: string,
   ): Promise<BoardPage> {
+    const wid = workspaceId || (await personalWorkspace(this.db, owner));
+    await authorize(this.db, owner, wid, "boards.read");
     const rows = await this.db
       .select({
         id: boards.id,
@@ -64,7 +97,7 @@ export class BoardService {
       .innerJoin(revisions, eq(boards.currentRevisionId, revisions.id))
       .where(
         and(
-          scope(owner),
+          scope(wid),
           cursor
             ? or(
                 lt(boards.updatedAt, new Date(cursor.updatedAt)),
@@ -99,6 +132,7 @@ export class BoardService {
     value: unknown,
     clientKey?: string,
     source = "studio",
+    workspaceId?: string,
   ): Promise<BoardRecord> {
     let draft: CustomBoard;
     try {
@@ -110,76 +144,92 @@ export class BoardService {
         "This board has an unsupported or unsafe draft format.",
       );
     }
+    const wid = workspaceId || (await personalWorkspace(this.db, owner));
     return this.db.transaction(async (tx) => {
-      // Serialize retry keys even when their first board row has not committed yet.
-      if (clientKey) {
-        await tx.execute(
-          sql`select pg_advisory_xact_lock(hashtextextended(${owner + ":" + clientKey}, 0))`,
-        );
-        const [existing] = await tx
-          .select()
-          .from(boards)
-          .where(
-            and(
-              eq(boards.ownerUserId, owner),
-              eq(boards.clientImportKey, clientKey),
-            ),
-          );
-        if (existing) {
-          if (existing.deletedAt)
-            throw new ApiError(
-              409,
-              "IMPORT_RETIRED",
-              "This board was already imported and later deleted. Create a new copy if you want it again.",
-            );
-          const [revision] = await tx
-            .select()
-            .from(revisions)
-            .where(eq(revisions.id, existing.currentRevisionId));
-          return {
-            board: revision.content,
-            revisionId: revision.id,
-            revisionNumber: revision.revisionNumber,
-          };
-        }
-      }
-      const id = randomUUID(),
-        revisionId = randomUUID(),
-        now = new Date();
-      const board = {
-        ...draft,
-        id,
-        createdAt: now.toISOString(),
-        updatedAt: now.toISOString(),
-      };
-      await tx.insert(boards).values({
-        id,
-        ownerUserId: owner,
-        title: board.title,
-        description: board.description,
-        status: boardIssues(board).length ? "draft" : "ready",
-        currentRevisionId: revisionId,
-        clientImportKey: clientKey,
-        createdAt: now,
-        updatedAt: now,
-      });
-      await tx.insert(revisions).values({
-        id: revisionId,
-        boardId: id,
-        revisionNumber: 1,
-        content: board,
-        contentHash: contentHash(board),
-        createdByUserId: owner,
-        source,
-      });
-      return { board, revisionId, revisionNumber: 1 };
+      await lockWorkspace(tx, wid);
+      await authorize(tx, owner, wid, "boards.create");
+      return this.insert(tx, owner, wid, draft, clientKey, source);
     });
+  }
+  private async insert(
+    tx: Transaction,
+    owner: string,
+    wid: string,
+    draft: CustomBoard,
+    clientKey: string | undefined,
+    source: string,
+  ): Promise<BoardRecord> {
+    // Serialize retry keys even when their first board row has not committed yet.
+    if (clientKey) {
+      await tx.execute(
+        sql`select pg_advisory_xact_lock(hashtextextended(${wid + ":" + clientKey}, 0))`,
+      );
+      const [existing] = await tx
+        .select()
+        .from(boards)
+        .where(
+          and(
+            eq(boards.workspaceId, wid),
+            eq(boards.clientImportKey, clientKey),
+          ),
+        );
+      if (existing) {
+        if (existing.deletedAt)
+          throw new ApiError(
+            409,
+            "IMPORT_RETIRED",
+            "This board was already imported and later deleted. Create a new copy if you want it again.",
+          );
+        const [revision] = await tx
+          .select()
+          .from(revisions)
+          .where(eq(revisions.id, existing.currentRevisionId));
+        return {
+          board: revision.content,
+          revisionId: revision.id,
+          revisionNumber: revision.revisionNumber,
+        };
+      }
+    }
+    const id = randomUUID(),
+      revisionId = randomUUID(),
+      now = new Date();
+    const board = {
+      ...draft,
+      id,
+      createdAt: now.toISOString(),
+      updatedAt: now.toISOString(),
+    };
+    await tx.insert(boards).values({
+      id,
+      createdByUserId: owner,
+      workspaceId: wid,
+      title: board.title,
+      description: board.description,
+      status: boardIssues(board).length ? "draft" : "ready",
+      currentRevisionId: revisionId,
+      clientImportKey: clientKey,
+      createdAt: now,
+      updatedAt: now,
+    });
+    await tx.insert(revisions).values({
+      id: revisionId,
+      boardId: id,
+      revisionNumber: 1,
+      content: board,
+      contentHash: contentHash(board),
+      createdByUserId: owner,
+      source,
+    });
+    await audit(tx, wid, owner, "board.created", "board", id);
+    return { board, revisionId, revisionNumber: 1 };
   }
   async save(
     owner: string,
     id: string,
     value: unknown,
     baseRevisionId: string,
+    workspaceId?: string,
   ): Promise<BoardRecord> {
     let draft: CustomBoard;
     try {
@@ -191,11 +241,14 @@ export class BoardService {
         "This board has an unsupported or unsafe draft format.",
       );
     }
+    const wid = workspaceId || (await personalWorkspace(this.db, owner));
     return this.db.transaction(async (tx) => {
+      await lockWorkspace(tx, wid);
+      await authorize(tx, owner, wid, "boards.update");
       const [row] = await tx
         .select()
         .from(boards)
-        .where(scope(owner, id))
+        .where(scope(wid, id))
         .for("update");
       if (!row) throw missing();
       const [current] = await tx
@@ -251,17 +304,69 @@ export class BoardService {
       return { board, revisionId, revisionNumber };
     });
   }
-  async delete(owner: string, id: string) {
-    const result = await this.db
-      .update(boards)
-      .set({ deletedAt: new Date() })
-      .where(scope(owner, id))
-      .returning({ id: boards.id });
-    if (!result.length) throw missing();
+  async delete(owner: string, id: string, workspaceId?: string) {
+    const wid = workspaceId || (await personalWorkspace(this.db, owner));
+    await this.db.transaction(async (tx) => {
+      await lockWorkspace(tx, wid);
+      await authorize(tx, owner, wid, "boards.delete");
+      const rows = await tx
+        .update(boards)
+        .set({ deletedAt: new Date() })
+        .where(scope(wid, id))
+        .returning({ id: boards.id });
+      if (!rows.length) throw missing();
+      await audit(tx, wid, owner, "board.deleted", "board", id);
+    });
   }
+  async copy(
+    actor: string,
+    sourceWorkspace: string,
+    id: string,
+    targetWorkspace: string,
+  ) {
+    return this.db.transaction(async (tx) => {
+      for (const wid of [...new Set([sourceWorkspace, targetWorkspace])].sort())
+        await lockWorkspace(tx, wid);
+      await authorize(tx, actor, sourceWorkspace, "boards.read");
+      await authorize(tx, actor, targetWorkspace, "boards.create");
+      const [source] = await tx
+        .select({ content: revisions.content })
+        .from(boards)
+        .innerJoin(revisions, eq(boards.currentRevisionId, revisions.id))
+        .where(scope(sourceWorkspace, id));
+      if (!source) throw missing();
+      const draft = {
+        ...source.content,
+        title: `${source.content.title || "Untitled board"} (copy)`.slice(
+          0,
+          60,
+        ),
+      };
+      const saved = await this.insert(
+        tx,
+        actor,
+        targetWorkspace,
+        draft,
+        undefined,
+        "workspace-copy",
+      );
+      await audit(
+        tx,
+        targetWorkspace,
+        actor,
+        "board.copied_between_workspaces",
+        "board",
+        saved.board.id,
+        { sourceWorkspaceId: sourceWorkspace, sourceBoardId: id },
+      );
+      return saved;
+    });
+  }
+
   async import(
     owner: string,
     items: { key: string; board: unknown }[],
+    workspaceId?: string,
   ): Promise<ImportResult[]> {
     const results: ImportResult[] = [];
     for (const item of items) {
@@ -271,6 +376,7 @@ export class BoardService {
           item.board,
           `local:${item.key}`,
           "local-import",
+          workspaceId,
         );
         results.push({ key: item.key, id: saved.board.id });
       } catch (error) {

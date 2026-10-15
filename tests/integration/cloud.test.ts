@@ -1,3 +1,4 @@
+import { MemoryEmailTransport } from "../../server/email/transport.js";
 import { createAuthentication } from "../../server/auth/create-auth.js";
 import { test, before, after } from "node:test";
 import assert from "node:assert/strict";
@@ -323,7 +324,7 @@ test("local import returns per-board failures, retries never duplicate, and owne
   assert.equal(
     (
       await pool.query(
-        "select count(*)::int as count from boards where owner_user_id = $1 and client_import_key = $2",
+        "select count(*)::int as count from boards where created_by_user_id = $1 and client_import_key = $2",
         [userA.id, `local:${key}`],
       )
     ).rows[0].count,
@@ -332,11 +333,15 @@ test("local import returns per-board failures, retries never duplicate, and owne
 });
 
 test("production session cookies use host-only Secure/HttpOnly/Lax attributes", async () => {
-  const secureAuth = createAuthentication(db, {
-    origin: "https://ruckus.example",
-    secret: randomBytes(48).toString("base64url"),
-    production: true,
-  });
+  const secureAuth = createAuthentication(
+    db,
+    {
+      origin: "https://ruckus.example",
+      secret: randomBytes(48).toString("base64url"),
+      production: true,
+    },
+    new MemoryEmailTransport(),
+  );
   const response = await secureAuth.api.signInEmail({
     body: { email: emailA, password: passphrase },
     headers: new Headers({ Origin: "https://ruckus.example" }),
@@ -361,4 +366,169 @@ test("production session cookies use host-only Secure/HttpOnly/Lax attributes", 
     headers: new Headers({ Cookie: cookie.split(";")[0] }),
   });
   assert.equal(restored?.user.id, userA.id);
+});
+
+test("workspace HTTP routes enforce fresh membership, role policy, private asset delivery and non-enumerating resource scopes", async () => {
+  await pool.query(
+    'update "user" set email_verified=true where id=any($1::text[])',
+    [[userA.id, userB.id]],
+  );
+  const orgResponse = await api("/api/v1/workspaces", cookieA, {
+    name: "HTTP collaboration",
+  });
+  assert.equal(orgResponse.status, 201);
+  const wid = (await orgResponse.json()).id;
+  const root = `/api/v1/workspaces/${wid}`;
+  assert.equal((await api(root, cookieB)).status, 404);
+  assert.equal(
+    (await api(`/api/v1/workspaces/${randomUUID()}`, cookieB)).status,
+    404,
+  );
+  await pool.query(
+    "insert into workspace_memberships(workspace_id,user_id,role,invited_by_user_id) values ($1,$2,'viewer',$3)",
+    [wid, userB.id, userA.id],
+  );
+  assert.equal((await api(root, cookieB)).status, 200);
+  const createdResponse = await api(root + "/boards", cookieA, {
+    board: { ...newBoard(), title: "HTTP shared board" },
+  });
+  assert.equal(createdResponse.status, 201);
+  const created = await createdResponse.json();
+  assert.equal(
+    (await api(root + `/boards/${created.board.id}`, cookieB)).status,
+    200,
+  );
+  for (const [path, body, method] of [
+    ["/boards", { board: newBoard() }, "POST"],
+    [
+      `/boards/${created.board.id}`,
+      { board: created.board, baseRevisionId: created.revisionId },
+      "PUT",
+    ],
+    [`/boards/${created.board.id}`, undefined, "DELETE"],
+    [
+      "/invitations",
+      { email: `fixture-${randomUUID()}@example.test`, role: "host" },
+      "POST",
+    ],
+    ["/archive", {}, "POST"],
+  ] as const) {
+    assert.equal((await api(root + path, cookieB, body, method)).status, 403);
+  }
+  const { defaultBrandConfig } = await import("../../shared/brand.js");
+  const brand = await api(root + "/brand-kits", cookieA, {
+    name: "HTTP brand",
+    config: defaultBrandConfig,
+  });
+  assert.equal(brand.status, 201);
+  const record = await brand.json();
+  assert.equal(
+    (await api(root + `/brand-kits/${record.id}`, cookieB)).status,
+    200,
+  );
+  assert.equal(
+    (
+      await api(root + "/brand-kits", cookieB, {
+        name: "Forbidden",
+        config: defaultBrandConfig,
+      })
+    ).status,
+    403,
+  );
+  const sharp = (await import("sharp")).default;
+  const image = await sharp({
+    create: { width: 20, height: 20, channels: 3, background: "#123456" },
+  })
+    .png()
+    .toBuffer();
+  const upload = await fetch(origin + root + "/brand-assets?kind=logo", {
+    method: "POST",
+    headers: { Origin: origin, Cookie: cookieA, "Content-Type": "image/png" },
+    body: image,
+  });
+  assert.equal(upload.status, 201);
+  const asset = await upload.json();
+  const delivery = await api(root + `/brand-assets/${asset.id}`, cookieB);
+  assert.equal(delivery.status, 200);
+  assert.equal(delivery.headers.get("content-type"), "image/webp");
+  assert.equal(delivery.headers.get("x-content-type-options"), "nosniff");
+  assert.equal(delivery.headers.get("cache-control"), "private, no-cache");
+  const etag = delivery.headers.get("etag");
+  assert.ok(etag);
+  const cached = await fetch(origin + root + `/brand-assets/${asset.id}`, {
+    headers: { Cookie: cookieB, "If-None-Match": etag },
+  });
+  assert.equal(cached.status, 304);
+  const personal = (
+    await (await api("/api/v1/workspaces", cookieB)).json()
+  ).items.find((w: { kind: string }) => w.kind === "personal").id;
+  assert.equal(
+    (
+      await api(
+        `/api/v1/workspaces/${personal}/boards/${created.board.id}`,
+        cookieB,
+      )
+    ).status,
+    404,
+  );
+  assert.equal(
+    (
+      await api(
+        `/api/v1/workspaces/${personal}/brand-kits/${record.id}`,
+        cookieB,
+      )
+    ).status,
+    404,
+  );
+  assert.equal(
+    (
+      await api(
+        `/api/v1/workspaces/${personal}/brand-assets/${asset.id}`,
+        cookieB,
+      )
+    ).status,
+    404,
+  );
+  assert.equal((await api(root + "/activity", cookieB)).status, 403);
+  const promoted = await api(
+    root + `/members/${userB.id}`,
+    cookieA,
+    { role: "host" },
+    "PATCH",
+  );
+  assert.equal(promoted.status, 204);
+  assert.equal(
+    (
+      await api(
+        root + `/boards/${created.board.id}`,
+        cookieB,
+        {
+          board: { ...created.board, title: "HTTP host revision" },
+          baseRevisionId: created.revisionId,
+        },
+        "PUT",
+      )
+    ).status,
+    200,
+  );
+  assert.equal(
+    (
+      await api(
+        root + `/members/${userB.id}`,
+        cookieB,
+        { role: "owner" },
+        "PATCH",
+      )
+    ).status,
+    403,
+  );
+  await api(root + `/members/${userB.id}`, cookieA, undefined, "DELETE");
+  assert.equal(
+    (await api(root + `/boards/${created.board.id}`, cookieB)).status,
+    404,
+  );
+  assert.equal(
+    (await api(root + `/brand-assets/${asset.id}`, cookieB)).status,
+    404,
+  );
 });

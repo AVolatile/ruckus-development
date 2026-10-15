@@ -1,5 +1,6 @@
+import VerificationNotice from "../auth/VerificationNotice";
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "../workspaces/navigation";
 import { useHostAuth } from "../auth/HostAuth";
 import { Avatar, Tag } from "../components/Visuals";
 import { ErrorMessage } from "../components/Layout";
@@ -18,19 +19,20 @@ export function AccountSettings() {
           <span>good stuff.</span>
         </h1>
         <p>
-          Signed in as {auth.user?.email}. Your private boards save to your
-          account and follow you when you sign in on another device.
+          Signed in as {auth.user?.email}. Your personal and shared workspaces
+          follow you when you sign in on another device.
         </p>
       </section>
       <section className="section">
+        <VerificationNotice />
         <div className="studio-empty">
           <Avatar id={3} size={95} />
           <div>
             <h2>Your library. Wherever you host.</h2>
             <p>
               Export portable copies from Studio. Local boards from before
-              accounts can be copied into this account; their originals stay on
-              the device.
+              accounts can be copied into a workspace you can write to. Their
+              originals stay on the device.
             </p>
             <ErrorMessage message={error} />
             <div className="hero-actions">

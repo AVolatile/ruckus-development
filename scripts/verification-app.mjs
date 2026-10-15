@@ -20,6 +20,7 @@ const child = spawn(process.execPath, args, {
   env: {
     ...process.env,
     NODE_ENV: "test",
+    EMAIL_TRANSPORT: "file",
     DATABASE_URL: url.toString(),
     AUTH_SECRET:
       process.env.AUTH_SECRET || randomBytes(48).toString("base64url"),

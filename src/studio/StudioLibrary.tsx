@@ -1,5 +1,7 @@
+import { useWorkspace } from "../workspaces/WorkspaceContext";
+import { CloudBoardRepository } from "./repository";
 import { useCallback, useRef, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "../workspaces/navigation";
 import { CONTENT, TEMPLATES, TOPICS } from "../../shared/content/library";
 import { estimatedMinutes, type CustomBoard } from "../../shared/boards";
 import { Avatar, Icon, Tag } from "../components/Visuals";
@@ -18,6 +20,9 @@ import { useParty } from "../lib/party";
 import { launchBoard } from "./launch";
 import { useDialog } from "../lib/useDialog";
 export default function StudioLibrary() {
+  const { can, items: workspaces, current } = useWorkspace();
+  const [copyId, setCopyId] = useState(""),
+    [copyTarget, setCopyTarget] = useState("");
   const library = useBoardLibrary();
   const { items, repository } = library;
   const [error, setError] = useState(""),
@@ -62,8 +67,13 @@ export default function StudioLibrary() {
       const snapshot =
         "questions" in board ? board : (await repository.get(board.id))?.board;
       if (!snapshot)
-        throw new Error("This board is no longer in your account.");
-      const reply = await launchBoard(snapshot, party.create, demo);
+        throw new Error("This board is no longer available in this workspace.");
+      const reply = await launchBoard(
+        snapshot,
+        party.create,
+        demo,
+        "questions" in board ? undefined : repository.workspaceId,
+      );
       if (reply.ok && reply.identity)
         navigate(`/room/${reply.identity.code}/host`);
       else setError(reply.error ?? "The live stage is unavailable.");
@@ -97,22 +107,26 @@ export default function StudioLibrary() {
             competitive. Build your own. Or start with one of ours.
           </p>
           <div className="hero-actions">
-            <button
-              className="button"
-              disabled={!!busy}
-              onClick={() => void create()}
-            >
-              Create question board <Icon name="arrow" />
-            </button>
-            <button
-              className="button outline"
-              onClick={() => file.current?.click()}
-            >
-              Import question board
-            </button>
+            {can("boards.create") && (
+              <button
+                className="button"
+                disabled={!!busy}
+                onClick={() => void create()}
+              >
+                Create question board <Icon name="arrow" />
+              </button>
+            )}
+            {can("boards.create") && (
+              <button
+                className="button outline"
+                onClick={() => file.current?.click()}
+              >
+                Import question board
+              </button>
+            )}
           </div>
           <p className="studio-storage-note">
-            Saved to your Ruckus account. Open your boards on any device.
+            Saved in {current.name}. Open this workspace on any device.
           </p>
         </div>
         <div className="studio-hero-art">
@@ -136,7 +150,9 @@ export default function StudioLibrary() {
         <div className="section-heading">
           <div>
             <span className="eyebrow">YOUR QUESTIONS. YOUR HOUSE RULES.</span>
-            <h2>My boards.</h2>
+            <h2>
+              {current.kind === "personal" ? "My boards." : "Shared boards."}
+            </h2>
           </div>
           <div className="studio-library-tools">
             <button
@@ -219,31 +235,49 @@ export default function StudioLibrary() {
                     })}
                   </small>
                   <div>
-                    <button
-                      disabled={!!busy}
-                      className="button small"
-                      onClick={() => void play(board)}
-                    >
-                      {busy === board.id ? "Opening…" : "Play this board"}
-                      <Icon name="arrow" />
-                    </button>
+                    {can("boards.launch") && (
+                      <button
+                        disabled={!!busy}
+                        className="button small"
+                        onClick={() => void play(board)}
+                      >
+                        {busy === board.id ? "Opening…" : "Play this board"}
+                        <Icon name="arrow" />
+                      </button>
+                    )}
                     <Link
                       className="button small outline"
                       to={`/app/studio/boards/${board.id}`}
                     >
-                      Edit
+                      {can("boards.update") ? "Edit" : "View"}
                     </Link>
                   </div>
                   <div className="board-minor-actions">
                     <button
-                      onClick={() =>
-                        run(() => {
-                          return repository.duplicate(board.id);
-                        })
-                      }
+                      onClick={() => {
+                        setCopyId(board.id);
+                        setCopyTarget(
+                          workspaces.find(
+                            (w) =>
+                              w.id !== current.id &&
+                              w.permissions.includes("boards.create"),
+                          )?.id || "",
+                        );
+                      }}
                     >
-                      Duplicate board
+                      Copy to workspace
                     </button>
+                    {can("boards.create") && (
+                      <button
+                        onClick={() =>
+                          run(() => {
+                            return repository.duplicate(board.id);
+                          })
+                        }
+                      >
+                        Duplicate board
+                      </button>
+                    )}
                     <button
                       onClick={() =>
                         run(async () => {
@@ -258,9 +292,11 @@ export default function StudioLibrary() {
                     >
                       Export
                     </button>
-                    <button onClick={() => setPendingDelete(board)}>
-                      Delete
-                    </button>
+                    {can("boards.delete") && (
+                      <button onClick={() => setPendingDelete(board)}>
+                        Delete
+                      </button>
+                    )}
                   </div>
                 </div>
               </article>
@@ -276,13 +312,15 @@ export default function StudioLibrary() {
                 <p>
                   Create your first question board, or make a starter your own.
                 </p>
-                <button
-                  className="button"
-                  disabled={!!busy}
-                  onClick={() => void create()}
-                >
-                  Build your first board <Icon name="arrow" />
-                </button>
+                {can("boards.create") && (
+                  <button
+                    className="button"
+                    disabled={!!busy}
+                    onClick={() => void create()}
+                  >
+                    Build your first board <Icon name="arrow" />
+                  </button>
+                )}
               </div>
             </div>
           )
@@ -344,15 +382,17 @@ export default function StudioLibrary() {
               ))}
             </select>
           </label>
-          <button
-            className="button outline"
-            disabled={!visible.length}
-            onClick={() =>
-              void create(visible[Math.floor(Math.random() * visible.length)])
-            }
-          >
-            Surprise me <Icon name="asterisk" />
-          </button>
+          {can("boards.create") && (
+            <button
+              className="button outline"
+              disabled={!visible.length}
+              onClick={() =>
+                void create(visible[Math.floor(Math.random() * visible.length)])
+              }
+            >
+              Surprise me <Icon name="asterisk" />
+            </button>
+          )}
         </div>
         {!visible.length && (
           <div className="studio-empty">
@@ -360,13 +400,15 @@ export default function StudioLibrary() {
               No starter board uses this topic yet. Create a board and add
               questions from the library.
             </p>
-            <button
-              className="button"
-              disabled={!!busy}
-              onClick={() => void create()}
-            >
-              Build with this topic
-            </button>
+            {can("boards.create") && (
+              <button
+                className="button"
+                disabled={!!busy}
+                onClick={() => void create()}
+              >
+                Build with this topic
+              </button>
+            )}
           </div>
         )}
         <div className="template-grid">
@@ -388,25 +430,79 @@ export default function StudioLibrary() {
                 {t.questions.length} questions · ~{estimatedMinutes(t)} min
               </span>
               <div>
-                <button
-                  disabled={!!busy}
-                  onClick={() => void create(t)}
-                  className="button outline small"
-                >
-                  Make it mine <Icon name="arrow" />
-                </button>
-                <button
-                  disabled={!!busy}
-                  onClick={() => void play(t, true)}
-                  className="studio-demo-link"
-                >
-                  Demo it ↗
-                </button>
+                {can("boards.create") && (
+                  <button
+                    disabled={!!busy}
+                    onClick={() => void create(t)}
+                    className="button outline small"
+                  >
+                    Make it mine <Icon name="arrow" />
+                  </button>
+                )}
+                {can("boards.launch") && (
+                  <button
+                    disabled={!!busy}
+                    onClick={() => void play(t, true)}
+                    className="studio-demo-link"
+                  >
+                    Demo it ↗
+                  </button>
+                )}
               </div>
             </article>
           ))}
         </div>
       </section>
+      {copyId && (
+        <section
+          className="workspace-panel"
+          aria-label="Copy board to workspace"
+        >
+          <h2>A fresh copy. Another workspace.</h2>
+          <p>
+            The copy starts at revision 1. This board and its history stay here.
+          </p>
+          <label>
+            Destination workspace
+            <select
+              value={copyTarget}
+              onChange={(e) => setCopyTarget(e.target.value)}
+            >
+              <option value="">Choose workspace</option>
+              {workspaces
+                .filter(
+                  (w) =>
+                    w.id !== current.id &&
+                    w.permissions.includes("boards.create"),
+                )
+                .map((w) => (
+                  <option key={w.id} value={w.id}>
+                    {w.name}
+                  </option>
+                ))}
+            </select>
+          </label>
+          <button
+            className="button"
+            disabled={!copyTarget || !!busy}
+            onClick={() =>
+              void run(async () => {
+                if (repository instanceof CloudBoardRepository) {
+                  const result = await repository.copy(copyId, copyTarget);
+                  navigate(
+                    `/app/w/${copyTarget}/studio/boards/${result.board.id}`,
+                  );
+                }
+              })
+            }
+          >
+            Create copy ↗
+          </button>
+          <button className="button outline" onClick={() => setCopyId("")}>
+            Cancel
+          </button>
+        </section>
+      )}
       {pendingDelete && (
         <div className="modal-backdrop">
           <section

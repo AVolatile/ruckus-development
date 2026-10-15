@@ -11,6 +11,8 @@ import {
   unique,
   check,
 } from "drizzle-orm/pg-core";
+import { workspaces } from "./workspace-schema.js";
+export * from "./workspace-schema.js";
 import { user } from "./auth-schema.js";
 import type { CustomBoard } from "../../shared/boards.js";
 const utc = (name: string) =>
@@ -19,9 +21,12 @@ export const boardsTable = pgTable(
   "boards",
   {
     id: uuid("id").primaryKey(),
-    ownerUserId: text("owner_user_id")
+    createdByUserId: text("created_by_user_id")
       .notNull()
       .references(() => user.id),
+    workspaceId: uuid("workspace_id")
+      .notNull()
+      .references(() => workspaces.id),
     title: text("title").notNull(),
     description: text("description").notNull(),
     status: text("status").notNull().default("draft"),
@@ -33,11 +38,11 @@ export const boardsTable = pgTable(
     deletedAt: timestamp("deleted_at", { withTimezone: true }),
   },
   (table) => [
-    index("boards_active_owner_updated_idx")
-      .on(table.ownerUserId, table.updatedAt, table.id)
+    index("boards_active_workspace_updated_idx")
+      .on(table.workspaceId, table.updatedAt, table.id)
       .where(sql`${table.deletedAt} is null`),
-    uniqueIndex("boards_owner_import_key_idx")
-      .on(table.ownerUserId, table.clientImportKey)
+    uniqueIndex("boards_workspace_import_key_idx")
+      .on(table.workspaceId, table.clientImportKey)
       .where(sql`${table.clientImportKey} is not null`),
     check("boards_schema_version_check", sql`${table.schemaVersion} = 1`),
     check("boards_status_check", sql`${table.status} in ('draft', 'ready')`),

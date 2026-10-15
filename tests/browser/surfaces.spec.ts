@@ -59,6 +59,10 @@ test.describe("public and guest boundaries", () => {
 test("legacy paths retain query/hash and retired portfolio pages stay retired", async ({
   page,
 }) => {
+  const spaces = await (await page.request.get("/api/v1/workspaces")).json();
+  const personal = spaces.items.find(
+    (w: { kind: string }) => w.kind === "personal",
+  ).id;
   for (const [before, after] of [
     ["/studio?source=saved#starters", "/app/studio?source=saved#starters"],
     ["/studio/boards", "/app/studio/boards"],
@@ -74,7 +78,12 @@ test("legacy paths retain query/hash and retired portfolio pages stay retired", 
     ["/about", "/product"],
   ]) {
     await page.goto(before);
-    await expect(page).toHaveURL(appOrigin + after);
+    await expect(page).toHaveURL(
+      appOrigin +
+        (after.startsWith("/app")
+          ? `/app/w/${personal}${after.slice(4)}`
+          : after),
+    );
     await expect(page.locator("main h1")).toBeVisible();
   }
   for (const route of ["/brand", "/campaign", "/case-study"]) {

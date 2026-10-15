@@ -153,7 +153,12 @@ export interface Reply {
 }
 export interface ClientEvents {
   "room:create": (
-    data: { settings: Settings; demo?: boolean; board?: CustomBoard },
+    data: {
+      settings: Settings;
+      demo?: boolean;
+      board?: CustomBoard;
+      boardReference?: { workspaceId: string; boardId: string };
+    },
     ack: (reply: Reply) => void,
   ) => void;
   "room:join": (

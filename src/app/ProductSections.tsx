@@ -1,7 +1,9 @@
-import { Link } from "react-router-dom";
+import { useWorkspace } from "../workspaces/context";
+import { Link } from "../workspaces/navigation";
 import { Icon, Tag } from "../components/Visuals";
 
 export function Library() {
+  const { can, current } = useWorkspace();
   return (
     <>
       <section className="page-hero">
@@ -28,22 +30,26 @@ export function Library() {
           </Link>
           <Link className="occasion" to="/app/studio">
             <Icon name="screen" />
-            <h2>My boards</h2>
+            <h2>
+              {current.kind === "personal" ? "My boards" : "Shared boards"}
+            </h2>
             <p>
-              Your account’s saved boards, plus real starter templates and a
+              This workspace’s saved boards, plus real starter templates and a
               searchable question library.
             </p>
             <span>Open Studio ↗</span>
           </Link>
-          <Link className="occasion" to="/app/studio/boards/new">
-            <Icon name="asterisk" />
-            <h2>Something new</h2>
-            <p>
-              Build trivia, True / False, or polls around the things your people
-              know.
-            </p>
-            <span>Create a board ↗</span>
-          </Link>
+          {can("boards.create") && (
+            <Link className="occasion" to="/app/studio/boards/new">
+              <Icon name="asterisk" />
+              <h2>Something new</h2>
+              <p>
+                Build trivia, True / False, or polls around the things your
+                people know.
+              </p>
+              <span>Create a board ↗</span>
+            </Link>
+          )}
         </div>
       </section>
     </>
@@ -51,6 +57,7 @@ export function Library() {
 }
 
 export function HostEvents() {
+  const { can } = useWorkspace();
   return (
     <>
       <section className="page-hero">
@@ -65,9 +72,11 @@ export function HostEvents() {
           gathering. Up to 30 players can join from their phones.
         </p>
         <div className="hero-actions">
-          <Link className="button" to="/app/host">
-            Start an event room <Icon name="arrow" />
-          </Link>
+          {can("boards.launch") && (
+            <Link className="button" to="/app/host">
+              Start an event room <Icon name="arrow" />
+            </Link>
+          )}
           <Link className="button outline" to="/app/studio">
             Prepare a custom board
           </Link>
@@ -92,13 +101,6 @@ const future = {
       "Live scoring, leaderboards, and a session summary already come with your room. Saved reports and cross-session analytics are coming later.",
     action: "Start a room",
     to: "/app/host",
-  },
-  workspace: {
-    title: "Room for your team.",
-    description:
-      "Shared libraries, organization memberships, and reusable Brand Kits are planned. For now, host a room or build a board in your account.",
-    action: "Build a board",
-    to: "/app/studio",
   },
 };
 export function FutureSection({ section }: { section: keyof typeof future }) {

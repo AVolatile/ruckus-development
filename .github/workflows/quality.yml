@@ -21,6 +21,7 @@ jobs:
           --health-cmd "pg_isready -U ruckus_test -d ruckus_test"
           --health-interval 3s --health-timeout 3s --health-retries 20
     env:
+      EMAIL_TRANSPORT: memory
       NODE_ENV: test
       DATABASE_URL: postgresql://ruckus_test:isolated-ci-only@127.0.0.1:5432/ruckus_test
       TEST_DATABASE_URL: postgresql://ruckus_test:isolated-ci-only@127.0.0.1:5432/ruckus_test

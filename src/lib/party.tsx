@@ -38,6 +38,7 @@ interface PartyContext {
     settings: Settings,
     demo?: boolean,
     board?: CustomBoard,
+    boardReference?: { workspaceId: string; boardId: string },
   ) => Promise<Reply>;
   join: (code: string, name: string, avatar: number) => Promise<Reply>;
   resume: (identity: Identity) => Promise<Reply>;
@@ -65,7 +66,9 @@ export function PartyProvider({ children }: { children: ReactNode }) {
     [error, setError] = useState(""),
     [reactions, setReactions] = useState<PartyContext["reactions"]>([]);
   const location = useLocation();
-  const liveRoute = /^\/(app\/host|join|room)(\/|$)/.test(location.pathname);
+  const liveRoute = /^\/(app\/(?:w\/[^/]+\/)?host|join|room)(\/|$)/.test(
+    location.pathname,
+  );
   const identityRef = useRef(identity);
   const reactionTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
   function accept(reply: Reply) {
@@ -189,6 +192,7 @@ export function PartyProvider({ children }: { children: ReactNode }) {
     settings: Settings,
     demo = false,
     board?: CustomBoard,
+    boardReference?: { workspaceId: string; boardId: string },
   ) => {
     try {
       await ensureConnection();
@@ -204,18 +208,21 @@ export function PartyProvider({ children }: { children: ReactNode }) {
     return new Promise<Reply>((resolve) =>
       socket
         .timeout(7000)
-        .emit("room:create", { settings, demo, board }, (err, reply) =>
-          resolve(
-            accept(
-              err
-                ? {
-                    ok: false,
-                    error:
-                      "The stage is offline. Check that the server is running.",
-                  }
-                : reply,
+        .emit(
+          "room:create",
+          { settings, demo, board, boardReference },
+          (err, reply) =>
+            resolve(
+              accept(
+                err
+                  ? {
+                      ok: false,
+                      error:
+                        "The stage is offline. Check that the server is running.",
+                    }
+                  : reply,
+              ),
             ),
-          ),
         ),
     );
   };

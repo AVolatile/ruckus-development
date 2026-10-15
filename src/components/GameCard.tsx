@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link } from "../workspaces/navigation";
 import { Icon, Tag } from "./Visuals";
 import type { GameInfo } from "../../shared/types";
 export function GameCard({

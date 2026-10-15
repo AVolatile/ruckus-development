@@ -1,5 +1,10 @@
+import {
+  WorkspaceSwitcher,
+  useWorkspace,
+} from "../workspaces/WorkspaceContext";
 import { useEffect, useState } from "react";
-import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
+import { Link, NavLink } from "../workspaces/navigation";
 import { useHostAuth } from "../auth/HostAuth";
 import LocalImportPrompt from "./LocalImportPrompt";
 import { Logo, Icon } from "../components/Visuals";
@@ -14,6 +19,7 @@ const navigation = [
 
 export function AppShell() {
   const { user } = useHostAuth();
+  const { current, can } = useWorkspace();
   const [open, setOpen] = useState(false);
   const { pathname } = useLocation();
   useEffect(() => {
@@ -47,23 +53,25 @@ export function AppShell() {
               {label}
             </NavLink>
           ))}
-          <Link className="button small" to="/app/host">
-            Start a Ruckus <Icon name="arrow" />
-          </Link>
+          {can("boards.launch") && (
+            <Link className="button small" to="/app/host">
+              Start a Ruckus <Icon name="arrow" />
+            </Link>
+          )}
         </nav>
       </header>
       <div className="app-access-note">
-        Your private host library · {user?.email}
+        <WorkspaceSwitcher /> <span>{user?.email}</span>
       </div>
       <main id="main">
-        <LocalImportPrompt />
+        <LocalImportPrompt key={current.id} />
         <Outlet />
       </main>
       <footer className="app-footer">
         <span>Your screen. Your people. Your Ruckus.</span>
         <nav aria-label="Host account and product information">
           <Link to="/app/settings">Settings</Link>
-          <Link to="/app/workspace">Workspace · coming soon</Link>
+          <Link to="/app/workspace">Workspace</Link>
           <Link to="/app/analytics">Analytics · coming soon</Link>
           <Link to="/">Ruckus website</Link>
         </nav>

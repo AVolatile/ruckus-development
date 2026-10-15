@@ -1,7 +1,11 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { AudioBus } from "../src/audio/AudioBus.js";
-import { MusicController } from "../src/audio/MusicController.js";
+import {
+  MUSIC_CROSSFADE_MS,
+  MUSIC_STOP_GRACE_MS,
+  MusicController,
+} from "../src/audio/MusicController.js";
 import { AudioEngine } from "../src/audio/AudioEngine.js";
 import { AudioPreloader, assets } from "../src/audio/AudioPreloader.js";
 import { CueScheduler } from "../src/audio/CueScheduler.js";
@@ -367,4 +371,332 @@ test("clearing during async decode prevents stale cache resurrection", async () 
   resolve!({ duration: 8 });
   assert.equal(await pending, null);
   assert.equal(preloader.loaded, 0);
+});
+
+test("failed retirement cannot leave a started unowned bed behind", () => {
+  const fake = new FakeAudio();
+  const music = new MusicController(
+    cast(fake),
+    fake.destination as unknown as AudioNode,
+  );
+  const buffer = { duration: 8 } as AudioBuffer;
+  music.play(assets.hotwire, buffer, 0);
+  fake.gains[0].gain.linearRampToValueAtTime = () => {
+    throw new Error("Interrupted gain automation");
+  };
+  assert.throws(() => music.play(assets["caption-this"], buffer, 0));
+  music.dispose();
+  const leaked = fake.sources.filter(
+    (source) => source.started.length > 0 && !source.disconnected,
+  );
+  assert.equal(
+    leaked.length,
+    0,
+    "every started loop must remain owned and disposable after a failed transition",
+  );
+});
+
+const gameplay = (profile: AudioState["profile"], sequence = 1) =>
+  frame({
+    profile,
+    sequence,
+    stage: "gameplay",
+    phase: "active",
+    names: ["QUESTION_OPEN"],
+  });
+for (const [from, to] of [
+  ["hotwire", "caption-this"],
+  ["hotwire", "sellout"],
+  ["hotwire", "scribble-shift"],
+  ["hotwire", "room-temperature"],
+  ["caption-this", "hotwire"],
+  ["scribble-shift", "hotwire"],
+] as const) {
+  test(`one owned bed through ${from} → ${to}, including repeated snapshots`, async () => {
+    const fake = new FakeAudio();
+    const engine = new AudioEngine(
+      () => cast(fake),
+      loader(),
+      new CueScheduler(),
+    );
+    try {
+      engine.configure("host", { ...defaults, sfxEnabled: false });
+      engine.sync(gameplay(from), 1000, true);
+      await engine.unlock();
+      engine.sync(gameplay(to, 2), 1000);
+      await settle();
+      assert.equal(engine.diagnostics().track, to);
+      assert.equal(engine.diagnostics().musicCurrent, 1);
+      assert.equal(engine.diagnostics().musicRetiring, 1);
+      assert.equal(fake.sources.filter((s) => !s.disconnected).length, 2);
+      fake.sources[0].onended!();
+      assert.equal(engine.diagnostics().musicRetiring, 0);
+      assert.equal(engine.diagnostics().sources, 1);
+      assert.ok(fake.sources[0].disconnected);
+      for (let i = 0; i < 5; i++) engine.sync(gameplay(to, 2), 1000);
+      await settle();
+      assert.equal(fake.sources.length, 2);
+      assert.equal(engine.diagnostics().musicCurrent, 1);
+    } finally {
+      await engine.dispose();
+    }
+    assert.ok(fake.sources.every((s) => s.disconnected));
+  });
+}
+test("retirement deadline clears sources and gains even without an ended callback", (t) => {
+  t.mock.timers.enable({ apis: ["setTimeout"] });
+  const fake = new FakeAudio();
+  const music = new MusicController(
+    cast(fake),
+    fake.destination as unknown as AudioNode,
+  );
+  const buffer = { duration: 8 } as AudioBuffer;
+  music.play(assets.hotwire, buffer, 0);
+  music.play(assets["caption-this"], buffer, 0);
+  assert.equal(music.retiringCount, 1);
+  t.mock.timers.tick(MUSIC_CROSSFADE_MS + MUSIC_STOP_GRACE_MS);
+  assert.equal(music.retiringCount, 0);
+  assert.equal(music.currentCount, 1);
+  assert.ok(fake.sources[0].disconnected && fake.gains[0].disconnected);
+  music.play(assets.sellout, buffer, 0);
+  music.play(assets["scribble-shift"], buffer, 0);
+  assert.equal(music.count, 2);
+  assert.equal(music.retiringCount, 1);
+  t.mock.timers.tick(MUSIC_CROSSFADE_MS + MUSIC_STOP_GRACE_MS);
+  assert.equal(music.count, 1);
+  music.dispose();
+  assert.ok(fake.sources.every((s) => s.disconnected));
+});
+function delayedLoader() {
+  const preloader = loader();
+  const jobs: { id: string; resolve: (buffer: AudioBuffer | null) => void }[] =
+    [];
+  preloader.load = (_context, id) =>
+    new Promise((resolve) => jobs.push({ id, resolve }));
+  return {
+    preloader,
+    jobs,
+    resolve(id: string, value = { duration: 8 } as AudioBuffer) {
+      const job = jobs.find((j) => j.id === id);
+      assert.ok(job, `pending ${id}`);
+      jobs.splice(jobs.indexOf(job), 1);
+      job.resolve(value);
+    },
+  };
+}
+test("A → B → C delayed loads cannot resurrect B, including a late fallback", async () => {
+  const fake = new FakeAudio(),
+    pending = delayedLoader();
+  const engine = new AudioEngine(
+    () => cast(fake),
+    pending.preloader,
+    new CueScheduler(),
+  );
+  try {
+    engine.configure("host", { ...defaults, sfxEnabled: false });
+    engine.sync(gameplay("hotwire"), 1000, true);
+    const unlocked = engine.unlock();
+    await settle();
+    pending.resolve("hotwire");
+    await unlocked;
+    engine.sync(gameplay("caption-this", 2), 1000);
+    pending.resolve("caption-this", null as unknown as AudioBuffer);
+    await settle(); // B is waiting for its fallback while C becomes authoritative.
+    engine.sync(gameplay("scribble-shift", 3), 1000);
+    pending.resolve("scribble-shift");
+    await settle();
+    assert.equal(engine.diagnostics().track, "scribble-shift");
+    const sources = fake.sources.length;
+    pending.resolve("studio");
+    await settle();
+    assert.equal(engine.diagnostics().track, "scribble-shift");
+    assert.equal(fake.sources.length, sources);
+    fake.sources[0].onended!();
+    assert.equal(engine.diagnostics().sources, 1);
+    engine.sync(gameplay("hotwire", 1), 1000); // Older resumed metadata is ignored.
+    await settle();
+    assert.equal(engine.diagnostics().track, "scribble-shift");
+  } finally {
+    await engine.dispose();
+  }
+});
+test("late creative decode cannot restart music after end or room release", async () => {
+  for (const end of [true, false]) {
+    const fake = new FakeAudio(),
+      pending = delayedLoader();
+    const engine = new AudioEngine(
+      () => cast(fake),
+      pending.preloader,
+      new CueScheduler(),
+    );
+    try {
+      engine.configure("host", { ...defaults, sfxEnabled: false });
+      engine.sync(gameplay("caption-this"), 1000, true);
+      const unlocked = engine.unlock();
+      await settle();
+      if (end)
+        engine.sync(
+          frame({ sequence: 2, stage: "ended", names: ["EVENT_END"] }),
+          1000,
+        );
+      else engine.release();
+      pending.resolve("caption-this");
+      await unlocked;
+      assert.equal(engine.diagnostics().track, null);
+      assert.equal(fake.sources.length, 0);
+    } finally {
+      await engine.dispose();
+    }
+  }
+});
+test("creative reconnect baseline and pause/resume retain only the correct bed", async () => {
+  const fake = new FakeAudio();
+  const engine = new AudioEngine(
+    () => cast(fake),
+    loader(),
+    new CueScheduler(),
+  );
+  try {
+    engine.configure("host", { ...defaults, sfxEnabled: false });
+    engine.sync(gameplay("caption-this"), 1000, true);
+    await engine.unlock();
+    engine.sync({ ...gameplay("caption-this"), paused: true }, 1000);
+    engine.sync(gameplay("caption-this"), 1000);
+    await settle();
+    assert.equal(fake.sources.length, 1);
+    engine.disconnect();
+    engine.sync(
+      { ...gameplay("scribble-shift", 3), elapsedMs: 4200 },
+      5200,
+      true,
+    );
+    await settle();
+    assert.equal(engine.diagnostics().track, "scribble-shift");
+    assert.equal(engine.diagnostics().musicCurrent, 1);
+    assert.equal(engine.diagnostics().musicRetiring, 0);
+    assert.equal(engine.diagnostics().oneShots, 0);
+    assert.ok(fake.sources[0].disconnected);
+    assert.ok(fake.sources[1].started[0].offset >= 4.2);
+  } finally {
+    await engine.dispose();
+  }
+});
+
+test("C becomes current before B finishes decoding and B never starts", async () => {
+  const fake = new FakeAudio(),
+    pending = delayedLoader();
+  const engine = new AudioEngine(
+    () => cast(fake),
+    pending.preloader,
+    new CueScheduler(),
+  );
+  try {
+    engine.configure("host", { ...defaults, sfxEnabled: false });
+    engine.sync(gameplay("hotwire"), 1000, true);
+    const unlocked = engine.unlock();
+    await settle();
+    pending.resolve("hotwire");
+    await unlocked;
+    engine.sync(gameplay("caption-this", 2), 1000);
+    engine.sync(gameplay("sellout", 3), 1000);
+    pending.resolve("sellout");
+    await settle();
+    const count = fake.sources.length;
+    pending.resolve("caption-this");
+    await settle();
+    assert.equal(engine.diagnostics().track, "sellout");
+    assert.equal(engine.diagnostics().requestedTrack, "sellout");
+    assert.equal(fake.sources.length, count);
+    fake.sources[0].onended!();
+    assert.equal(engine.diagnostics().sources, 1);
+  } finally {
+    await engine.dispose();
+  }
+});
+
+test("engine surfaces a failed transition, cleans native voices and retries without orphan loops", async () => {
+  const fake = new FakeAudio();
+  const engine = new AudioEngine(
+    () => cast(fake),
+    loader(),
+    new CueScheduler(),
+  );
+  try {
+    engine.configure("host", { ...defaults, sfxEnabled: false });
+    engine.sync(gameplay("hotwire"), 1000, true);
+    await engine.unlock();
+    const voiceGain = fake.gains.at(-1)!;
+    voiceGain.gain.linearRampToValueAtTime = () => {
+      throw new Error("Interrupted retirement");
+    };
+    engine.sync(gameplay("caption-this", 2), 1000);
+    await settle();
+    assert.equal(engine.diagnostics().status, "error");
+    assert.equal(engine.diagnostics().musicCurrent, 0);
+    assert.equal(engine.diagnostics().musicRetiring, 0);
+    assert.ok(fake.sources.every((s) => s.disconnected));
+    await engine.unlock();
+    assert.equal(engine.diagnostics().status, "ready");
+    assert.equal(engine.diagnostics().track, "caption-this");
+    assert.equal(
+      fake.sources.filter((s) => s.started.length && !s.disconnected).length,
+      1,
+    );
+  } finally {
+    await engine.dispose();
+  }
+});
+
+test("unavailable creative bed and neutral fallback fade out the prior trivia bed", async () => {
+  const fake = new FakeAudio(),
+    preloader = loader();
+  const load = preloader.load.bind(preloader);
+  preloader.load = (context, id) =>
+    ["caption-this", "studio"].includes(id)
+      ? Promise.resolve(null)
+      : load(context, id);
+  const engine = new AudioEngine(
+    () => cast(fake),
+    preloader,
+    new CueScheduler(),
+  );
+  try {
+    engine.configure("host", { ...defaults, sfxEnabled: false });
+    engine.sync(gameplay("hotwire"), 1000, true);
+    await engine.unlock();
+    engine.sync(gameplay("caption-this", 2), 1000);
+    await settle();
+    assert.equal(engine.diagnostics().track, null);
+    assert.equal(engine.diagnostics().musicCurrent, 0);
+    fake.sources[0].onended!();
+    assert.equal(engine.diagnostics().musicRetiring, 0);
+    assert.ok(fake.sources[0].disconnected);
+  } finally {
+    await engine.dispose();
+  }
+});
+
+test("incoming preparation failure also releases the previous profile", async () => {
+  const fake = new FakeAudio();
+  const engine = new AudioEngine(
+    () => cast(fake),
+    loader(),
+    new CueScheduler(),
+  );
+  try {
+    engine.configure("host", { ...defaults, sfxEnabled: false });
+    engine.sync(gameplay("hotwire"), 1000, true);
+    await engine.unlock();
+    fake.createGain = () => {
+      throw new Error("Cannot allocate incoming gain");
+    };
+    engine.sync(gameplay("caption-this", 2), 1000);
+    await settle();
+    assert.equal(engine.diagnostics().status, "error");
+    assert.equal(engine.diagnostics().track, null);
+    assert.equal(engine.diagnostics().sources, 0);
+    assert.ok(fake.sources.every((s) => s.disconnected));
+  } finally {
+    await engine.dispose();
+  }
 });

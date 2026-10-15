@@ -27,6 +27,12 @@ export interface AudioDiagnostics {
   status: EngineStatus;
   contextState: string;
   track: string | null;
+  engineId: number;
+  generation: number;
+  musicRequest: number;
+  requestedTrack: string | null;
+  musicCurrent: number;
+  musicRetiring: number;
   profile: string | null;
   stage: string | null;
   cue: string | null;

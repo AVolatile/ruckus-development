@@ -18,7 +18,10 @@ import type {
   AudioDiagnostics,
   FeedbackKind,
 } from "./types";
+let nextEngineId = 0;
 export class AudioEngine {
+  private readonly engineId = ++nextEngineId;
+  private requestedTrack: string | null = null;
   private context: AudioContext | null = null;
   private bus: AudioBus | null = null;
   private music: MusicController | null = null;
@@ -77,6 +80,12 @@ export class AudioEngine {
       status: this.muted() ? "muted" : this.status,
       contextState: this.context?.state ?? "uninitialized",
       track: this.music?.track ?? null,
+      engineId: this.engineId,
+      generation: this.generation,
+      musicRequest: this.reconcileId,
+      requestedTrack: this.requestedTrack,
+      musicCurrent: this.music?.currentCount ?? 0,
+      musicRetiring: this.music?.retiringCount ?? 0,
       profile: this.latest?.state.profile ?? null,
       stage: this.latest?.state.stage ?? null,
       cue: this.latest?.state.names.join("+") ?? null,
@@ -97,13 +106,25 @@ export class AudioEngine {
     if (changed) this.release();
     this.bus?.apply(prefs, role, this.visible && this.live);
     if (role === "player" || !prefs.musicEnabled || prefs.masterMuted)
-      this.music?.stop();
+      this.stopMusic();
     if (!prefs.sfxEnabled || prefs.masterMuted) {
       this.sfx?.dispose();
       this.ui?.dispose();
     }
     if (this.live) void this.reconcile();
     this.notify();
+  }
+  private stopMusic(fadeMs?: number) {
+    try {
+      this.music?.stop(fadeMs);
+    } catch {
+      this.musicError();
+    }
+  }
+  private musicError() {
+    this.status = "error";
+    this.error =
+      "Sound is unavailable. Gameplay can continue; try Enable sound again.";
   }
   private muted() {
     return (
@@ -161,6 +182,8 @@ export class AudioEngine {
   }
   sync(state: AudioState, serverTime: number, baseline = false) {
     const previous = this.latest?.state;
+    if (previous?.roomId === state.roomId && state.sequence < previous.sequence)
+      return;
     if (previous?.roomId !== state.roomId) {
       this.generation++;
       this.music?.dispose();
@@ -193,8 +216,10 @@ export class AudioEngine {
     if (!this.tickTimer && state.stage !== "ended")
       this.tickTimer = setInterval(() => this.tick(), 100);
     if (state.stage === "ended") {
+      this.reconcileId++;
+      this.requestedTrack = null;
       this.cancelTimers();
-      this.music?.stop(350);
+      this.stopMusic(350);
       const generation = this.generation;
       const timer = setTimeout(() => {
         this.timers.delete(timer);
@@ -248,6 +273,15 @@ export class AudioEngine {
   private async reconcile() {
     const request = ++this.reconcileId;
     const latest = this.latest;
+    this.requestedTrack =
+      latest &&
+      this.role === "host" &&
+      this.live &&
+      this.visible &&
+      !this.muted() &&
+      this.prefs.musicEnabled
+        ? trackForState(latest.state)
+        : null;
     if (
       !latest ||
       !this.live ||
@@ -260,7 +294,7 @@ export class AudioEngine {
       return;
     const id = trackForState(latest.state);
     if (!id) {
-      this.music?.stop();
+      this.stopMusic();
       return;
     }
     if (this.music?.track === id) return;
@@ -272,23 +306,27 @@ export class AudioEngine {
       buffer = await this.loader.load(this.context, chosen);
     }
     if (
-      !buffer ||
       this.context?.state !== "running" ||
       request !== this.reconcileId ||
       generation !== this.generation ||
       !this.live ||
       !this.visible ||
       this.muted() ||
-      !this.prefs.musicEnabled
+      !this.prefs.musicEnabled ||
+      this.requestedTrack !== id
     )
       return;
+    if (!buffer) {
+      this.stopMusic();
+      this.notify();
+      return;
+    }
     const offset = phaseOffset(latest.state, latest.receivedAt, this.now());
     try {
       this.music!.play(assets[chosen], buffer, offset);
     } catch {
-      this.status = "error";
-      this.error =
-        "Sound is unavailable. Gameplay can continue; try Enable sound again.";
+      this.music?.dispose();
+      this.musicError();
     }
     this.notify();
   }
@@ -417,6 +455,10 @@ export class AudioEngine {
   }
   visibility(visible: boolean) {
     this.visible = visible;
+    if (!visible) {
+      this.reconcileId++;
+      this.requestedTrack = null;
+    }
     this.bus?.apply(this.prefs, this.role, visible && this.live);
     this.scheduler.resetBaseline();
     if (this.latest)
@@ -441,6 +483,7 @@ export class AudioEngine {
     this.generation++;
     this.live = false;
     this.reconcileId++;
+    this.requestedTrack = null;
     this.scheduler.resetBaseline();
     this.cancelTimers();
     this.music?.dispose();

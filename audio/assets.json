@@ -1,0 +1,1008 @@
+{
+  "version": 1,
+  "generator": "ruckus-procedural-v1",
+  "createdAt": "2026-10-15",
+  "encoder": "ffmpeg version 8.1 Copyright (c) 2000-2026 the FFmpeg developers",
+  "classification": "Original pre-release reference pack; human audible approval pending",
+  "assets": [
+    {
+      "id": "lobby",
+      "kind": "music",
+      "purpose": "Loop: lobby",
+      "loop": true,
+      "loopStart": 0,
+      "loopEnd": 17.142854,
+      "duration": 17.142854,
+      "sampleRate": 48000,
+      "formats": [
+        {
+          "url": "/audio/lobby.0cbec2718ac6.ogg",
+          "mime": "audio/ogg",
+          "bytes": 148210,
+          "sha256": "0cbec2718ac65501bdd3f0d86a036245987a47310fa43336da761b2d2ae5f01f"
+        },
+        {
+          "url": "/audio/lobby.6879994317da.mp3",
+          "mime": "audio/mpeg",
+          "bytes": 206516,
+          "sha256": "6879994317daafade2d6e5dce8aff48d0db473cb6331504f5d5cf72a41c5b5ef"
+        }
+      ],
+      "peak": 0.488368,
+      "rms": 0.105,
+      "dc": 3.33e-6,
+      "seamDelta": 0.00181,
+      "masterSha256": "460f57f1fda6deb5b17ae9f7dfb724da297b0b8db9b1b7da13eb51da60654065",
+      "origin": "Original deterministic synthesis; no imported recordings, compositions or samples",
+      "author": "Ruckus project procedural generator",
+      "generator": "ruckus-procedural-v1",
+      "createdAt": "2026-10-15",
+      "license": "Project-owned original procedural output; no third-party sample license",
+      "productionApproved": false,
+      "classification": "pre-release-reference",
+      "ships": true
+    },
+    {
+      "id": "intro",
+      "kind": "music",
+      "purpose": "Loop: intro",
+      "loop": true,
+      "loopStart": 0,
+      "loopEnd": 16.0,
+      "duration": 16.0,
+      "sampleRate": 48000,
+      "formats": [
+        {
+          "url": "/audio/intro.e2bd49e26f02.ogg",
+          "mime": "audio/ogg",
+          "bytes": 145219,
+          "sha256": "e2bd49e26f02ab9f877e8b6313376c6f96e92346481ec4c21b8d956299327de3"
+        },
+        {
+          "url": "/audio/intro.697ba0dd1343.mp3",
+          "mime": "audio/mpeg",
+          "bytes": 192692,
+          "sha256": "697ba0dd1343ea265c8f97f18e6d164307d1def1619706dc00dc488d42ae0fcc"
+        }
+      ],
+      "peak": 0.457636,
+      "rms": 0.105,
+      "dc": 8.63e-6,
+      "seamDelta": 0.004051,
+      "masterSha256": "9dd5b0ad427516f7b931669f478dbd6db8d43db766a58b3f185c9dc6dcb47554",
+      "origin": "Original deterministic synthesis; no imported recordings, compositions or samples",
+      "author": "Ruckus project procedural generator",
+      "generator": "ruckus-procedural-v1",
+      "createdAt": "2026-10-15",
+      "license": "Project-owned original procedural output; no third-party sample license",
+      "productionApproved": false,
+      "classification": "pre-release-reference",
+      "ships": true
+    },
+    {
+      "id": "hotwire",
+      "kind": "music",
+      "purpose": "Loop: hotwire",
+      "loop": true,
+      "loopStart": 0,
+      "loopEnd": 14.117646,
+      "duration": 14.117646,
+      "sampleRate": 48000,
+      "formats": [
+        {
+          "url": "/audio/hotwire.e6b7133adc21.ogg",
+          "mime": "audio/ogg",
+          "bytes": 126152,
+          "sha256": "e6b7133adc21c1ec386da1770acb498aae9ac34918878ea3e2b37d4f52521191"
+        },
+        {
+          "url": "/audio/hotwire.fed5ea6cb679.mp3",
+          "mime": "audio/mpeg",
+          "bytes": 170228,
+          "sha256": "fed5ea6cb6796f4cafd4656be8dcbf020b1018aaca2290bd5cb0d478c5b91d82"
+        }
+      ],
+      "peak": 0.454263,
+      "rms": 0.105,
+      "dc": 9.942e-5,
+      "seamDelta": 0.000664,
+      "masterSha256": "a29c63971867d03913b162d041c279c50632c7587cf6e0f8fa4e143d0b521a34",
+      "origin": "Original deterministic synthesis; no imported recordings, compositions or samples",
+      "author": "Ruckus project procedural generator",
+      "generator": "ruckus-procedural-v1",
+      "createdAt": "2026-10-15",
+      "license": "Project-owned original procedural output; no third-party sample license",
+      "productionApproved": false,
+      "classification": "pre-release-reference",
+      "ships": true
+    },
+    {
+      "id": "room-temperature",
+      "kind": "music",
+      "purpose": "Loop: room-temperature",
+      "loop": true,
+      "loopStart": 0,
+      "loopEnd": 18.113208,
+      "duration": 18.113208,
+      "sampleRate": 48000,
+      "formats": [
+        {
+          "url": "/audio/room-temperature.471e461f4d90.ogg",
+          "mime": "audio/ogg",
+          "bytes": 161920,
+          "sha256": "471e461f4d90420b4eff4ba373295bdeb0589dffdbeec441b5db20d2e286a98c"
+        },
+        {
+          "url": "/audio/room-temperature.c832606d0cf5.mp3",
+          "mime": "audio/mpeg",
+          "bytes": 218036,
+          "sha256": "c832606d0cf53ae895f7eb3c655f2fa3eaf42aad137a986427242b52afb5330f"
+        }
+      ],
+      "peak": 0.468708,
+      "rms": 0.105,
+      "dc": 1.433e-5,
+      "seamDelta": 0.000498,
+      "masterSha256": "b1aede05a69d6782232fb86c90154314a98002a95853eba6698146d7728319c7",
+      "origin": "Original deterministic synthesis; no imported recordings, compositions or samples",
+      "author": "Ruckus project procedural generator",
+      "generator": "ruckus-procedural-v1",
+      "createdAt": "2026-10-15",
+      "license": "Project-owned original procedural output; no third-party sample license",
+      "productionApproved": false,
+      "classification": "pre-release-reference",
+      "ships": true
+    },
+    {
+      "id": "sellout",
+      "kind": "music",
+      "purpose": "Loop: sellout",
+      "loop": true,
+      "loopStart": 0,
+      "loopEnd": 16.0,
+      "duration": 16.0,
+      "sampleRate": 48000,
+      "formats": [
+        {
+          "url": "/audio/sellout.15437e78fd16.ogg",
+          "mime": "audio/ogg",
+          "bytes": 148816,
+          "sha256": "15437e78fd167570355c0b5ccc4152175a5a144613b419f74959fc73c538d60c"
+        },
+        {
+          "url": "/audio/sellout.1a062e780c93.mp3",
+          "mime": "audio/mpeg",
+          "bytes": 192692,
+          "sha256": "1a062e780c93c0c4d6d1ded4143ff131436206cecc424c38e9dd6169cc6bf120"
+        }
+      ],
+      "peak": 0.4643,
+      "rms": 0.105,
+      "dc": 0.00011535,
+      "seamDelta": 0.003918,
+      "masterSha256": "8a2a8e6bb3b87208309e6df9e4f9dcde9ca5d200830899384a7c007a15d66592",
+      "origin": "Original deterministic synthesis; no imported recordings, compositions or samples",
+      "author": "Ruckus project procedural generator",
+      "generator": "ruckus-procedural-v1",
+      "createdAt": "2026-10-15",
+      "license": "Project-owned original procedural output; no third-party sample license",
+      "productionApproved": false,
+      "classification": "pre-release-reference",
+      "ships": true
+    },
+    {
+      "id": "caption-this",
+      "kind": "music",
+      "purpose": "Loop: caption-this",
+      "loop": true,
+      "loopStart": 0,
+      "loopEnd": 17.454542,
+      "duration": 17.454542,
+      "sampleRate": 48000,
+      "formats": [
+        {
+          "url": "/audio/caption-this.d12fbaf6d502.ogg",
+          "mime": "audio/ogg",
+          "bytes": 174232,
+          "sha256": "d12fbaf6d5029fa144d600f5cea20fd961fe5902bec5f0307f89bb81bc6e2c98"
+        },
+        {
+          "url": "/audio/caption-this.65b8be84e833.mp3",
+          "mime": "audio/mpeg",
+          "bytes": 210260,
+          "sha256": "65b8be84e833cef794495cd3406c55b73abcc5f038cb906d180da324bd000d17"
+        }
+      ],
+      "peak": 0.458282,
+      "rms": 0.105,
+      "dc": 8.07e-6,
+      "seamDelta": 0.003435,
+      "masterSha256": "99852c59553a9bc5cb6146165759cdd62a69a870d2e30154479254f5685abb7f",
+      "origin": "Original deterministic synthesis; no imported recordings, compositions or samples",
+      "author": "Ruckus project procedural generator",
+      "generator": "ruckus-procedural-v1",
+      "createdAt": "2026-10-15",
+      "license": "Project-owned original procedural output; no third-party sample license",
+      "productionApproved": false,
+      "classification": "pre-release-reference",
+      "ships": true
+    },
+    {
+      "id": "odd-one-in",
+      "kind": "music",
+      "purpose": "Loop: odd-one-in",
+      "loop": true,
+      "loopStart": 0,
+      "loopEnd": 17.777771,
+      "duration": 17.777771,
+      "sampleRate": 48000,
+      "formats": [
+        {
+          "url": "/audio/odd-one-in.fda38e477dfb.ogg",
+          "mime": "audio/ogg",
+          "bytes": 155181,
+          "sha256": "fda38e477dfb654bb2be8d786d66718845af2bb851824c841a6524e9f2bd29c1"
+        },
+        {
+          "url": "/audio/odd-one-in.f581a0276fdb.mp3",
+          "mime": "audio/mpeg",
+          "bytes": 214004,
+          "sha256": "f581a0276fdbf360f9a9b43e772a070464331691a6ecf46b37627c8ce3c15726"
+        }
+      ],
+      "peak": 0.49318,
+      "rms": 0.105,
+      "dc": 0.00010543,
+      "seamDelta": 0.001568,
+      "masterSha256": "14e2fbfd09b3bce1d776312aee0cfc367797a1a5f4fa5fb2a98aac3fa17b438a",
+      "origin": "Original deterministic synthesis; no imported recordings, compositions or samples",
+      "author": "Ruckus project procedural generator",
+      "generator": "ruckus-procedural-v1",
+      "createdAt": "2026-10-15",
+      "license": "Project-owned original procedural output; no third-party sample license",
+      "productionApproved": false,
+      "classification": "pre-release-reference",
+      "ships": true
+    },
+    {
+      "id": "scribble-shift",
+      "kind": "music",
+      "purpose": "Loop: scribble-shift",
+      "loop": true,
+      "loopStart": 0,
+      "loopEnd": 14.769229,
+      "duration": 14.769229,
+      "sampleRate": 48000,
+      "formats": [
+        {
+          "url": "/audio/scribble-shift.950318268e47.ogg",
+          "mime": "audio/ogg",
+          "bytes": 139371,
+          "sha256": "950318268e473578dc73386e4c94e720f7f55eadfa55349bdb6af3af6ff5e695"
+        },
+        {
+          "url": "/audio/scribble-shift.cd3c4cc07762.mp3",
+          "mime": "audio/mpeg",
+          "bytes": 178004,
+          "sha256": "cd3c4cc077623bc11fe8235af775b0946a89aedfe37ca37607dca72499bc2b6b"
+        }
+      ],
+      "peak": 0.456921,
+      "rms": 0.105,
+      "dc": 0.00012002,
+      "seamDelta": 0.006429,
+      "masterSha256": "204043d21c946af3ebf143bdbcdb8a78c0a59edd398ab15f128fbd4f02e775ca",
+      "origin": "Original deterministic synthesis; no imported recordings, compositions or samples",
+      "author": "Ruckus project procedural generator",
+      "generator": "ruckus-procedural-v1",
+      "createdAt": "2026-10-15",
+      "license": "Project-owned original procedural output; no third-party sample license",
+      "productionApproved": false,
+      "classification": "pre-release-reference",
+      "ships": true
+    },
+    {
+      "id": "studio",
+      "kind": "music",
+      "purpose": "Loop: studio",
+      "loop": true,
+      "loopStart": 0,
+      "loopEnd": 16.551729,
+      "duration": 16.551729,
+      "sampleRate": 48000,
+      "formats": [
+        {
+          "url": "/audio/studio.7dc71bbfe6d3.ogg",
+          "mime": "audio/ogg",
+          "bytes": 143268,
+          "sha256": "7dc71bbfe6d32cc2454cb2b90279171f98667bed14ff0d3b7c82611d3fda2c0d"
+        },
+        {
+          "url": "/audio/studio.c58110a1e4f1.mp3",
+          "mime": "audio/mpeg",
+          "bytes": 199316,
+          "sha256": "c58110a1e4f172d619a8713c6cd16e3a5aaa044024af56fbbbb0ab8a71840043"
+        }
+      ],
+      "peak": 0.47368,
+      "rms": 0.105,
+      "dc": -0.00010128,
+      "seamDelta": 0.000719,
+      "masterSha256": "2e6daf32b61e488fe1982755c8dc0d842c90ffeef729f108b01c044ae14dc07a",
+      "origin": "Original deterministic synthesis; no imported recordings, compositions or samples",
+      "author": "Ruckus project procedural generator",
+      "generator": "ruckus-procedural-v1",
+      "createdAt": "2026-10-15",
+      "license": "Project-owned original procedural output; no third-party sample license",
+      "productionApproved": false,
+      "classification": "pre-release-reference",
+      "ships": true
+    },
+    {
+      "id": "results",
+      "kind": "music",
+      "purpose": "Loop: results",
+      "loop": true,
+      "loopStart": 0,
+      "loopEnd": 17.142854,
+      "duration": 17.142854,
+      "sampleRate": 48000,
+      "formats": [
+        {
+          "url": "/audio/results.a4e85a7dc4ee.ogg",
+          "mime": "audio/ogg",
+          "bytes": 155605,
+          "sha256": "a4e85a7dc4ee029a348fa7b9576f6f6f8aea8eab63be114ad28478e5783b3967"
+        },
+        {
+          "url": "/audio/results.b378461ddb3b.mp3",
+          "mime": "audio/mpeg",
+          "bytes": 206516,
+          "sha256": "b378461ddb3bdd83a62957339ad5986fdcc9dedef300535655b80f5016e81548"
+        }
+      ],
+      "peak": 0.470874,
+      "rms": 0.105,
+      "dc": 2.607e-5,
+      "seamDelta": 0.003309,
+      "masterSha256": "1201cc5dde93b60286433520b42c658bb39dfa5146e24ba9bb39b960c2ffcb50",
+      "origin": "Original deterministic synthesis; no imported recordings, compositions or samples",
+      "author": "Ruckus project procedural generator",
+      "generator": "ruckus-procedural-v1",
+      "createdAt": "2026-10-15",
+      "license": "Project-owned original procedural output; no third-party sample license",
+      "productionApproved": false,
+      "classification": "pre-release-reference",
+      "ships": true
+    },
+    {
+      "id": "leaderboard",
+      "kind": "music",
+      "purpose": "Loop: leaderboard",
+      "loop": true,
+      "loopStart": 0,
+      "loopEnd": 15.483875,
+      "duration": 15.483875,
+      "sampleRate": 48000,
+      "formats": [
+        {
+          "url": "/audio/leaderboard.da50f8a3365d.ogg",
+          "mime": "audio/ogg",
+          "bytes": 149656,
+          "sha256": "da50f8a3365dcafcb530dcb04046dac9190bc67ef3ccd0935eb625f78698d6e1"
+        },
+        {
+          "url": "/audio/leaderboard.e2f83c608951.mp3",
+          "mime": "audio/mpeg",
+          "bytes": 186644,
+          "sha256": "e2f83c608951856224e993f5cf94b80ad499eb19d40c93fa6c7fd1bd286d7da3"
+        }
+      ],
+      "peak": 0.476175,
+      "rms": 0.105,
+      "dc": 3.526e-5,
+      "seamDelta": 0.005463,
+      "masterSha256": "905cfc43d7ed7e8cc72d6271f0a55a061eeb2f6c830cfdb71d1cc421196b6ceb",
+      "origin": "Original deterministic synthesis; no imported recordings, compositions or samples",
+      "author": "Ruckus project procedural generator",
+      "generator": "ruckus-procedural-v1",
+      "createdAt": "2026-10-15",
+      "license": "Project-owned original procedural output; no third-party sample license",
+      "productionApproved": false,
+      "classification": "pre-release-reference",
+      "ships": true
+    },
+    {
+      "id": "intermission",
+      "kind": "music",
+      "purpose": "Loop: intermission",
+      "loop": true,
+      "loopStart": 0,
+      "loopEnd": 18.461542,
+      "duration": 18.461542,
+      "sampleRate": 48000,
+      "formats": [
+        {
+          "url": "/audio/intermission.aaaea16c969b.ogg",
+          "mime": "audio/ogg",
+          "bytes": 165344,
+          "sha256": "aaaea16c969b644a26333fcbfe63ae16bd598c2c5aeb6ca0356cdef11b38762a"
+        },
+        {
+          "url": "/audio/intermission.748efc0c877c.mp3",
+          "mime": "audio/mpeg",
+          "bytes": 222356,
+          "sha256": "748efc0c877c04347e5450d436840a90ec142fda7fe37923192e5b0a36e4fca4"
+        }
+      ],
+      "peak": 0.474105,
+      "rms": 0.105,
+      "dc": 5.279e-5,
+      "seamDelta": 0.002089,
+      "masterSha256": "26aa6c8420a2cdd63ff8259e7f55ddbf997188c3ff7b5fadd131f8e2b5f2edcb",
+      "origin": "Original deterministic synthesis; no imported recordings, compositions or samples",
+      "author": "Ruckus project procedural generator",
+      "generator": "ruckus-procedural-v1",
+      "createdAt": "2026-10-15",
+      "license": "Project-owned original procedural output; no third-party sample license",
+      "productionApproved": false,
+      "classification": "pre-release-reference",
+      "ships": true
+    },
+    {
+      "id": "finale",
+      "kind": "music",
+      "purpose": "Loop: finale",
+      "loop": true,
+      "loopStart": 0,
+      "loopEnd": 15.0,
+      "duration": 15.0,
+      "sampleRate": 48000,
+      "formats": [
+        {
+          "url": "/audio/finale.a9fda0e369c7.ogg",
+          "mime": "audio/ogg",
+          "bytes": 137234,
+          "sha256": "a9fda0e369c71cf94e44b84d030f793d57309837487f24b8bf4e1b1355b700fa"
+        },
+        {
+          "url": "/audio/finale.2e959cbb7737.mp3",
+          "mime": "audio/mpeg",
+          "bytes": 180596,
+          "sha256": "2e959cbb7737b40d7b651d275989dffda39ca55f7594573247d24dc52cf2f073"
+        }
+      ],
+      "peak": 0.443566,
+      "rms": 0.105,
+      "dc": -1.176e-5,
+      "seamDelta": 0.000388,
+      "masterSha256": "567313240a9667b25ea00c6a73e482c399ecc11d8a13af2077847a5d886719f7",
+      "origin": "Original deterministic synthesis; no imported recordings, compositions or samples",
+      "author": "Ruckus project procedural generator",
+      "generator": "ruckus-procedural-v1",
+      "createdAt": "2026-10-15",
+      "license": "Project-owned original procedural output; no third-party sample license",
+      "productionApproved": false,
+      "classification": "pre-release-reference",
+      "ships": true
+    },
+    {
+      "id": "event_start",
+      "kind": "sfx",
+      "purpose": "Cue: event_start",
+      "loop": false,
+      "loopStart": 0,
+      "loopEnd": 1.35,
+      "duration": 1.35,
+      "sampleRate": 48000,
+      "formats": [
+        {
+          "url": "/audio/event_start.ca0d6fc89411.ogg",
+          "mime": "audio/ogg",
+          "bytes": 12768,
+          "sha256": "ca0d6fc89411848be5e8268a98f80a4f88479e27287b53ec6c22f77fc1c25329"
+        },
+        {
+          "url": "/audio/event_start.0783ea01959a.mp3",
+          "mime": "audio/mpeg",
+          "bytes": 17012,
+          "sha256": "0783ea01959a4f6245b83b09c9579c7e5f67cde3fa9420a19203991c810e08d2"
+        }
+      ],
+      "peak": 0.72,
+      "rms": 0.117282,
+      "dc": -7.094e-5,
+      "seamDelta": 0.0,
+      "masterSha256": "2bb08e5da4659b567d6fb279ed4601a46cf18cf3dd42f8c2ca0b29e370bcc32b",
+      "origin": "Original deterministic synthesis; no imported recordings, compositions or samples",
+      "author": "Ruckus project procedural generator",
+      "generator": "ruckus-procedural-v1",
+      "createdAt": "2026-10-15",
+      "license": "Project-owned original procedural output; no third-party sample license",
+      "productionApproved": false,
+      "classification": "pre-release-reference",
+      "ships": true
+    },
+    {
+      "id": "segment_intro",
+      "kind": "sfx",
+      "purpose": "Cue: segment_intro",
+      "loop": false,
+      "loopStart": 0,
+      "loopEnd": 0.85,
+      "duration": 0.85,
+      "sampleRate": 48000,
+      "formats": [
+        {
+          "url": "/audio/segment_intro.f9753d91cd43.ogg",
+          "mime": "audio/ogg",
+          "bytes": 8100,
+          "sha256": "f9753d91cd43c20e9186de2887fdcc54c236531eeecddf433776c4c8eb0961dd"
+        },
+        {
+          "url": "/audio/segment_intro.bd437bf0d2d5.mp3",
+          "mime": "audio/mpeg",
+          "bytes": 10964,
+          "sha256": "bd437bf0d2d5f226b83b9fa0a2f827a4608b8c6b2bbe23cf4b8df9286531fdd4"
+        }
+      ],
+      "peak": 0.672219,
+      "rms": 0.12,
+      "dc": -2.259e-5,
+      "seamDelta": 0.0,
+      "masterSha256": "5c01aa2a074ae5608f434f9d852ff1671487d7db0c5215fe810831c6cc9d8c24",
+      "origin": "Original deterministic synthesis; no imported recordings, compositions or samples",
+      "author": "Ruckus project procedural generator",
+      "generator": "ruckus-procedural-v1",
+      "createdAt": "2026-10-15",
+      "license": "Project-owned original procedural output; no third-party sample license",
+      "productionApproved": false,
+      "classification": "pre-release-reference",
+      "ships": true
+    },
+    {
+      "id": "lock",
+      "kind": "sfx",
+      "purpose": "Cue: lock",
+      "loop": false,
+      "loopStart": 0,
+      "loopEnd": 0.25,
+      "duration": 0.25,
+      "sampleRate": 48000,
+      "formats": [
+        {
+          "url": "/audio/lock.041f13ea497c.ogg",
+          "mime": "audio/ogg",
+          "bytes": 2467,
+          "sha256": "041f13ea497c492fbe0a6f69e48098af92d80f7f7deb3a688d48a39ea608eb18"
+        },
+        {
+          "url": "/audio/lock.0b6223921f24.mp3",
+          "mime": "audio/mpeg",
+          "bytes": 3764,
+          "sha256": "0b6223921f24f9d77e35c4e1e552f8195cf3355efab56daf2aafed000513ebb0"
+        }
+      ],
+      "peak": 0.365438,
+      "rms": 0.12,
+      "dc": -0.00015922,
+      "seamDelta": 0.0,
+      "masterSha256": "1efc03f37ad0f30ef0a39ddb2808cb2f8f53bd9a26f79f8ce9928f0cf04cadc4",
+      "origin": "Original deterministic synthesis; no imported recordings, compositions or samples",
+      "author": "Ruckus project procedural generator",
+      "generator": "ruckus-procedural-v1",
+      "createdAt": "2026-10-15",
+      "license": "Project-owned original procedural output; no third-party sample license",
+      "productionApproved": false,
+      "classification": "pre-release-reference",
+      "ships": true
+    },
+    {
+      "id": "reveal",
+      "kind": "sfx",
+      "purpose": "Cue: reveal",
+      "loop": false,
+      "loopStart": 0,
+      "loopEnd": 1.1,
+      "duration": 1.1,
+      "sampleRate": 48000,
+      "formats": [
+        {
+          "url": "/audio/reveal.996b04be627a.ogg",
+          "mime": "audio/ogg",
+          "bytes": 10806,
+          "sha256": "996b04be627a9f88a04a65ab33770570f86db1c84b4a8409df61eefc4160620f"
+        },
+        {
+          "url": "/audio/reveal.27ef7b1d08a6.mp3",
+          "mime": "audio/mpeg",
+          "bytes": 13844,
+          "sha256": "27ef7b1d08a66c40eaa50eb6413d13682080271cc728aef4b0ffc5f5f7c04d9f"
+        }
+      ],
+      "peak": 0.716697,
+      "rms": 0.12,
+      "dc": -8.065e-5,
+      "seamDelta": 0.0,
+      "masterSha256": "8f9e45d35721d8fa75812a2875dcc1e4401e1b3b57237a4d3e5f7f5599673d86",
+      "origin": "Original deterministic synthesis; no imported recordings, compositions or samples",
+      "author": "Ruckus project procedural generator",
+      "generator": "ruckus-procedural-v1",
+      "createdAt": "2026-10-15",
+      "license": "Project-owned original procedural output; no third-party sample license",
+      "productionApproved": false,
+      "classification": "pre-release-reference",
+      "ships": true
+    },
+    {
+      "id": "leaderboard_sting",
+      "kind": "sfx",
+      "purpose": "Cue: leaderboard_sting",
+      "loop": false,
+      "loopStart": 0,
+      "loopEnd": 1.3,
+      "duration": 1.3,
+      "sampleRate": 48000,
+      "formats": [
+        {
+          "url": "/audio/leaderboard_sting.b5f390cb865a.ogg",
+          "mime": "audio/ogg",
+          "bytes": 12710,
+          "sha256": "b5f390cb865a70a9978e2e1d6b4c0de6b7e423ec2f033876921d7abcb9f30559"
+        },
+        {
+          "url": "/audio/leaderboard_sting.2854fc66ed94.mp3",
+          "mime": "audio/mpeg",
+          "bytes": 16436,
+          "sha256": "2854fc66ed942d89460001272ebbd5c2179cd292080063acde7911bb190cc8a5"
+        }
+      ],
+      "peak": 0.72,
+      "rms": 0.112695,
+      "dc": 2.089e-5,
+      "seamDelta": 0.0,
+      "masterSha256": "3ec045fc1bf409005f48c1362a37b770dac48cb9ccd853ca601b9b0d85e663d1",
+      "origin": "Original deterministic synthesis; no imported recordings, compositions or samples",
+      "author": "Ruckus project procedural generator",
+      "generator": "ruckus-procedural-v1",
+      "createdAt": "2026-10-15",
+      "license": "Project-owned original procedural output; no third-party sample license",
+      "productionApproved": false,
+      "classification": "pre-release-reference",
+      "ships": true
+    },
+    {
+      "id": "finale_sting",
+      "kind": "sfx",
+      "purpose": "Cue: finale_sting",
+      "loop": false,
+      "loopStart": 0,
+      "loopEnd": 2.0,
+      "duration": 2.0,
+      "sampleRate": 48000,
+      "formats": [
+        {
+          "url": "/audio/finale_sting.6863f0ab48d1.ogg",
+          "mime": "audio/ogg",
+          "bytes": 21873,
+          "sha256": "6863f0ab48d1344b649787af4ba041a316f7bdf4bfee2209388c747d989af8b3"
+        },
+        {
+          "url": "/audio/finale_sting.fb8db257e91c.mp3",
+          "mime": "audio/mpeg",
+          "bytes": 24788,
+          "sha256": "fb8db257e91c4baec4d509374c5138d51c8565294362268ed960ed5a42562ffb"
+        }
+      ],
+      "peak": 0.72,
+      "rms": 0.10279,
+      "dc": -4.867e-5,
+      "seamDelta": 0.0,
+      "masterSha256": "771005fe99f232cf81515fabcfa280d3b7fe7c2bc375967f7b612bdff519c019",
+      "origin": "Original deterministic synthesis; no imported recordings, compositions or samples",
+      "author": "Ruckus project procedural generator",
+      "generator": "ruckus-procedural-v1",
+      "createdAt": "2026-10-15",
+      "license": "Project-owned original procedural output; no third-party sample license",
+      "productionApproved": false,
+      "classification": "pre-release-reference",
+      "ships": true
+    },
+    {
+      "id": "end",
+      "kind": "sfx",
+      "purpose": "Cue: end",
+      "loop": false,
+      "loopStart": 0,
+      "loopEnd": 1.2,
+      "duration": 1.2,
+      "sampleRate": 48000,
+      "formats": [
+        {
+          "url": "/audio/end.cf5e23850e59.ogg",
+          "mime": "audio/ogg",
+          "bytes": 10745,
+          "sha256": "cf5e23850e59995a016a97cffd47b8811e12667330a0950783f14e15b6efc431"
+        },
+        {
+          "url": "/audio/end.531c8eaa6e38.mp3",
+          "mime": "audio/mpeg",
+          "bytes": 14996,
+          "sha256": "531c8eaa6e38e9ed6ceb0e7f3f7e9268832bb1991781a4fc10481b46427869d4"
+        }
+      ],
+      "peak": 0.72,
+      "rms": 0.113971,
+      "dc": -2.294e-5,
+      "seamDelta": 0.0,
+      "masterSha256": "52bd9799c03886fc75b882dd249ecc3afa76f96082684a5c7f6204c845e4a78f",
+      "origin": "Original deterministic synthesis; no imported recordings, compositions or samples",
+      "author": "Ruckus project procedural generator",
+      "generator": "ruckus-procedural-v1",
+      "createdAt": "2026-10-15",
+      "license": "Project-owned original procedural output; no third-party sample license",
+      "productionApproved": false,
+      "classification": "pre-release-reference",
+      "ships": true
+    },
+    {
+      "id": "tick_soft",
+      "kind": "sfx",
+      "purpose": "Cue: tick_soft",
+      "loop": false,
+      "loopStart": 0,
+      "loopEnd": 0.12,
+      "duration": 0.12,
+      "sampleRate": 48000,
+      "formats": [
+        {
+          "url": "/audio/tick_soft.e73cbfb2c684.ogg",
+          "mime": "audio/ogg",
+          "bytes": 1816,
+          "sha256": "e73cbfb2c684d9559332f4ba5c2008b96bd334dd40575b5dbb10ffe429ac40a7"
+        },
+        {
+          "url": "/audio/tick_soft.51a8b02b8d8f.mp3",
+          "mime": "audio/mpeg",
+          "bytes": 2036,
+          "sha256": "51a8b02b8d8fd722b8f2400ce3c61ea94c7809e01f84814a837605c49a130517"
+        }
+      ],
+      "peak": 0.236431,
+      "rms": 0.12,
+      "dc": -1.07e-6,
+      "seamDelta": 0.0,
+      "masterSha256": "ea5d60a79df197441210a9b8f0a533f642a90ecd44607ec136754b26f434af1e",
+      "origin": "Original deterministic synthesis; no imported recordings, compositions or samples",
+      "author": "Ruckus project procedural generator",
+      "generator": "ruckus-procedural-v1",
+      "createdAt": "2026-10-15",
+      "license": "Project-owned original procedural output; no third-party sample license",
+      "productionApproved": false,
+      "classification": "pre-release-reference",
+      "ships": true
+    },
+    {
+      "id": "tick_urgent",
+      "kind": "sfx",
+      "purpose": "Cue: tick_urgent",
+      "loop": false,
+      "loopStart": 0,
+      "loopEnd": 0.14,
+      "duration": 0.14,
+      "sampleRate": 48000,
+      "formats": [
+        {
+          "url": "/audio/tick_urgent.79d7be2ff2f7.ogg",
+          "mime": "audio/ogg",
+          "bytes": 2180,
+          "sha256": "79d7be2ff2f7db769ed2fa088addf0f74c4edeb3d2003c8b4cccde96b5917ba1"
+        },
+        {
+          "url": "/audio/tick_urgent.04cefc60339f.mp3",
+          "mime": "audio/mpeg",
+          "bytes": 2324,
+          "sha256": "04cefc60339fc1a7c1a3f857cb543455c9d7324ffc2374a3e68bfb08b9cb0544"
+        }
+      ],
+      "peak": 0.251111,
+      "rms": 0.12,
+      "dc": -1.2e-7,
+      "seamDelta": 0.0,
+      "masterSha256": "5099a96f63ef79c4e6894620f64b2b2ca8146eedea873c03af126bcee13cc813",
+      "origin": "Original deterministic synthesis; no imported recordings, compositions or samples",
+      "author": "Ruckus project procedural generator",
+      "generator": "ruckus-procedural-v1",
+      "createdAt": "2026-10-15",
+      "license": "Project-owned original procedural output; no third-party sample license",
+      "productionApproved": false,
+      "classification": "pre-release-reference",
+      "ships": true
+    },
+    {
+      "id": "select",
+      "kind": "sfx",
+      "purpose": "Cue: select",
+      "loop": false,
+      "loopStart": 0,
+      "loopEnd": 0.08,
+      "duration": 0.08,
+      "sampleRate": 48000,
+      "formats": [
+        {
+          "url": "/audio/select.2e16cee058e5.ogg",
+          "mime": "audio/ogg",
+          "bytes": 1289,
+          "sha256": "2e16cee058e5dc02b6b7eefb03b612d0621e7c75b050a2a3edab75fb8a71050f"
+        },
+        {
+          "url": "/audio/select.2b849162e8c7.mp3",
+          "mime": "audio/mpeg",
+          "bytes": 1748,
+          "sha256": "2b849162e8c75c10ccad5ea2fabcf9f62948a01f18bf2c4df34d63747beac1e2"
+        }
+      ],
+      "peak": 0.208991,
+      "rms": 0.12,
+      "dc": -1.48e-6,
+      "seamDelta": 0.0,
+      "masterSha256": "4464e792b651911728eaf62fa0543642f90a11b9d47b73db13c5139a3aa2b3b8",
+      "origin": "Original deterministic synthesis; no imported recordings, compositions or samples",
+      "author": "Ruckus project procedural generator",
+      "generator": "ruckus-procedural-v1",
+      "createdAt": "2026-10-15",
+      "license": "Project-owned original procedural output; no third-party sample license",
+      "productionApproved": false,
+      "classification": "pre-release-reference",
+      "ships": true
+    },
+    {
+      "id": "confirm",
+      "kind": "sfx",
+      "purpose": "Cue: confirm",
+      "loop": false,
+      "loopStart": 0,
+      "loopEnd": 0.22,
+      "duration": 0.22,
+      "sampleRate": 48000,
+      "formats": [
+        {
+          "url": "/audio/confirm.acb1f479065b.ogg",
+          "mime": "audio/ogg",
+          "bytes": 2660,
+          "sha256": "acb1f479065b5fc6edac9ab85b2fc3a61748fc5f979fb14ef07c75c9d7a2dc0b"
+        },
+        {
+          "url": "/audio/confirm.b93332261dd3.mp3",
+          "mime": "audio/mpeg",
+          "bytes": 3476,
+          "sha256": "b93332261dd319caea913e0437782caba25e5c3eee86fe50ce45a2d0e4bb7d59"
+        }
+      ],
+      "peak": 0.351517,
+      "rms": 0.12,
+      "dc": -1.632e-5,
+      "seamDelta": 0.0,
+      "masterSha256": "256edaa635873ebeed3fcbbb1790966ec605f44c8c5b3d25ca6c3668e50d7081",
+      "origin": "Original deterministic synthesis; no imported recordings, compositions or samples",
+      "author": "Ruckus project procedural generator",
+      "generator": "ruckus-procedural-v1",
+      "createdAt": "2026-10-15",
+      "license": "Project-owned original procedural output; no third-party sample license",
+      "productionApproved": false,
+      "classification": "pre-release-reference",
+      "ships": true
+    },
+    {
+      "id": "vote",
+      "kind": "sfx",
+      "purpose": "Cue: vote",
+      "loop": false,
+      "loopStart": 0,
+      "loopEnd": 0.24,
+      "duration": 0.24,
+      "sampleRate": 48000,
+      "formats": [
+        {
+          "url": "/audio/vote.591343a802a6.ogg",
+          "mime": "audio/ogg",
+          "bytes": 3207,
+          "sha256": "591343a802a63914494d8e41ded9b1ee4e644797c615ad188474bde123fc461d"
+        },
+        {
+          "url": "/audio/vote.2bfa60afbfb3.mp3",
+          "mime": "audio/mpeg",
+          "bytes": 3476,
+          "sha256": "2bfa60afbfb3c602378c30cffe336f1369cfa13ded9a918da35f588d5efc2c73"
+        }
+      ],
+      "peak": 0.359915,
+      "rms": 0.12,
+      "dc": 1.716e-5,
+      "seamDelta": 0.0,
+      "masterSha256": "e5eb0fe89da7756979b07c3080899118cf88ccc799c57071af37b31dd6fe9d7e",
+      "origin": "Original deterministic synthesis; no imported recordings, compositions or samples",
+      "author": "Ruckus project procedural generator",
+      "generator": "ruckus-procedural-v1",
+      "createdAt": "2026-10-15",
+      "license": "Project-owned original procedural output; no third-party sample license",
+      "productionApproved": false,
+      "classification": "pre-release-reference",
+      "ships": true
+    },
+    {
+      "id": "correct",
+      "kind": "sfx",
+      "purpose": "Cue: correct",
+      "loop": false,
+      "loopStart": 0,
+      "loopEnd": 0.38,
+      "duration": 0.38,
+      "sampleRate": 48000,
+      "formats": [
+        {
+          "url": "/audio/correct.dfbc8361e7a1.ogg",
+          "mime": "audio/ogg",
+          "bytes": 4394,
+          "sha256": "dfbc8361e7a19d9ee9bec91201a2ebed0aae7246acf25a569e3b8ec39a7a0980"
+        },
+        {
+          "url": "/audio/correct.10e3c8ed20a3.mp3",
+          "mime": "audio/mpeg",
+          "bytes": 5204,
+          "sha256": "10e3c8ed20a34da23aa28d4c34e6ae09e1da5cee852a11aef308446b04b7dcf5"
+        }
+      ],
+      "peak": 0.42882,
+      "rms": 0.12,
+      "dc": 3.747e-5,
+      "seamDelta": 0.0,
+      "masterSha256": "c7124495c9c7cc12c27957f8770fc72956eafb2df0540b07dabbb5cb6270e6d4",
+      "origin": "Original deterministic synthesis; no imported recordings, compositions or samples",
+      "author": "Ruckus project procedural generator",
+      "generator": "ruckus-procedural-v1",
+      "createdAt": "2026-10-15",
+      "license": "Project-owned original procedural output; no third-party sample license",
+      "productionApproved": false,
+      "classification": "pre-release-reference",
+      "ships": true
+    },
+    {
+      "id": "incorrect",
+      "kind": "sfx",
+      "purpose": "Cue: incorrect",
+      "loop": false,
+      "loopStart": 0,
+      "loopEnd": 0.3,
+      "duration": 0.3,
+      "sampleRate": 48000,
+      "formats": [
+        {
+          "url": "/audio/incorrect.929e090679f3.ogg",
+          "mime": "audio/ogg",
+          "bytes": 2543,
+          "sha256": "929e090679f38d79694f1abf4c6ae493e2caf79840161a5727b75fcf027acac9"
+        },
+        {
+          "url": "/audio/incorrect.584d3929abde.mp3",
+          "mime": "audio/mpeg",
+          "bytes": 4340,
+          "sha256": "584d3929abde1ff149cebe619cc61e6af5295508396b198bdc11456f24b6a87d"
+        }
+      ],
+      "peak": 0.385586,
+      "rms": 0.12,
+      "dc": -1.71e-6,
+      "seamDelta": 0.0,
+      "masterSha256": "034d7d577d4d06969be664345b206ede20d5e1afba68c2f6c0234789e220e9ab",
+      "origin": "Original deterministic synthesis; no imported recordings, compositions or samples",
+      "author": "Ruckus project procedural generator",
+      "generator": "ruckus-procedural-v1",
+      "createdAt": "2026-10-15",
+      "license": "Project-owned original procedural output; no third-party sample license",
+      "productionApproved": false,
+      "classification": "pre-release-reference",
+      "ships": true
+    }
+  ]
+}

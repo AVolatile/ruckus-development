@@ -441,6 +441,14 @@ if (process.env.REALTIME_ONLY === "true") {
   process.env.NODE_ENV === "production" ||
   process.argv[1]?.endsWith(".js")
 ) {
+  app.use(
+    "/audio",
+    express.static(path.resolve("dist/audio"), {
+      maxAge: "1y",
+      immutable: true,
+      index: false,
+    }),
+  );
   app.use(express.static(path.resolve("dist"), { maxAge: "1h" }));
   app.get("*", (_req, res) => res.sendFile(path.resolve("dist/index.html")));
 } else {

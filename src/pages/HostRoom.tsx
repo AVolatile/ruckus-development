@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { gameById, gameForRoom } from "../../shared/catalog";
 import { useParty } from "../lib/party";
-import { playSound } from "../lib/sound";
+import { useLiveAudio } from "../audio/AudioContext";
 import { Avatar, Confetti, Icon, Logo, Star, Tag } from "../components/Visuals";
 import { Awards, JoinQR, Scoreboard, Timer } from "../components/RoomParts";
 import { HostGallery } from "../components/HostGallery";
@@ -14,8 +14,8 @@ export function HostRoom() {
   const party = useParty(),
     { code } = useParams(),
     room = party.room;
+  const audio = useLiveAudio();
   const [drawer, setDrawer] = useState(false),
-    [muted, setMuted] = useState(true),
     [ending, setEnding] = useState(false);
   useEffect(() => {
     if (!ending) return;
@@ -45,27 +45,11 @@ export function HostRoom() {
       previouslyFocused?.focus();
     };
   }, [ending]);
-  const previous = useRef({ phase: "", count: 0 });
   const fullscreen = useCallback(() => {
     if (document.fullscreenElement) void document.exitFullscreen();
     else
       void document.documentElement.requestFullscreen().catch(() => undefined);
   }, []);
-  useEffect(() => {
-    if (!room || room.event) return;
-    if (!muted) {
-      if (room.phase !== previous.current.phase)
-        playSound(
-          room.phase === "final"
-            ? "winner"
-            : room.phase === "results"
-              ? "reveal"
-              : "tick",
-        );
-      else if (room.players.length > previous.current.count) playSound("join");
-    }
-    previous.current = { phase: room.phase, count: room.players.length };
-  }, [room, muted]);
   useEffect(() => {
     const key = (e: KeyboardEvent) => {
       if (
@@ -74,6 +58,10 @@ export function HostRoom() {
         e.metaKey
       )
         return;
+      if (e.key.toLowerCase() === "m") {
+        audio.toggleMute();
+        return;
+      }
       if (room?.event && room.event.state !== "GAME_ACTIVE") return;
       if (e.key === " ") {
         e.preventDefault();
@@ -81,12 +69,11 @@ export function HostRoom() {
       }
       if (e.key.toLowerCase() === "p") void party.action("pause");
       if (e.key.toLowerCase() === "f") fullscreen();
-      if (e.key.toLowerCase() === "m") setMuted((m) => !m);
       if (e.key.toLowerCase() === "h") setDrawer((d) => !d);
     };
     window.addEventListener("keydown", key);
     return () => window.removeEventListener("keydown", key);
-  }, [party, room?.phase, room?.event, fullscreen]);
+  }, [party, room?.phase, room?.event, fullscreen, audio]);
   if (!room || room.code !== code || party.identity?.role !== "host")
     return (
       <div className="room-recovery">
@@ -476,9 +463,6 @@ export function HostRoom() {
             </button>
           </>
         )}
-        <button onClick={() => setMuted((v) => !v)}>
-          {muted ? "Sound off" : "Sound on"} <kbd>M</kbd>
-        </button>
         <button onClick={fullscreen}>
           Full screen <kbd>F</kbd>
         </button>

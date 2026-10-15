@@ -13,6 +13,8 @@ import type {
   Submission,
 } from "../shared/types.js";
 import { botCreative, getPrompt, type Question } from "./content.js";
+import { standaloneCues, standaloneStage } from "../shared/audio.js";
+import type { AudioCue } from "../shared/audio.js";
 import { safeText } from "./validation.js";
 interface PrivatePlayer {
   public: Player;
@@ -47,6 +49,7 @@ export const makeCode = () =>
   ).join("");
 export class Room {
   readonly hostToken = randomUUID();
+  readonly audioRoomId = randomUUID();
   readonly createdAt = Date.now();
   phase: Phase = "lobby";
   players = new Map<string, PrivatePlayer>();
@@ -70,6 +73,11 @@ export class Room {
   private timeout: ReturnType<typeof setTimeout> | null = null;
   private botTimers: ReturnType<typeof setTimeout>[] = [];
   private roundSequence = 0;
+  private audioSequence = 0;
+  private phaseStartedAt = Date.now();
+  private phasePausedMs = 0;
+  private pauseStartedAt: number | null = null;
+  private audioCues: AudioCue[] = ["LOBBY_ENTER"];
   private offset = randomInt(500);
   private ranks = new Map<string, number>();
   private boardQuestion: CustomQuestion | null = null;
@@ -231,7 +239,39 @@ export class Room {
           scoreMode: this.boardQuestion?.scoreMode,
         }
       : null;
+    const now = Date.now();
     return {
+      audio: {
+        roomId: this.audioRoomId,
+        sequence: this.audioSequence,
+        names: this.audioCues,
+        occurredAt: this.phaseStartedAt,
+        phase: this.phase,
+        phaseStartedAt: this.phaseStartedAt,
+        elapsedMs: Math.max(
+          0,
+          (this.pauseStartedAt ?? now) -
+            this.phaseStartedAt -
+            this.phasePausedMs,
+        ),
+        remainingMs: this.deadline
+          ? this.paused
+            ? this.remaining
+            : Math.max(0, this.deadline - now)
+          : null,
+        paused: this.paused,
+        profile: this.board
+          ? this.boardQuestion?.type === "poll" ||
+            this.boardQuestion?.scoreMode === "no-score" ||
+            !this.board.questions.some(
+              (q) => q.type !== "poll" && q.scoreMode !== "no-score",
+            )
+            ? "studio-poll"
+            : "studio"
+          : this.settings.playlist[this.gameIndex],
+        nextProfile: this.settings.playlist[this.gameIndex + 1],
+        stage: standaloneStage[this.phase],
+      },
       board: this.board
         ? {
             title: this.board.title,
@@ -295,6 +335,15 @@ export class Room {
   }
   private setPhase(phase: Phase, ms: number) {
     this.clearTimers();
+    this.audioCues = standaloneCues(
+      phase,
+      this.phase,
+      this.gameIndex === 0 && phase === "intro" && this.phase === "lobby",
+    );
+    this.audioSequence++;
+    this.phaseStartedAt = Date.now();
+    this.phasePausedMs = 0;
+    this.pauseStartedAt = null;
     this.phase = phase;
     this.paused = false;
     this.duration = ms;
@@ -350,7 +399,10 @@ export class Room {
         this.remaining = Math.max(1, this.deadline - Date.now());
         this.clearTimers();
         this.paused = true;
+        this.pauseStartedAt = Date.now();
       } else {
+        this.phasePausedMs += Date.now() - (this.pauseStartedAt ?? Date.now());
+        this.pauseStartedAt = null;
         this.paused = false;
         this.deadline = Date.now() + this.remaining;
         this.timeout = setTimeout(() => this.advance(), this.remaining);

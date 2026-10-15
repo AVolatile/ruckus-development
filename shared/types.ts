@@ -89,6 +89,7 @@ export interface Prompt {
   scoreMode?: "casual" | "quick-draw" | "no-score";
 }
 export interface RoomView {
+  audio?: import("./audio.js").AudioState;
   event?: import("./events.js").EventLiveView;
   board?: {
     title: string;

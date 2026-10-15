@@ -32,11 +32,13 @@ Each completed scored segment awards `round(1000 * (n - 1 - numberOfPlayersWithH
 
 `carryScoresAcrossGames=false` disables accumulation and event leaderboard presentation. `showFinalEventLeaderboard=false` hides only the final aggregate display; existing event totals remain available in runtime state. Game result screens still show the game's own scores. No event points survive a server restart.
 
-## Semantic cues for Phase 3.5
+## Semantic audio cues
 
 `RoomView.event.cue` includes typed `name`, the semantic `names` belonging to the same transition, a monotonic cue sequence and authoritative millisecond timestamp. `RoomView.event.sequence` identifies the current lifecycle/phase version. Clients compare cue sequence when observing current state; reconnect must establish the current baseline without replaying it.
 
-Supported meanings: LOBBY_ENTER, EVENT_START, EVENT_INTRO_ENTER, SEGMENT_INTRO_ENTER, QUESTION_OPEN, ANSWER_LOCKED (the collection phase closing), REVEAL_ENTER, GAME_RESULTS_ENTER, EVENT_LEADERBOARD_ENTER, INTERMISSION_ENTER, FINAL_RESULTS_ENTER and EVENT_END. Simultaneous meanings share a timestamp. A reveal after creative voting closes an already-locked answer phase; consumers should treat this as transition context, not a per-player click sound. Individual phone feedback can later use existing input acknowledgements. No music, SFX assets, new browser Audio APIs, ducking or volume system was added. Existing standalone optional sound behavior remains; Event stages do not opt into it.
+Supported meanings: LOBBY_ENTER, EVENT_START, EVENT_INTRO_ENTER, SEGMENT_INTRO_ENTER, QUESTION_OPEN, ANSWER_LOCKED (the collection phase closing), REVEAL_ENTER, GAME_RESULTS_ENTER, EVENT_LEADERBOARD_ENTER, INTERMISSION_ENTER, FINAL_RESULTS_ENTER and EVENT_END. Simultaneous meanings share a timestamp. Creative voting emits ANSWER_LOCKED once when collection closes; its later reveal emits REVEAL_ENTER without repeating the lock. Individual phone feedback uses existing input acknowledgements, never these room-wide cues.
+
+Phase 3.5 normalizes `RoomView.audio` for both standalone and Event rooms. The Event launch UUID stays stable across segment engines, while cue sequence/timestamps follow the parent. Stage mapping chooses lobby/intro/profile gameplay/results/leaderboard/intermission/finale beds in the browser registry. Pause/remaining/elapsed timing comes from the existing engine. Reconnect acknowledgement establishes a baseline, restores the current loop at a phase offset and never replays the current entrance sting. Audio cannot progress the Event, alter scores or block inputs. [Audio architecture](AUDIO-ARCHITECTURE.md) defines loading, crossfades, ducking, countdown and host/phone separation. Current assets are an original pre-release reference pack pending human audible QA.
 
 ## Runtime and persistence limits
 

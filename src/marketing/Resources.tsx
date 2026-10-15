@@ -36,7 +36,7 @@ export function Resources() {
           ],
           [
             "Know your shortcuts",
-            "Space advances the round. P pauses, M toggles sound, F opens full screen, and H opens host controls. Sound starts muted.",
+            "Space advances the round. P pauses, M toggles sound, F opens full screen, and H opens host controls. Sound unlocks on interaction; music and effects can be muted independently.",
           ],
           [
             "Keep a copy of your boards",

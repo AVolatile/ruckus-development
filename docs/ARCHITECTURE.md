@@ -1,4 +1,4 @@
-# Ruckus architecture — Phase 3.5
+# Ruckus architecture — Phase 4
 
 Public marketing/account routes remain separate from host tools and guest capability routes. `/app` requires a server session. `/app/w/:workspaceId/...` additionally resolves an active membership before rendering a workspace-scoped repository and the existing AppShell/Studio. Compatibility `/app/*` and Phase 0 redirects preserve suffix/query/hash and deterministically open the personal workspace. Invitations resume through validated app-only login/signup return paths. Account forms and workspace settings remain lazy; public routes avoid question banks and realtime connections.
 
@@ -56,3 +56,7 @@ All below use `/api/v1`, safe errors/correlation IDs, bounded input, exact Origi
 Workspace API adds `/workspaces/:workspaceId/events` (GET keyset summaries, POST), `/events/templates` (GET), `/events/validate` (POST read-only readiness), `/events/:eventId` (GET/PUT base revision), and POST suffixes `/archive`, `/copy`, `/launch`. Guest GET `/event-assets/:assetId` returns only an immutable attached image while its Event room is available. This route precedes the account guard but retains request IDs, bounded per-IP access and production Host checks. Development additionally allows the current machine’s actual interface addresses on the configured port for guest images only.
 
 Canonical host routes: `/app/w/:workspaceId/events`, `/events/new`, `/events/:eventId`, `/events/:eventId/preview`. Existing `/app/events` redirects into personal space. No account requirement is added to joining or guest controllers.
+
+## Phase 4 content foundation
+
+Phase 4 adds the [content platform](CONTENT-PLATFORM.md): authenticated system/private pack catalogs, strict six-game documents, immutable revisions and explicit seeds. Standalone and Event launch copy exact revisions before room creation; the runtime performs no pack queries. Canonical host routes are `/app/w/:workspaceId/content-packs`, `/new`, `/:packId` and `/:packId/edit`. Library and Original details link into this surface. Public/player routes remain separate.

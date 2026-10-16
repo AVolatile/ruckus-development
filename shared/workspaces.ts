@@ -16,6 +16,10 @@ export const capabilities = [
   "brand.read",
   "brand.manage",
   "audit.read",
+  "content.read",
+  "content.create",
+  "content.update",
+  "content.archive",
   "events.read",
   "events.create",
   "events.update",
@@ -24,6 +28,7 @@ export const capabilities = [
 ] as const;
 export type Capability = (typeof capabilities)[number];
 const reader: Capability[] = [
+  "content.read",
   "workspace.read",
   "members.read",
   "boards.read",
@@ -31,6 +36,8 @@ const reader: Capability[] = [
   "events.read",
 ];
 const host: Capability[] = [
+  "content.create",
+  "content.update",
   ...reader,
   "boards.create",
   "boards.update",
@@ -50,6 +57,7 @@ export const roleCapabilities: Record<WorkspaceRole, readonly Capability[]> = {
     "brand.manage",
     "audit.read",
     "events.archive",
+    "content.archive",
   ],
   host,
   viewer: reader,

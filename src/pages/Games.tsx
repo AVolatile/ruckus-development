@@ -207,6 +207,21 @@ export function GameDetail() {
         </div>
         <Icon name={game.icon} />
       </section>
+      <section className="compact-cta">
+        <div>
+          <h2>Pick the material.</h2>
+          <p>
+            Keep the default for a quick start, or find a pack that fits your
+            room.
+          </p>
+        </div>
+        <Link
+          className="button outline"
+          to={`/app/content-packs?game=${game.id}`}
+        >
+          Browse compatible packs →
+        </Link>
+      </section>
       <section className="section detail-how">
         <div>
           <span className="eyebrow">HERE’S THE DEAL.</span>

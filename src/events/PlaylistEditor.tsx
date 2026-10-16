@@ -1,3 +1,4 @@
+import { PackChooser } from "../content/PackChooser";
 import { GAMES, PACKS } from "../../shared/catalog";
 import type { EventDefinition, PlaylistItem } from "../../shared/events";
 import type { BoardSummary } from "../../shared/cloud";
@@ -112,6 +113,11 @@ export function PlaylistEditor({
                   </label>
                   {item.type === "original" && (
                     <>
+                      <PackChooser
+                        game={item.gameSlug}
+                        value={item.contentPackId}
+                        onChange={(id) => patch(index, { contentPackId: id })}
+                      />
                       <label>
                         Rounds
                         <select
@@ -149,7 +155,7 @@ export function PlaylistEditor({
                         </select>
                       </label>
                       <label>
-                        Content pack
+                        Topic filter
                         <select
                           value={item.settings.pack}
                           onChange={(e) =>

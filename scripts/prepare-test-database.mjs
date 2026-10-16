@@ -32,4 +32,13 @@ const child = spawnSync(
   },
 );
 if (child.status) process.exit(child.status);
+const seed = spawnSync(
+  process.execPath,
+  ["--import", "tsx", "scripts/content.ts", "seed"],
+  {
+    env: { ...process.env, DATABASE_URL: source.toString() },
+    stdio: "inherit",
+  },
+);
+if (seed.status) process.exit(seed.status);
 console.log("Local test database prepared. Its URL is in ignored .env.test.");

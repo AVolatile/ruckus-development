@@ -162,6 +162,10 @@ export interface ClientEvents {
     data: {
       settings: Settings;
       demo?: boolean;
+      contentReference?: {
+        workspaceId: string;
+        selections: Partial<Record<GameId, string>>;
+      };
       board?: CustomBoard;
       boardReference?: { workspaceId: string; boardId: string };
     },

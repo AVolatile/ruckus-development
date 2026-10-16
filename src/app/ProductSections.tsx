@@ -28,6 +28,15 @@ export function Library() {
             </p>
             <span>Choose a game ↗</span>
           </Link>
+          <Link className="occasion" to="/app/content-packs">
+            <Icon name="asterisk" />
+            <h2>Content Packs</h2>
+            <p>
+              Fresh questions, scenes and creative prompts for your Originals.
+              Browse Ruckus packs or write privately for this workspace.
+            </p>
+            <span>Find your next pack ↗</span>
+          </Link>
           <Link className="occasion" to="/app/studio">
             <Icon name="screen" />
             <h2>

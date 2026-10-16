@@ -16,7 +16,12 @@ interface Validation {
   issues: { itemId?: string; message: string }[];
   warnings: string[];
   brand: BrandSnapshot | null;
-  segments: { itemId: string; title: string; boardId?: string }[];
+  segments: {
+    itemId: string;
+    title: string;
+    boardId?: string;
+    contentPack?: import("../../shared/content-packs").PackReference;
+  }[];
 }
 export default function EventBuilder({
   preview = false,
@@ -429,31 +434,41 @@ export default function EventBuilder({
             <ol className="event-preview-lineup">
               {d.playlist
                 .filter((p) => p.enabled)
-                .map((p, i) => (
-                  <li key={p.itemId}>
-                    <span className="event-number">{i + 1}</span>
-                    <div>
-                      <h3>
-                        {p.displayTitle ||
-                          validation?.segments.find(
-                            (s) => s.itemId === p.itemId,
-                          )?.title ||
-                          (p.type === "original"
-                            ? GAMES.find((g) => g.id === p.gameSlug)?.name
-                            : "Studio board")}
-                      </h3>
-                      <p>
-                        {p.transitionLabel ||
-                          "The host introduces the next game."}
-                      </p>
-                      {p.type === "studio_board" && (
-                        <Link to={`/app/studio/boards/${p.boardId}/preview`}>
-                          Preview the Studio board ↗
-                        </Link>
-                      )}
-                    </div>
-                  </li>
-                ))}
+                .map((p, i) => {
+                  const segment = validation?.segments.find(
+                    (s) => s.itemId === p.itemId,
+                  );
+                  const pack = segment?.contentPack;
+                  return (
+                    <li key={p.itemId}>
+                      <span className="event-number">{i + 1}</span>
+                      <div>
+                        <h3>
+                          {p.displayTitle ||
+                            segment?.title ||
+                            (p.type === "original"
+                              ? GAMES.find((g) => g.id === p.gameSlug)?.name
+                              : "Studio board")}
+                        </h3>
+                        <p>
+                          {p.transitionLabel ||
+                            "The host introduces the next game."}
+                        </p>
+                        {pack && (
+                          <p>
+                            Content: {pack.name} · Revision{" "}
+                            {pack.revisionNumber}
+                          </p>
+                        )}
+                        {p.type === "studio_board" && (
+                          <Link to={`/app/studio/boards/${p.boardId}/preview`}>
+                            Preview the Studio board ↗
+                          </Link>
+                        )}
+                      </div>
+                    </li>
+                  );
+                })}
             </ol>
             <span className="eyebrow">INTERMISSION</span>
             <p>

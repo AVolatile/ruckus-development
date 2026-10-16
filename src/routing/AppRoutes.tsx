@@ -69,6 +69,8 @@ const StudioPreview = lazy(() => import("../studio/StudioPreview"));
 const Library = lazy(() =>
   import("../app/ProductSections").then((m) => ({ default: m.Library })),
 );
+const PackPages = lazy(() => import("../content/PackPages"));
+const PackEditor = lazy(() => import("../content/PackEditor"));
 const HostEvents = lazy(() => import("../events/EventList"));
 const EventNew = lazy(() => import("../events/EventNew"));
 const EventBuilder = lazy(() => import("../events/EventBuilder"));
@@ -167,6 +169,24 @@ export function AppRoutes() {
                   element={<StudioPreview />}
                 />
                 <Route path="library" element={<Library />} />
+                <Route path="content-packs" element={<PackPages />} />
+                <Route
+                  path="content-packs/new"
+                  element={
+                    <WorkspaceCapability permission="content.create">
+                      <PackPages create />
+                    </WorkspaceCapability>
+                  }
+                />
+                <Route path="content-packs/:packId" element={<PackPages />} />
+                <Route
+                  path="content-packs/:packId/edit"
+                  element={
+                    <WorkspaceCapability permission="content.update">
+                      <PackEditor />
+                    </WorkspaceCapability>
+                  }
+                />
                 <Route path="events" element={<HostEvents />} />
                 <Route
                   path="events/new"

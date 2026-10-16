@@ -20,9 +20,13 @@ Delivered persisted workspace events/revisions, mixed Original/Studio playlists,
 
 Delivered a central lazy AudioEngine, normalized standalone/Event cues, all Original/Studio profiles, host phase-aligned music/stings, countdown, crossfades/ducking, quiet phone feedback, gesture unlock and independent persistent controls. Refresh/reconnect baseline prevents stale stings. The original generated pack is a shipping pre-release reference; human listening/device approval remains outstanding. See [report](PHASE-3-5-REPORT.md) and [sonic design](SONIC-DESIGN.md).
 
-## Recommended Phase 4 — Content Platform & Packs
+## Phase 4 — Content Platform & Packs
 
-Formalize game engines separately from content packs. Add curated topic/seasonal packs, metadata, versioning and discovery, with future unlock/entitlement hooks and stable approved audio profile IDs. No billing implementation is included in this milestone.
+Delivered persistent system/private workspace packs, strict six-game schemas, parity-preserving defaults, discovery, structured authoring, immutable revisions and pinned standalone/Event content. Explicit validate/diff/seed tooling controls built-in releases. Topic compatibility and repaired audio remain intact. No billing or entitlements were added.
+
+## Recommended Phase 5 — Persistent Session History & Analytics
+
+Persist actual completed-session outcomes with clear workspace access and retention, then derive useful host reports. Avoid high-frequency gameplay database writes; keep the authoritative engine independent.
 
 Before public account/collaboration release, complete actual SMTP/domain/DNS/TLS/proxy/cookie/device checks, backup restore, retention/account deletion, monitoring, dependency patch policy and independent security review. Local tests do not replace hosted validation.
 

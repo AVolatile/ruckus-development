@@ -31,7 +31,8 @@ import {
 import { audit } from "../workspaces/audit.js";
 import { ApiError } from "../api/errors.js";
 import { settingsSchema } from "../validation.js";
-import { getPrompt } from "../content.js";
+import { ContentPackService } from "../content-packs/service.js";
+import { defaultPackId } from "../../shared/content-packs.js";
 import { contentHash } from "../boards/content.js";
 import type { Database } from "../db/client.js";
 const missing = () =>
@@ -243,7 +244,28 @@ export class EventService {
       if (source !== target) {
         d.brandKitId = null;
         const copied = new Map<string, string>();
+        const copiedPacks = new Map<string, string>();
+        const packService = new ContentPackService(this.db);
         for (const item of d.playlist) {
+          if (item.type === "original" && item.contentPackId) {
+            const r = await packService.row(tx, source, item.contentPackId);
+            if (r.pack.ownerType === "workspace") {
+              let packId = copiedPacks.get(item.contentPackId);
+              if (!packId) {
+                packId = (
+                  await packService.copyIn(
+                    tx,
+                    actor,
+                    source,
+                    item.contentPackId,
+                    target,
+                  )
+                ).id;
+                copiedPacks.set(item.contentPackId, packId);
+              }
+              item.contentPackId = packId;
+            }
+          }
           if (item.type !== "studio_board") continue;
           if (copied.has(item.boardId)) {
             item.boardId = copied.get(item.boardId)!;
@@ -316,6 +338,19 @@ export class EventService {
   ) {
     const issues: { itemId?: string; message: string }[] = [];
     const segments: FrozenSegment[] = [];
+    const packService = new ContentPackService(this.db);
+    const originals = d.playlist.filter(
+      (i) => i.enabled && i.type === "original",
+    );
+    const packRows = await packService.resolveMany(
+      tx,
+      wid,
+      originals.map((i) =>
+        i.type === "original"
+          ? (i.contentPackId ?? defaultPackId(i.gameSlug))
+          : "",
+      ),
+    );
     for (const item of d.playlist.filter((i) => i.enabled)) {
       try {
         if (item.type === "original") {
@@ -326,18 +361,21 @@ export class EventService {
             lateJoins: d.eventSettings.allowLateJoin,
             autoAdvance: false,
           });
-          const offset = randomInt(500);
+          const frozen = packService.freeze(
+            packRows.get(item.contentPackId ?? defaultPackId(item.gameSlug)),
+            item.gameSlug,
+            settings.rounds,
+            settings.pack,
+            randomInt(500),
+          );
           segments.push({
             itemId: item.itemId,
             title: item.displayTitle || gameById(item.gameSlug).name,
             transitionLabel: item.transitionLabel,
             settings,
-            contentVersion: "ruckus-originals-2026-10-15",
-            prompts: Array.from({ length: settings.rounds }, (_, round) =>
-              structuredClone(
-                getPrompt(item.gameSlug, round, settings.pack, offset),
-              ),
-            ),
+            contentVersion: "content-pack-v1",
+            contentPack: frozen.reference,
+            prompts: frozen.prompts,
           });
         } else {
           await authorize(tx, actor, wid, "boards.read");
@@ -458,6 +496,7 @@ export class EventService {
           itemId: s.itemId,
           title: s.title,
           boardId: s.boardId,
+          contentPack: s.contentPack,
         })),
         warnings: [
           ...(!d.brandKitId ? ["Ruckus styling will be used."] : []),

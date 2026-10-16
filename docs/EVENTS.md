@@ -23,3 +23,7 @@ Referenced processed logo/background bytes are copied to immutable `event_snapsh
 The HTTP adapter allocates a room only after the snapshot transaction commits, returns a host capability, and the browser resumes it before opening the stage. Capacity is checked before snapshotting and allocation. A failure between commit and allocation can leave an immutable, unusable launch record; no assets become guest-readable without a live room. There is no distributed transaction between PostgreSQL and process memory. Each explicit launch creates a new snapshot/room; HTTP launches are not retry-idempotent. Lifecycle commands within a room do reject stale retries.
 
 Launch records prepare future session history. They are not saved answers, analytics or restart recovery. See [runtime](EVENT-RUNTIME.md), [database](DATABASE.md) and [Phase 3 report](PHASE-3-REPORT.md).
+
+## Phase 4 content foundation
+
+Original items now optionally select a compatible `contentPackId`. Legacy items resolve seeded defaults with their existing topic settings. Launch snapshots pin exact pack/revision/schema metadata and copied prompts. Later edits/archival do not affect active Events; new launches reject unavailable sources. Cross-workspace copies duplicate private pack dependencies. See [Content Packs](CONTENT-PACKS.md).

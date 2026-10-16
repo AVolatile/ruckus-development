@@ -1,3 +1,5 @@
+import { PackChooser } from "../content/PackChooser";
+import { useWorkspace } from "../workspaces/context";
 import { useState, type FormEvent } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Link, useNavigate } from "../workspaces/navigation";
@@ -14,6 +16,15 @@ import { ErrorMessage } from "../components/Layout";
 import { useParty } from "../lib/party";
 import { DemoButton } from "../components/DemoButton";
 export function HostSetup() {
+  const { current } = useWorkspace();
+  const [selections, setSelections] = useState<
+    Partial<Record<Settings["playlist"][number], string>>
+  >(() => {
+    const p = new URLSearchParams(location.search),
+      g = p.get("game"),
+      id = p.get("contentPackId");
+    return g && id ? { [g]: id } : {};
+  });
   const party = useParty(),
     navigate = useNavigate();
   const [settings, setSettings] = useState<Settings>(() => {
@@ -47,7 +58,14 @@ export function HostSetup() {
   async function create(e: FormEvent) {
     e.preventDefault();
     setBusy(true);
-    const reply = await party.create(settings);
+    const reply = await party.create(settings, false, undefined, undefined, {
+      workspaceId: current.id,
+      selections: Object.fromEntries(
+        Object.entries(selections).filter(([g]) =>
+          settings.playlist.includes(g as Settings["playlist"][number]),
+        ),
+      ),
+    });
     setBusy(false);
     if (reply.ok && reply.identity)
       navigate(`/room/${reply.identity.code}/host`);
@@ -158,12 +176,30 @@ export function HostSetup() {
               Choose at least one game to open the room.
             </p>
           )}
+          <fieldset className="pack-lineup">
+            <legend>Content Packs</legend>
+            <p>
+              Choose a ready pack for each game, or keep the Ruckus defaults.
+            </p>
+            {settings.playlist.map((game) => (
+              <div key={game}>
+                <h3>{GAMES.find((g) => g.id === game)?.name}</h3>
+                <PackChooser
+                  game={game}
+                  value={selections[game]}
+                  onChange={(id) =>
+                    setSelections((s) => ({ ...s, [game]: id }))
+                  }
+                />
+              </div>
+            ))}
+          </fieldset>
         </div>
         <div className="form-step">
           <span className="eyebrow">03 / YOUR HOUSE RULES</span>
           <div className="form-two-col">
             <label>
-              Content pack
+              Topic filter
               <select
                 value={settings.pack}
                 onChange={(e) => patch({ pack: e.target.value })}

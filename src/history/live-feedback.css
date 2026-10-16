@@ -1,0 +1,16 @@
+/* Live-stage feedback loads with its component, independently of History routes. */
+.live-history-feedback {
+  margin: 20px 0;
+}
+.live-history-feedback .host-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 100%;
+  line-height: 1.5;
+  text-align: left;
+  background: var(--paper);
+  color: var(--ink);
+  border-radius: 6px;
+  padding: 8px 12px;
+}

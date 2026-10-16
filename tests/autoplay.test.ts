@@ -1,3 +1,4 @@
+import { persistedRecap } from "./support/history-http.js";
 import { hostCookie } from "./support/host-session.js";
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -56,6 +57,17 @@ test(
       );
       assert.equal(start.ok, true);
       await finished;
+      let finalState = (
+        await new Promise<Reply>((resolve) =>
+          socket.emit("room:resume", created.identity!, resolve),
+        )
+      ).state!;
+      socket.on("room:state", (s) => {
+        finalState = s;
+      });
+      const recap = await persistedRecap(origin!, cookie, () => finalState);
+      assert.equal(recap.demoCount, 12);
+      assert.equal(recap.segments.length, 3);
       const ended = await new Promise<Reply>((resolve) =>
         socket.emit("host:action", { action: "end" }, resolve),
       );

@@ -51,7 +51,8 @@ jobs:
       - run: npm run lint
       - run: npm run audio:validate
       - run: npm audit --audit-level=low
-      - run: npm run test:integration
+      - name: Verify persistence, history, analytics and migration invariants
+        run: npm run test:integration
       - run: npm run build
       - run: npx playwright install --with-deps chromium
       - name: Verify compiled application
@@ -63,6 +64,7 @@ jobs:
           done
           curl --fail --silent http://localhost:4312/ready
           npm test
+          # Includes real completed-session recaps, ranges, overflow and Axe checks.
           npm run test:e2e
       - name: Upload failure evidence
         if: failure()

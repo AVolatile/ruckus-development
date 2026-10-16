@@ -76,3 +76,5 @@ export const revisionsTable = pgTable(
 
 export * from "./event-schema.js";
 export * from "./content-schema.js";
+
+export * from "./history-schema.js";

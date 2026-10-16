@@ -2,7 +2,7 @@
 
 Turn any shared screen into something the room can play with. Six multiplayer Originals meet Studio for custom trivia, True / False and polls. Hosts have personal and shared workspaces; players join from phones without accounts.
 
-This is `AVolatile/ruckus-development`, the startup repository, separate from the original portfolio/demo. Phase 4 adds persistent Content Packs, private workspace authoring and frozen standalone/Event content. Phase 4.5/4.5B extends the original Ruckus page compositions into host tools, with compact navigation, distinct shelves/editors and acknowledged feedback; human art-direction approval is pending. Gameplay and repaired host/phone audio remain preserved.
+This is `AVolatile/ruckus-development`, the startup repository, separate from the original portfolio/demo. Phase 4 adds persistent Content Packs, private workspace authoring and frozen standalone/Event content. Phase 4.5/4.5B extends the original Ruckus page compositions into host tools, with compact navigation, distinct shelves/editors and acknowledged feedback; human art-direction approval is pending. Gameplay and repaired host/phone audio remain preserved. Phase 5 adds workspace Session History, frozen recaps and lightweight SQL usage analytics; live rooms remain memory-based.
 
 ## Run locally
 
@@ -40,6 +40,7 @@ The compiled Node service serves pages/auth/API/Socket.IO under one public origi
 | Workspace app        | `/app/w/:workspaceId`, `/host`, `/originals/*`, `/studio/*`, `/library` beneath it            | Validated membership, role-aware board library, existing Studio and Originals                |
 | Workspace management | `/app/w/:workspaceId/workspace`, `/members`, `/brand`, `/brand/:id`, `/activity`, `/settings` | General settings, membership/invites, real Brand Kits, bounded activity and account controls |
 | Events               | `/app/w/:workspaceId/events`, `/events/new`, `/events/:id`, `/events/:id/preview`             | Saved lineups, immutable launches, branded stages and one-join multi-game flow               |
+| History              | `/app/w/:workspaceId/history`, `/history/:sessionId`, `/history/analytics`                    | Frozen outcomes, recaps/CSV and actual workspace usage; current membership required          |
 | Create/accept        | `/app/workspaces/new`, `/app/invitations/:token`                                              | Verified-email organization creation and matching-email invitation acceptance                |
 | Compatibility        | `/app/*`, old `/studio/*`, `/games/*`, `/host`                                                | Deterministic personal-workspace redirect; suffix/query/hash preserved                       |
 | Guests/live          | `/join`, `/room/:code/play`, `/room/:code/host`                                               | Account-free players, existing room capabilities and host stage                              |
@@ -63,11 +64,11 @@ PLAYWRIGHT_BASE_URL=http://localhost:4312 npm run test:e2e
 TEST_ORIGIN=http://localhost:4312 AUTOPLAY_ORIGIN=http://localhost:4312 npm test
 ```
 
-Tests require an explicit isolated local/CI ruckus_test database; development data is never reset. Browser fixtures use real accounts and captured transactional email. Without live origins, five socket/autoplay tests intentionally skip. Screenshots and local mail remain ignored. CI extends the existing quality workflow and does not deploy.
+Tests require an explicit isolated local/CI ruckus_test database; development data is never reset. Browser fixtures use real accounts and captured transactional email. Without live origins, six socket/autoplay tests intentionally skip. Screenshots and local mail remain ignored. CI extends the existing quality workflow and does not deploy.
 
 ## Boundaries and next milestone
 
-No billing, subscriptions, analytics, account deletion, player accounts/progression, SSO or distributed room state is implemented. [Portfolio presentations](src/archive/README.md), original artwork and historical reports remain preserved. Before public release, verify actual-domain SMTP/TLS/proxy/cookies/devices, backups/restores, retention/account deletion, abuse monitoring and independent security review.
+No billing, subscriptions, account deletion, player accounts/progression, SSO or distributed room state is implemented. [Portfolio presentations](src/archive/README.md), original artwork and historical reports remain preserved. Before public release, verify actual-domain SMTP/TLS/proxy/cookies/devices, backups/restores, retention/account deletion, abuse monitoring and independent security review.
 
 Phase 3 delivers **Events & Experience Builder**: persisted workspace lineups of Originals and Studio boards, six editable starters, immutable launch snapshots and guest-safe copied imagery, one room code through every game, host-led intermissions and a cumulative finale. Open `/app/w/:workspaceId/events`. [Events](docs/EVENTS.md) · [Runtime and scoring](docs/EVENT-RUNTIME.md) · [Phase 3 report](docs/PHASE-3-REPORT.md).
 
@@ -79,7 +80,9 @@ Phase 4 delivers **Content Platform & Packs**: seven Ruckus packs, private works
 
 Phase 4.5 adds **Host Experience & Visual Cohesion**: quiet recoverable local import, direct Packs navigation and acknowledged feedback. Following human review, Phase 4.5B corrects Library, Packs, Events and Brand composition using the original repository’s page archetypes. **Human art-direction approval is pending Anthony’s review.** [Host design system](docs/HOST-DESIGN-SYSTEM.md) · [Visual audit](docs/PHASE-4-5-VISUAL-AUDIT.md) · [Phase 4.5 report](docs/PHASE-4-5-REPORT.md).
 
-Next: **Phase 5 — Persistent Session History & Analytics**, built from actual completed outcomes. No Phase 5 implementation is included.
+Phase 5 adds **Session History & Analytics** from actual qualified outcomes: frozen Original/Studio/Event recaps, exact final standings and source revisions, attendance summaries, CSV and date-bounded SQL usage. History writes are asynchronous with bounded retries; failure never blocks gameplay, and process loss can still lose an uncommitted recap. Player identities remain session-local. [Session History](docs/SESSION-HISTORY.md) · [Analytics](docs/ANALYTICS.md) · [Phase 5 report](docs/PHASE-5-REPORT.md).
+
+Next: production reliability and retention work, informed by real hosting use. No Phase 6 implementation is included.
 
 - [Phase 2 report](docs/PHASE-2-REPORT.md) and [audit](docs/PHASE-2-AUDIT.md)
 - [Architecture/API](docs/ARCHITECTURE.md)

@@ -20,7 +20,7 @@ Office hosts and managers who want a meeting warmup or Friday break; teams makin
 
 ## Current boundaries
 
-Personal and organization workspaces own PostgreSQL-backed boards with immutable revisions; existing local boards can be explicitly copied into a writable workspace and still transfer via files. Sessions support 2–30 players on one in-memory realtime server. Reconnect survives a refresh or short interruption, not a server restart. Summary CSV contains display names, scores and aggregate question counts. Host accounts, verification/recovery, role-based organization collaboration and Brand Kit authoring/preview are implemented. Persisted mixed-game Events and frozen live event branding are implemented. Organization reporting and guaranteed uptime are not implemented.
+Personal and organization workspaces own PostgreSQL-backed boards with immutable revisions; existing local boards can be explicitly copied into a writable workspace and still transfer via files. Sessions support 2–30 players on one in-memory realtime server. Reconnect survives a refresh or short interruption, not a server restart. Summary CSV contains display names, scores and aggregate question counts. Host accounts, verification/recovery, role-based organization collaboration and Brand Kit authoring/preview are implemented. Persisted mixed-game Events and frozen live event branding are implemented. Workspace session history and lightweight usage reporting are implemented; guaranteed uptime and restart recovery are not.
 
 ## Organization foundation and future capabilities
 
@@ -44,8 +44,12 @@ Events & Experience Builder now uses workspace ownership and immutable launch re
 
 ## Phase 4 content foundation
 
-Content Packs now separate reusable game rules from authored material: Ruckus defaults and private workspace packs share versioned validation and frozen launch behavior. Content discovery is part of the Library, without a marketplace, entitlements or artificial scarcity. The next milestone is persisted completed-session outcomes and useful host reporting.
+Content Packs now separate reusable game rules from authored material: Ruckus defaults and private workspace packs share versioned validation and frozen launch behavior. Content discovery is part of the Library, without a marketplace, entitlements or artificial scarcity. Phase 5 now records qualified completed/early-ended outcomes and useful workspace usage, without changing the live room into a database-driven runtime.
 
 ## Host experience principle
 
 The original game-night Ruckus product should feel deeper as capabilities grow: cream and ink, blue actions, purposeful yellow, game accents, editorial hierarchy and little utility chrome. Phase 4.5 applies that direction to the host shell, shelves, editors and workspace/account tools. Compact migration and acknowledged status feedback support the task instead of masking it. Phase 4.5B follows the original page archetypes rather than one universal header/grid. Human art-direction approval is pending Anthony’s review. See the [host design system](HOST-DESIGN-SYSTEM.md).
+
+## Session History and useful perspective
+
+Hosts can revisit actual Original, Studio and Event outcomes in workspace History, export a recap and understand what the room has played. Final standings and source metadata are frozen, while current-source actions recheck current access. Analytics counts hosting occasions and session-local attendances, never employee performance or cross-session player identities. Creative submissions and drawings are excluded. Completion writes are asynchronous and bounded; missing uncommitted history remains possible on process loss. Retention and production reliability are the next operational work. [History](SESSION-HISTORY.md) · [Analytics](ANALYTICS.md).

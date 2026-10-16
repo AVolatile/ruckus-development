@@ -17,6 +17,7 @@ const navigation = [
   ["/app/library", "Library"],
   ["/app/content-packs", "Packs"],
   ["/app/events", "Events"],
+  ["/app/history", "History"],
 ];
 
 export function AppShell() {
@@ -82,7 +83,7 @@ export function AppShell() {
         <nav aria-label="Host account and product information">
           <Link to="/app/settings">Settings</Link>
           <Link to="/app/workspace">Workspace</Link>
-          <Link to="/app/analytics">Analytics · coming soon</Link>
+          <Link to="/app/history/analytics">Your Ruckus lately</Link>
           <Link to="/">Ruckus website</Link>
         </nav>
       </footer>

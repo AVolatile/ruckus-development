@@ -1,0 +1,1 @@
+ALTER TABLE "session_participants" ADD COLUMN "final_order" integer;

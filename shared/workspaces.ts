@@ -2,6 +2,8 @@ import { z } from "zod/v3";
 export const roles = ["owner", "admin", "host", "viewer"] as const;
 export type WorkspaceRole = (typeof roles)[number];
 export const capabilities = [
+  "history.read",
+  "analytics.read",
   "workspace.read",
   "workspace.update",
   "workspace.archive",
@@ -29,6 +31,8 @@ export const capabilities = [
 export type Capability = (typeof capabilities)[number];
 const reader: Capability[] = [
   "content.read",
+  "history.read",
+  "analytics.read",
   "workspace.read",
   "members.read",
   "boards.read",

@@ -1,3 +1,4 @@
+import { persistedRecap } from "./support/history-http.js";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
@@ -319,6 +320,22 @@ test(
         "Event guest two",
       );
       assert.equal(state.event!.scores[0].segments, 7);
+      const recap = await persistedRecap(origin!, cookie, () => state);
+      assert.equal(recap.segments.length, 7);
+      assert.equal(recap.segments[1].title, "Socket event Studio");
+      assert.equal(recap.segments[1].source.boardRevisionId, stored.revisionId);
+      assert.equal(recap.source.eventRevisionId, event.revisionId);
+      assert.equal(recap.brand!.name, "Socket event Brand");
+      assert.ok(
+        recap.segments
+          .filter((s) => s.type === "original")
+          .every((s) => !!s.source.packRevisionId),
+      );
+      assert.equal(
+        (await emit(host, "room:resume", launch.identity)).state!.history!
+          .sessionId,
+        recap.id,
+      );
       await command("end");
       assert.equal((await fetch(origin + assetURL)).status, 404);
     } finally {

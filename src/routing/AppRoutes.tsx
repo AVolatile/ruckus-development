@@ -1,5 +1,5 @@
 import { lazy, Suspense } from "react";
-import { Link, Route, Routes } from "react-router-dom";
+import { Link, Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { Layout } from "../components/Layout";
 import { Home } from "../marketing/Home";
 import {
@@ -74,14 +74,21 @@ const PackEditor = lazy(() => import("../content/PackEditor"));
 const HostEvents = lazy(() => import("../events/EventList"));
 const EventNew = lazy(() => import("../events/EventNew"));
 const EventBuilder = lazy(() => import("../events/EventBuilder"));
-const FutureSection = lazy(() =>
-  import("../app/ProductSections").then((m) => ({ default: m.FutureSection })),
-);
+const HistoryPage = lazy(() => import("../history/HistoryPage"));
+const SessionRecap = lazy(() => import("../history/SessionRecap"));
+const AnalyticsPage = lazy(() => import("../history/AnalyticsPage"));
 const Settings = lazy(() =>
   import("../app/AccountSettings").then((m) => ({
     default: m.AccountSettings,
   })),
 );
+
+function AnalyticsRedirect() {
+  const { search, hash } = useLocation();
+  return (
+    <Navigate to={{ pathname: "../history/analytics", search, hash }} replace />
+  );
+}
 
 function NotFound({ host = false }: { host?: boolean }) {
   return (
@@ -208,10 +215,11 @@ export function AppRoutes() {
                   path="events/:eventId/preview"
                   element={<EventBuilder preview />}
                 />
-                <Route
-                  path="analytics"
-                  element={<FutureSection section="analytics" />}
-                />
+                <Route path="history" element={<HistoryPage />} />
+                <Route path="history/analytics" element={<AnalyticsPage />} />
+                <Route path="history/:sessionId" element={<SessionRecap />} />
+                <Route path="analytics" element={<AnalyticsRedirect />} />
+
                 <Route
                   path="workspace"
                   element={<WorkspacePages mode="general" />}

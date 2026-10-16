@@ -1,3 +1,15 @@
+import { broadcastRoom, retireRoom } from "./broadcast.js";
+import { SessionHistoryService } from "./history/service.js";
+import {
+  SessionFinalizer,
+  type HistoryPersistence,
+} from "./history/finalizer.js";
+import {
+  buildSessionSummary,
+  type SummaryContext,
+} from "./history/outcomes.js";
+import { personalWorkspace } from "./workspaces/policy.js";
+import { gameById } from "../shared/catalog.js";
 import { ContentPackService } from "./content-packs/service.js";
 import { GAME_IDS } from "../shared/types.js";
 import "dotenv/config";
@@ -71,6 +83,72 @@ import { EventService } from "./events/service.js";
 import { eventCommandSchema } from "../shared/events.js";
 type LiveRoom = Room | EventRuntime;
 const rooms = new Map<string, LiveRoom>();
+const historyWriter = new SessionFinalizer((summary) =>
+  new SessionHistoryService(db).finalize(summary),
+);
+const historyState = new WeakMap<
+  LiveRoom,
+  {
+    runId: string;
+    attempted: boolean;
+    context?: SummaryContext;
+    persistence?: HistoryPersistence;
+  }
+>();
+function finalizeHistory(room: LiveRoom) {
+  const runId =
+    room instanceof EventRuntime ? room.snapshot.id : room.outcomes.runId;
+  let state = historyState.get(room);
+  if (!state) {
+    state = { runId, attempted: false };
+    historyState.set(room, state);
+  }
+  if (state.runId !== runId) {
+    state = { runId, attempted: false, context: state.context };
+    historyState.set(room, state);
+  }
+  const terminal =
+    room instanceof EventRuntime
+      ? ["EVENT_FINAL", "ENDED"].includes(room.state)
+      : ["final", "ended"].includes(room.phase);
+  if (!terminal || state.attempted) return;
+  state.attempted = true;
+  try {
+    const summary =
+      room instanceof EventRuntime
+        ? room.historySummary()
+        : state.context
+          ? buildSessionSummary(room, state.context)
+          : null;
+    if (summary)
+      void historyWriter.submit(summary, (persistence) => {
+        state!.persistence = persistence;
+        broadcast(room);
+      });
+  } catch {
+    state.persistence = {
+      status: "failed",
+      sessionId: runId,
+      workspaceId:
+        room instanceof EventRuntime
+          ? room.snapshot.workspaceId
+          : state.context!.workspaceId,
+    };
+    console.error(
+      JSON.stringify({ event: "session.summary_failed", sessionId: runId }),
+    );
+  }
+}
+function roomView(
+  room: LiveRoom,
+  playerId?: string,
+  includeHistory = !playerId,
+) {
+  const view = room.view(playerId);
+  return !includeHistory
+    ? view
+    : { ...view, history: historyState.get(room)?.persistence };
+}
 const limiter = new RateLimiter();
 const addresses = Object.values(networkInterfaces())
   .flatMap((n) => n ?? [])
@@ -116,7 +194,10 @@ installHostApi(app, {
       code,
       snapshot,
       joinUrl,
-      () => broadcast(room),
+      () => {
+        finalizeHistory(room);
+        broadcast(room);
+      },
       (reason) => {
         void new EventService(db)
           .ended(snapshot, reason)
@@ -127,21 +208,12 @@ installHostApi(app, {
     return {
       ok: true,
       identity: { code, token: room.hostToken, role: "host" },
-      state: room.view(),
+      state: roomView(room),
     };
   },
 });
 function broadcast(room: LiveRoom) {
-  for (const socket of io.sockets.sockets.values()) {
-    const identity = socket.data.identity as Identity | undefined;
-    if (identity?.code === room.code) {
-      const p =
-        identity.role === "player"
-          ? room.playerByToken(identity.token)
-          : undefined;
-      socket.emit("room:state", room.view(p?.public.id));
-    }
-  }
+  broadcastRoom(rooms, io.sockets.sockets.values(), room, roomView);
 }
 const fail = (error: unknown): Reply => ({
   ok: false,
@@ -214,10 +286,11 @@ io.on("connection", (socket) => {
         })
         .parse(data);
       let board = parsed.board ? validateBoard(parsed.board) : undefined;
+      let boardRevisionId: string | undefined;
       if (parsed.boardReference) {
         let stored;
         try {
-          stored = await new BoardService(db).forLaunch(
+          stored = await new BoardService(db).forLaunchWithRevision(
             host.user.id,
             parsed.boardReference.workspaceId,
             parsed.boardReference.boardId,
@@ -228,7 +301,8 @@ io.on("connection", (socket) => {
             "Couldn’t load this workspace board. Try again shortly.",
           );
         }
-        board = validateBoard(stored);
+        board = validateBoard(stored.board);
+        boardRevisionId = stored.revisionId;
       }
       const frozenContent = board
         ? undefined
@@ -237,6 +311,10 @@ io.on("connection", (socket) => {
             parsed.settings,
             parsed.contentReference,
           );
+      const workspaceId =
+        parsed.boardReference?.workspaceId ??
+        (!board ? parsed.contentReference?.workspaceId : undefined) ??
+        (await personalWorkspace(db, host.user.id));
       let code = makeCode();
       while (rooms.has(code)) code = makeCode();
       const joinUrl = getPublicJoinUrl(
@@ -254,17 +332,41 @@ io.on("connection", (socket) => {
         code,
         settings,
         joinUrl,
-        () => broadcast(room),
+        () => {
+          finalizeHistory(room);
+          broadcast(room);
+        },
         board,
         undefined,
         frozenContent,
       );
+      historyState.set(room, {
+        runId: room.outcomes.runId,
+        attempted: false,
+        context: {
+          workspaceId,
+          hostUserId: host.user.id,
+          type: board ? "studio" : "original",
+          title:
+            board?.title ??
+            (settings.playlist.length === 1
+              ? gameById(settings.playlist[0]).name
+              : "Ruckus Originals"),
+          source: board
+            ? parsed.boardReference
+              ? { boardId: parsed.boardReference.boardId, boardRevisionId }
+              : {}
+            : settings.playlist.length === 1
+              ? { gameType: settings.playlist[0] }
+              : {},
+        },
+      });
       rooms.set(code, room);
       const identity: Identity = { code, token: room.hostToken, role: "host" };
       attach(identity);
       room.connectHost(socket.id);
       if (parsed.demo) room.addBots(8);
-      ack({ ok: true, identity, state: room.view() });
+      ack({ ok: true, identity, state: roomView(room) });
     } catch (error) {
       ack(fail(error));
     }
@@ -282,7 +384,7 @@ io.on("connection", (socket) => {
       const { token, id } = room.join(parsed.name, parsed.avatar, socket.id);
       const identity: Identity = { code: room.code, token, role: "player" };
       attach(identity);
-      ack({ ok: true, identity, state: room.view(id) });
+      ack({ ok: true, identity, state: roomView(room, id) });
     } catch (error) {
       ack(fail(error));
     }
@@ -302,7 +404,7 @@ io.on("connection", (socket) => {
           throw new Error("The host key doesn’t match this room.");
         attach(identity);
         room.connectHost(socket.id);
-        ack({ ok: true, identity, state: room.view() });
+        ack({ ok: true, identity, state: roomView(room) });
       } else {
         const existing = room.playerByToken(identity.token);
         if (!existing)
@@ -321,7 +423,7 @@ io.on("connection", (socket) => {
             );
           }
         }
-        ack({ ok: true, identity, state: room.view(id) });
+        ack({ ok: true, identity, state: roomView(room, id) });
       }
     } catch (error) {
       ack(fail(error));
@@ -434,7 +536,7 @@ io.on("connection", (socket) => {
 });
 const cleanup = setInterval(() => {
   limiter.sweep();
-  for (const [code, room] of rooms) {
+  for (const room of rooms.values()) {
     if (
       !room.hostSocket &&
       Date.now() - room.lastHostSeen > 5 * 60000 &&
@@ -445,8 +547,10 @@ const cleanup = setInterval(() => {
       Date.now() - room.changedAt > 2 * 3600000 ||
       (room.phase === "ended" && Date.now() - room.changedAt > 60000)
     ) {
+      if (room.phase !== "final" && room.phase !== "ended") room.action("end");
+      finalizeHistory(room);
       room.dispose();
-      rooms.delete(code);
+      retireRoom(rooms, io.sockets.sockets.values(), room);
     }
   }
 }, 30000);
@@ -484,10 +588,17 @@ http.listen(port, "0.0.0.0", () => {
 });
 function shutdown() {
   clearInterval(cleanup);
-  for (const room of rooms.values()) room.dispose();
+  for (const room of rooms.values()) {
+    if (room.phase !== "final" && room.phase !== "ended") room.action("end");
+    finalizeHistory(room);
+    room.dispose();
+  }
   io.close();
   http.close(() => {
-    void pool.end().finally(() => process.exit(0));
+    void historyWriter
+      .drain()
+      .then(() => pool.end())
+      .finally(() => process.exit(0));
   });
   setTimeout(() => process.exit(0), 3000).unref();
 }

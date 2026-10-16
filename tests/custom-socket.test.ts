@@ -1,3 +1,4 @@
+import { persistedRecap } from "./support/history-http.js";
 import { hostCookie } from "./support/host-session.js";
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -130,6 +131,9 @@ test(
       await waitFor(() => state.phase === "final");
       assert.equal(state.summary?.questions[1].timedOut, 1);
       assert.equal(state.summary?.questions.length, 2);
+      const firstRecap = await persistedRecap(origin!, cookie, () => state);
+      assert.equal(firstRecap.type, "studio");
+      assert.equal(firstRecap.segments[0].rounds, 2);
       await emit(recovered, "host:action", { action: "rematch" });
       await waitFor(() => state.phase === "lobby");
       await emit(recovered, "host:action", { action: "bots", count: 8 });
@@ -139,6 +143,9 @@ test(
       await waitFor(() => state.phase === "results");
       assert.ok(state.players.filter((p) => p.bot && p.submitted).length > 0);
       await emit(recovered, "host:action", { action: "end" });
+      const secondRecap = await persistedRecap(origin!, cookie, () => state);
+      assert.notEqual(secondRecap.id, firstRecap.id);
+      assert.equal(secondRecap.status, "ended_early");
     } finally {
       sockets.forEach((s) => s.disconnect());
     }

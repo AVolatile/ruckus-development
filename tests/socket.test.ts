@@ -1,3 +1,4 @@
+import { persistedRecap } from "./support/history-http.js";
 import { hostCookie } from "./support/host-session.js";
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -189,7 +190,21 @@ test(
       assert.equal(states.get(host)!.phase, "final");
       assert.equal(states.get(host)!.stats.rounds, 6);
       assert.ok(states.get(host)!.players.some((p) => p.score > 0));
+      const recap = await persistedRecap(origin!, cookie, () =>
+        states.get(host)!,
+      );
+      assert.equal(recap.segments.length, 6);
+      assert.equal(recap.status, "completed");
+      assert.deepEqual(
+        recap.segments.map((s) => s.source.gameType),
+        states.get(host)!.settings.playlist,
+      );
       await action(host, "end");
+      await action(host, "end");
+      const again = await persistedRecap(origin!, cookie, () =>
+        states.get(host)!,
+      );
+      assert.equal(again.id, recap.id);
       await wait(50);
       assert.equal(states.get(p2)!.phase, "ended");
     } finally {

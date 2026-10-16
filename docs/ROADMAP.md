@@ -28,12 +28,16 @@ Delivered persistent system/private workspace packs, strict six-game schemas, pa
 
 Restores original-demo brand direction across authenticated host tools: shared working scale, lightweight shell, recoverable compact local import, content shelf/game accents, grouped editors and acknowledged feedback. See [visual audit](PHASE-4-5-VISUAL-AUDIT.md), [design system](HOST-DESIGN-SYSTEM.md) and [report](PHASE-4-5-REPORT.md). The first art-direction pass was rejected in human review; Phase 4.5B corrects page composition from the original Home/Games/Studio/Setup/Brand archetypes. Human approval is pending Anthony’s review. This is a presentation milestone; gameplay/audio and persistence semantics remain unchanged.
 
-## Recommended Phase 5 — Persistent Session History & Analytics
+## Phase 5 — Session History & Analytics
 
-Persist actual completed-session outcomes with clear workspace access and retention, then derive useful host reports. Avoid high-frequency gameplay database writes; keep the authoritative engine independent.
+Implemented qualified completion-time persistence for standalone Originals, Studio and mixed Events. Immutable recaps preserve actual standings, source versions and session-local participation. Workspace History and SQL usage summaries use bounded pages/ranges, with recap CSV and current-source checks. In-memory runtime remains independent; bounded retry is not a durable outbox. Human visual approval remains pending. See [Session History](SESSION-HISTORY.md), [Analytics](ANALYTICS.md) and the [report](PHASE-5-REPORT.md).
+
+## Recommended Phase 6 — Reliability and retention
+
+Close production email/domain/proxy/backup validation and establish reviewed workspace history retention/deletion, failure monitoring and a reliable completion handoff if pilots require stronger delivery. Measure real hosting needs before introducing billing or distributed room state. No Phase 6 work has begun.
 
 Before public account/collaboration release, complete actual SMTP/domain/DNS/TLS/proxy/cookie/device checks, backup restore, retention/account deletion, monitoring, dependency patch policy and independent security review. Local tests do not replace hosted validation.
 
 ## Later, based on real use
 
-Session history/analytics, entitlements, billing/event passes, reviewed templates, SSO if warranted, player cosmetics/progression, marketplace, AI authoring and integrations. No finalized pricing or enterprise certification is implied. Redis/horizontal scaling need an explicit durable authoritative room-state design and capacity evidence.
+Entitlements, billing/event passes, reviewed templates, SSO if warranted, player cosmetics/progression, marketplace, AI authoring and integrations. No finalized pricing or enterprise certification is implied. Redis/horizontal scaling need an explicit durable authoritative room-state design and capacity evidence.

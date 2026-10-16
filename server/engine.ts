@@ -1,4 +1,5 @@
 import { randomInt, randomUUID } from "node:crypto";
+import { RoomOutcomes } from "./history/outcomes.js";
 import type { CustomBoard, CustomQuestion } from "../shared/boards.js";
 import type { BoardSessionSummary } from "../shared/types.js";
 import { gameById } from "../shared/catalog.js";
@@ -48,6 +49,7 @@ export const makeCode = () =>
     () => CODE_CHARS[randomInt(CODE_CHARS.length)],
   ).join("");
 export class Room {
+  readonly outcomes = new RoomOutcomes();
   readonly hostToken = randomUUID();
   readonly audioRoomId = randomUUID();
   readonly createdAt = Date.now();
@@ -99,7 +101,20 @@ export class Room {
     if (frozenPrompts) this.frozenPrompts = structuredClone(frozenPrompts);
     if (frozenLineup) this.frozenLineup = structuredClone(frozenLineup);
   }
+  packReference(index: number) {
+    return this.frozenLineup?.[index]?.reference;
+  }
   private publish() {
+    try {
+      this.outcomes.observe(this);
+    } catch {
+      console.error(
+        JSON.stringify({
+          event: "session.capture_failed",
+          runId: this.outcomes.runId,
+        }),
+      );
+    }
     this.changedAt = Date.now();
     this.onChange();
   }
@@ -371,6 +386,7 @@ export class Room {
     if (action === "rematch") {
       if (this.phase !== "final")
         throw new Error("Finish the session before starting a rematch.");
+      this.outcomes.reset();
       for (const p of this.players.values())
         Object.assign(p.public, {
           score: 0,

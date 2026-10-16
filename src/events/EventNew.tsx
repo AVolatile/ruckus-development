@@ -1,3 +1,4 @@
+import { GAMES } from "../../shared/catalog";
 import { useState } from "react";
 import { emptyEvent, type EventRecord } from "../../shared/events";
 import { request } from "../lib/api";
@@ -29,7 +30,30 @@ export default function EventNew() {
           setError("");
           void request<EventRecord>(`/api/v1/workspaces/${current.id}/events`, {
             method: "POST",
-            body: JSON.stringify({ definition: emptyEvent(title) }),
+            body: JSON.stringify({
+              definition: (() => {
+                const d = emptyEvent(title),
+                  q = new URLSearchParams(location.search),
+                  g = GAMES.find((g) => g.id === q.get("game")),
+                  id = q.get("contentPackId");
+                if (g && id)
+                  d.playlist = [
+                    {
+                      type: "original",
+                      gameSlug: g.id,
+                      contentPackId: id,
+                      itemId: crypto.randomUUID(),
+                      order: 0,
+                      enabled: true,
+                      displayTitle: "",
+                      hostNote: "",
+                      transitionLabel: "",
+                      settings: { rounds: 3, pace: "normal", pack: "mixed" },
+                    },
+                  ];
+                return d;
+              })(),
+            }),
           })
             .then((r) => navigate(`/app/events/${r.id}`, { replace: true }))
             .catch((e) => {

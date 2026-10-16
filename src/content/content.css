@@ -1,0 +1,145 @@
+.content-page {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.content-page h1,
+.pack-card h2,
+.pack-item h4 {
+  overflow-wrap: anywhere;
+}
+.pack-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+  gap: 24px;
+  margin: 24px 0;
+}
+.pack-card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 28px;
+  border: 2px solid var(--ink, #181820);
+  border-top-width: 8px;
+  border-radius: 16px;
+  background: var(--paper, #fffdf8);
+  text-decoration: none;
+  color: inherit;
+}
+.pack-card h2,
+.pack-card p {
+  margin: 0;
+}
+.pack-card b {
+  margin-top: auto;
+}
+.pack-items {
+  display: grid;
+  gap: 24px;
+  margin: 24px 0;
+}
+.pack-item {
+  min-width: 0;
+}
+.pack-item label,
+.pack-metadata label,
+.pack-choice label,
+.pack-copy label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  margin: 12px 0;
+}
+.content-page input,
+.content-page textarea,
+.content-page select,
+.pack-choice select {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+.content-page textarea {
+  min-height: 92px;
+  resize: vertical;
+}
+.pack-scene {
+  max-width: 100%;
+  width: 360px;
+  max-height: 280px;
+  object-fit: contain;
+}
+.pack-copy {
+  display: flex;
+  gap: 16px;
+  align-items: end;
+  flex-wrap: wrap;
+  margin-top: 24px;
+}
+.pack-copy label {
+  flex: 1 1 220px;
+}
+.pack-metadata {
+  min-width: 0;
+}
+.content-page .event-actions {
+  flex-wrap: wrap;
+}
+.pack-choice {
+  min-width: 0;
+}
+@media (max-width: 480px) {
+  .pack-card {
+    padding: 20px;
+  }
+  .content-page .event-panel {
+    padding: 16px;
+  }
+  .pack-copy {
+    display: block;
+  }
+  .content-page .event-actions > button {
+    white-space: normal;
+  }
+}
+.content-page .event-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 16px;
+}
+.content-page button:not(.button),
+.pack-choice button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 10px 14px;
+  border: 1px solid var(--line, #bab9b0);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ink, #181820);
+  font: inherit;
+  font-weight: 600;
+  line-height: 1.25;
+  cursor: pointer;
+  max-width: 100%;
+}
+.content-page button:not(.button):hover:not(:disabled),
+.pack-choice button:hover:not(:disabled) {
+  border-color: var(--blue, #2548f4);
+  color: var(--blue, #2548f4);
+}
+.content-page button:disabled,
+.pack-choice button:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+.pack-lineup {
+  min-inline-size: 0;
+  margin-top: 28px;
+}
+.pack-lineup > p {
+  margin-top: 12px;
+}

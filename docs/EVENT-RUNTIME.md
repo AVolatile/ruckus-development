@@ -1,6 +1,6 @@
 # Event runtime
 
-`server/events/runtime.ts` is a thin parent around the existing `Room`. A segment gets a fresh engine instance with the same player/token Map, host socket and room code/join URL. The parent's original host capability remains authoritative. Game scores/statistics reset per segment; separate event points persist. Old engine timers and bot jobs are disposed before moving on. A failed upcoming initializer retains the prior audience/state and reports a safe host-only message/correlation ID. Hosts can retry Continue, skip the failed upcoming item or end; guests keep a waiting screen. The only engine extension accepts frozen Original prompts; its normal content lookup remains the standalone fallback.
+`server/events/runtime.ts` is a thin parent around the existing `Room`. A segment gets a fresh engine instance with the same player/token Map, host socket and room code/join URL. The parent's original host capability remains authoritative. Game scores/statistics reset per segment; separate event points persist. Old engine timers and bot jobs are disposed before moving on. A failed upcoming initializer retains the prior audience/state and reports a safe host-only message/correlation ID. Hosts can retry Continue, skip the failed upcoming item or end; guests keep a waiting screen. Event segments and new standalone rooms receive frozen Original prompts before runtime; direct engine fixtures retain the canonical lookup fallback.
 
 The authoritative lifecycle is:
 

@@ -23,6 +23,7 @@ export const playlistItemSchema = z.discriminatedUnion("type", [
       ...common,
       type: z.literal("original"),
       gameSlug: z.enum(GAME_IDS),
+      contentPackId: z.string().uuid().optional(),
       settings: segmentSettings,
     })
     .strict(),
@@ -129,6 +130,7 @@ export interface FrozenSegment {
   boardId?: string;
   boardRevisionId?: string;
   contentVersion: string;
+  contentPack?: import("./content-packs.js").PackReference;
   prompts?: {
     title: string;
     options?: string[];

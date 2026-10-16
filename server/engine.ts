@@ -90,8 +90,14 @@ export class Room {
     private onChange: () => void,
     readonly board?: CustomBoard,
     private readonly frozenPrompts?: Question[],
+    private readonly frozenLineup?: {
+      prompts: Question[];
+      reference: import("../shared/content-packs.js").PackReference;
+    }[],
   ) {
     if (board) this.board = structuredClone(board);
+    if (frozenPrompts) this.frozenPrompts = structuredClone(frozenPrompts);
+    if (frozenLineup) this.frozenLineup = structuredClone(frozenLineup);
   }
   private publish() {
     this.changedAt = Date.now();
@@ -483,8 +489,12 @@ export class Room {
         explanation: source.explanation,
       };
     } else
-      this.prompt = this.frozenPrompts?.[this.round]
-        ? structuredClone(this.frozenPrompts[this.round])
+      this.prompt = (this.frozenLineup?.[this.gameIndex]?.prompts ??
+        this.frozenPrompts)?.[this.round]
+        ? structuredClone(
+            (this.frozenLineup?.[this.gameIndex]?.prompts ??
+              this.frozenPrompts)![this.round],
+          )
         : getPrompt(
             this.settings.playlist[this.gameIndex],
             this.round,

@@ -1,3 +1,4 @@
+import { installContentPackApi } from "./content-packs.js";
 import { randomUUID } from "node:crypto";
 import { networkInterfaces } from "node:os";
 import express, {
@@ -229,6 +230,7 @@ export function installHostApi(app: Express, eventAdapter?: EventAdapter) {
   });
   installWorkspaceApi(app, db, emailTransport, env.origin);
   installEventApi(app, db, eventAdapter);
+  installContentPackApi(app, db);
   // Legacy board endpoints delegate to the authenticated personal workspace.
   app.get("/api/v1/me", (_req, res) => res.json({ user: res.locals.user }));
   app.get(
@@ -323,6 +325,14 @@ export function installHostApi(app: Express, eventAdapter?: EventAdapter) {
     safe(async (_req, res) => {
       try {
         await db.execute(sql`select workspace_id from events limit 0`);
+        await db.execute(
+          sql`select current_revision_id from content_packs limit 0`,
+        );
+        const seeded = await db.execute(
+          sql`select count(*)::int as n from content_packs where owner_type='ruckus' and system_slug like '%-default' and status='ready' and archived_at is null`,
+        );
+        if (seeded.rows[0]?.n !== 6)
+          throw new Error("Content defaults require an explicit seed.");
         res.json({ status: "ready" });
       } catch {
         res.status(503).json({ status: "unavailable" });

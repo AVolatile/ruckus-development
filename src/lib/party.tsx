@@ -45,6 +45,10 @@ interface PartyContext {
     demo?: boolean,
     board?: CustomBoard,
     boardReference?: { workspaceId: string; boardId: string },
+    contentReference?: {
+      workspaceId: string;
+      selections: Partial<Record<import("../../shared/types").GameId, string>>;
+    },
   ) => Promise<Reply>;
   join: (code: string, name: string, avatar: number) => Promise<Reply>;
   resume: (identity: Identity) => Promise<Reply>;
@@ -215,6 +219,10 @@ export function PartyProvider({ children }: { children: ReactNode }) {
     demo = false,
     board?: CustomBoard,
     boardReference?: { workspaceId: string; boardId: string },
+    contentReference?: {
+      workspaceId: string;
+      selections: Partial<Record<import("../../shared/types").GameId, string>>;
+    },
   ) => {
     try {
       await ensureConnection();
@@ -232,7 +240,7 @@ export function PartyProvider({ children }: { children: ReactNode }) {
         .timeout(7000)
         .emit(
           "room:create",
-          { settings, demo, board, boardReference },
+          { settings, demo, board, boardReference, contentReference },
           (err, reply) =>
             resolve(
               accept(

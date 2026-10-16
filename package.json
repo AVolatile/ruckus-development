@@ -31,7 +31,12 @@
     "db:test:prepare": "node scripts/prepare-test-database.mjs",
     "db:migrate:production": "node dist-server/server/db/migrate.js",
     "audio:generate": "python3 scripts/generate-audio.py && prettier --write src/audio/assetCatalog.ts audio/assets.json",
-    "audio:validate": "node scripts/validate-audio.mjs"
+    "audio:validate": "node scripts/validate-audio.mjs",
+    "content:validate": "node --import tsx scripts/content.ts validate",
+    "content:diff": "node --import tsx scripts/content.ts diff",
+    "content:seed": "node --import tsx scripts/content.ts seed",
+    "content:diff:production": "node dist-server/server/content-packs/cli.js diff",
+    "content:seed:production": "node dist-server/server/content-packs/cli.js seed"
   },
   "dependencies": {
     "@better-auth/drizzle-adapter": "1.7.8",

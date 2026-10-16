@@ -29,7 +29,26 @@ test.describe("real account vertical slice", () => {
       .click();
     await page.getByLabel("Email", { exact: true }).fill(email);
     await page.getByLabel("Password", { exact: true }).fill(password);
-    await page.getByRole("button", { name: "Create my account" }).click();
+    const submitSignup = async () => {
+      const response = page.waitForResponse(
+        (r) =>
+          new URL(r.url()).pathname === "/api/auth/sign-up/email" &&
+          r.request().method() === "POST",
+      );
+      await page.getByRole("button", { name: "Create my account" }).click();
+      return response;
+    };
+    let signup = await submitSignup();
+    if (signup.status() === 429) {
+      await expect(page.getByRole("alert")).toContainText(/wait|attempt/i);
+      const seconds = Math.min(
+        60,
+        Math.max(1, Number(signup.headers()["retry-after"]) || 60),
+      );
+      await new Promise((resolve) => setTimeout(resolve, seconds * 1000));
+      signup = await submitSignup();
+    }
+    expect(signup.ok()).toBe(true);
     await expect(page).toHaveURL(/\/app\/w\/[^/]+\/studio$/);
     const cookies = await page.context().cookies();
     expect(

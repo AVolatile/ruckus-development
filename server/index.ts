@@ -1,3 +1,5 @@
+import { ContentPackService } from "./content-packs/service.js";
+import { GAME_IDS } from "../shared/types.js";
 import "dotenv/config";
 import express from "express";
 import { createServer } from "node:http";
@@ -192,6 +194,13 @@ io.on("connection", (socket) => {
         throw new Error("All stages are occupied. Try again shortly.");
       const parsed = z
         .object({
+          contentReference: z
+            .object({
+              workspaceId: z.string().uuid(),
+              selections: z.record(z.enum(GAME_IDS), z.string().uuid()),
+            })
+            .strict()
+            .optional(),
           settings: settingsSchema,
           demo: z.boolean().optional(),
           board: boardSchema.optional(),
@@ -221,6 +230,13 @@ io.on("connection", (socket) => {
         }
         board = validateBoard(stored);
       }
+      const frozenContent = board
+        ? undefined
+        : await new ContentPackService(db).forStandalone(
+            host.user.id,
+            parsed.settings,
+            parsed.contentReference,
+          );
       let code = makeCode();
       while (rooms.has(code)) code = makeCode();
       const joinUrl = getPublicJoinUrl(
@@ -240,6 +256,8 @@ io.on("connection", (socket) => {
         joinUrl,
         () => broadcast(room),
         board,
+        undefined,
+        frozenContent,
       );
       rooms.set(code, room);
       const identity: Identity = { code, token: room.hostToken, role: "host" };

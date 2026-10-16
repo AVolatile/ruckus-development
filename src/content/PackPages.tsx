@@ -1,3 +1,6 @@
+import { PageHeader } from "../app/PageHeader";
+import { Icon } from "../components/Visuals";
+import type { CSSProperties } from "react";
 import { useEffect, useState } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
 import { GAMES, gameById } from "../../shared/catalog";
@@ -27,6 +30,8 @@ export default function PackPages({ create = false }: { create?: boolean }) {
     [record, setRecord] = useState<PackRecord>(),
     [error, setError] = useState(""),
     [loading, setLoading] = useState(true),
+    [fetchFailed, setFetchFailed] = useState(false),
+    [refresh, setRefresh] = useState(0),
     [busy, setBusy] = useState(false),
     [name, setName] = useState(""),
     [game, setGame] = useState<GameId>("hotwire"),
@@ -46,6 +51,7 @@ export default function PackPages({ create = false }: { create?: boolean }) {
     if (create) return;
     let active = true;
     setLoading(true);
+    setFetchFailed(false);
     setRecord(undefined);
     setError("");
     const job = packId
@@ -62,7 +68,10 @@ export default function PackPages({ create = false }: { create?: boolean }) {
         });
     void job
       .catch((e) => {
-        if (active) setError(e.message);
+        if (active) {
+          setError(e.message);
+          setFetchFailed(true);
+        }
       })
       .finally(() => {
         if (active) setLoading(false);
@@ -70,7 +79,7 @@ export default function PackPages({ create = false }: { create?: boolean }) {
     return () => {
       active = false;
     };
-  }, [endpoint, packId, filters, create]);
+  }, [endpoint, packId, filters, create, refresh]);
   const filter = (field: string, value: string) => {
     const next = new URLSearchParams(search);
     next.delete("cursor");
@@ -94,14 +103,15 @@ export default function PackPages({ create = false }: { create?: boolean }) {
     return (
       <section className="events-page content-page">
         <Link to="/app/content-packs">← Content Packs</Link>
-        <header className="page-hero">
-          <span className="eyebrow">MADE FOR YOUR PEOPLE</span>
-          <h1>A fresh set of possibilities.</h1>
+        <PageHeader
+          eyebrow="CONTENT PACKS / MADE FOR YOUR PEOPLE"
+          title="A fresh set of possibilities."
+        >
           <p>
             Choose the game, then write the prompts. Your pack stays private to
             this workspace.
           </p>
-        </header>
+        </PageHeader>
         <form
           className="event-panel"
           onSubmit={(e) => {
@@ -111,7 +121,9 @@ export default function PackPages({ create = false }: { create?: boolean }) {
                 method: "POST",
                 body: JSON.stringify({ document: emptyPack(game, name) }),
               });
-              navigate(`/app/content-packs/${r.id}/edit`);
+              navigate(`/app/content-packs/${r.id}/edit`, {
+                state: { hostNotice: "Private pack created. Make it yours." },
+              });
             });
           }}
         >
@@ -162,20 +174,31 @@ export default function PackPages({ create = false }: { create?: boolean }) {
     return (
       <section className="events-page content-page">
         <Link to="/app/content-packs">← Content Packs</Link>
-        <header className="page-hero">
-          <span className="eyebrow">
-            {gameById(r.gameType).name} /{" "}
-            {r.ownerType === "ruckus"
-              ? "RUCKUS ORIGINAL CONTENT"
-              : "PRIVATE WORKSPACE CONTENT"}
-          </span>
-          <h1>{r.name}</h1>
-          <p>{r.document.shortDescription}</p>
-          <p>
-            {r.itemCount} items · {r.category.replaceAll("_", " ")} ·{" "}
-            {r.season.replaceAll("_", " ")} · {r.difficulty} · {r.status} ·
-            Revision {r.revisionNumber}
-          </p>
+        <header
+          className="pack-detail-intro"
+          style={
+            { "--pack-accent": gameById(r.gameType).color } as CSSProperties
+          }
+        >
+          <div className="pack-detail-mark" aria-hidden="true">
+            <Icon name={gameById(r.gameType).icon} />
+            <span className="orbit-line" />
+          </div>
+          <div>
+            <span className="eyebrow">
+              {gameById(r.gameType).name} /{" "}
+              {r.ownerType === "ruckus"
+                ? "RUCKUS ORIGINAL CONTENT"
+                : "PRIVATE WORKSPACE CONTENT"}
+            </span>
+            <h1>{r.name}</h1>
+            <p>{r.document.shortDescription}</p>
+            <p className="pack-detail-meta">
+              {r.itemCount} items · {r.category.replaceAll("_", " ")} ·{" "}
+              {r.season.replaceAll("_", " ")} · {r.difficulty} · {r.status} ·
+              Revision {r.revisionNumber}
+            </p>
+          </div>
         </header>
         {message}
         <div className="event-panel">
@@ -224,7 +247,12 @@ export default function PackPages({ create = false }: { create?: boolean }) {
                         method: "POST",
                         body: "{}",
                       });
-                      navigate("/app/content-packs");
+                      navigate("/app/content-packs", {
+                        state: {
+                          hostNotice:
+                            "Pack archived. Existing live games keep their snapshot.",
+                        },
+                      });
                     });
                 }}
               >
@@ -244,7 +272,11 @@ export default function PackPages({ create = false }: { create?: boolean }) {
                     body: JSON.stringify({ targetWorkspaceId: target }),
                   },
                 );
-                navigate(`/app/w/${target}/content-packs/${copied.id}`);
+                navigate(`/app/w/${target}/content-packs/${copied.id}`, {
+                  state: {
+                    hostNotice: "Editable copy saved to your workspace.",
+                  },
+                });
               });
             }}
           >
@@ -295,24 +327,23 @@ export default function PackPages({ create = false }: { create?: boolean }) {
   return (
     <section className="events-page content-page">
       <Link to="/app/library">← Library</Link>
-      <header className="page-hero">
-        <span className="eyebrow">SAME GREAT GAMES. FRESH MATERIAL.</span>
-        <h1>Content Packs.</h1>
-        <p>
-          Originals set the rules. Packs bring the questions, scenes and
-          creative sparks.
-        </p>
-        <div className="event-actions">
-          {can("content.create") && (
-            <Link className="button" to="/app/content-packs/new">
-              Create private pack +
-            </Link>
-          )}
-          <Link to="/app/originals">Explore Originals →</Link>
+      <header className="pack-shelf-intro">
+        <div>
+          <span className="eyebrow">SAME GREAT GAMES. FRESH MATERIAL.</span>
+          <h1>Content Packs.</h1>
+          <p>
+            Originals set the rules. Packs bring the questions, scenes and
+            creative sparks.
+          </p>
         </div>
+        {can("content.create") && (
+          <Link className="button" to="/app/content-packs/new">
+            Create private pack +
+          </Link>
+        )}
       </header>
       <form
-        className="event-panel"
+        className="pack-filters"
         onSubmit={(e) => {
           e.preventDefault();
           filter("q", query);
@@ -343,39 +374,53 @@ export default function PackPages({ create = false }: { create?: boolean }) {
               ))}
             </select>
           </label>
-          {(
-            [
-              ["category", CATEGORIES],
-              ["season", SEASONS],
-              ["difficulty", DIFFICULTIES],
-              ["source", ["ruckus", "workspace"]],
-            ] as const
-          ).map(([field, values]) => (
-            <label key={field}>
-              {field[0].toUpperCase() + field.slice(1)}
-              <select
-                value={search.get(field) ?? ""}
-                onChange={(e) => filter(field, e.target.value)}
-              >
-                <option value="">
-                  All{" "}
-                  {field === "source"
-                    ? "sources"
-                    : field === "category"
-                      ? "categories"
-                      : field === "difficulty"
-                        ? "difficulties"
-                        : "seasons"}
-                </option>
-                {values.map((v) => (
-                  <option value={v} key={v}>
-                    {v.replaceAll("_", " ")}
-                  </option>
-                ))}
-              </select>
-            </label>
-          ))}
         </div>
+        <details
+          className="pack-more-filters"
+          open={
+            ["category", "season", "difficulty", "source"].some((field) =>
+              search.has(field),
+            ) || undefined
+          }
+        >
+          <summary>
+            More filters <span>Category, season, difficulty & source</span>
+          </summary>
+          <div className="event-fields">
+            {(
+              [
+                ["category", CATEGORIES],
+                ["season", SEASONS],
+                ["difficulty", DIFFICULTIES],
+                ["source", ["ruckus", "workspace"]],
+              ] as const
+            ).map(([field, values]) => (
+              <label key={field}>
+                {field[0].toUpperCase() + field.slice(1)}
+                <select
+                  value={search.get(field) ?? ""}
+                  onChange={(e) => filter(field, e.target.value)}
+                >
+                  <option value="">
+                    All{" "}
+                    {field === "source"
+                      ? "sources"
+                      : field === "category"
+                        ? "categories"
+                        : field === "difficulty"
+                          ? "difficulties"
+                          : "seasons"}
+                  </option>
+                  {values.map((v) => (
+                    <option value={v} key={v}>
+                      {v.replaceAll("_", " ")}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            ))}
+          </div>
+        </details>
         <button
           type="button"
           onClick={() => {
@@ -389,6 +434,13 @@ export default function PackPages({ create = false }: { create?: boolean }) {
       {message}
       {loading ? (
         <p role="status">Loading packs…</p>
+      ) : fetchFailed ? (
+        <button
+          className="button outline"
+          onClick={() => setRefresh((value) => value + 1)}
+        >
+          Try loading packs again
+        </button>
       ) : (
         <>
           <p role="status">
@@ -406,19 +458,34 @@ export default function PackPages({ create = false }: { create?: boolean }) {
                 className="pack-card"
                 key={r.id}
                 to={`/app/content-packs/${r.id}`}
-                style={{ borderTopColor: gameById(r.gameType).color }}
+                style={
+                  {
+                    "--pack-accent": gameById(r.gameType).color,
+                  } as CSSProperties
+                }
               >
-                <span className="eyebrow">
-                  {gameById(r.gameType).name} ·{" "}
-                  {r.ownerType === "ruckus" ? "Ruckus" : "Workspace"}
-                </span>
+                <div className="pack-game-cover">
+                  <div className="pack-cover-labels">
+                    <span>{gameById(r.gameType).name}</span>
+                    <span>
+                      {r.ownerType === "ruckus" ? "Ruckus" : "Workspace"}
+                    </span>
+                  </div>
+                  <div className="pack-game-art" aria-hidden="true">
+                    <Icon name={gameById(r.gameType).icon} />
+                    <span className="orbit-line" />
+                  </div>
+                </div>
                 <h2>{r.name}</h2>
                 <p>{r.shortDescription || "Private workspace content."}</p>
-                <span>
-                  {r.itemCount} items · {r.status} ·{" "}
-                  {r.season.replaceAll("_", " ")}
-                </span>
-                <b>Explore pack →</b>
+                <div className="pack-card-foot">
+                  <span>
+                    {r.itemCount} items · {r.status}
+                  </span>
+                  <span>
+                    Explore pack <Icon name="arrow" />
+                  </span>
+                </div>
               </Link>
             ))}
           </div>
@@ -471,7 +538,11 @@ export default function PackPages({ create = false }: { create?: boolean }) {
                     method: "POST",
                     body: JSON.stringify(data),
                   });
-                  navigate(`/app/content-packs/${r.id}`);
+                  navigate(`/app/content-packs/${r.id}`, {
+                    state: {
+                      hostNotice: "Pack imported and saved to your workspace.",
+                    },
+                  });
                 });
               }}
             />

@@ -1,3 +1,4 @@
+import { StatusBadge } from "../app/StatusBadge";
 import { useState } from "react";
 import { useParams } from "react-router-dom";
 import { Link, useNavigate } from "../workspaces/navigation";
@@ -101,12 +102,11 @@ export default function StudioEditor() {
       <header className="studio-editor-top">
         <div>
           <Link to="/app/studio/boards">← My boards</Link>
-          <span
-            role="status"
-            className={saved === "Save failed" ? "field-error" : ""}
+          <StatusBadge
+            tone={draft.conflict ? "conflict" : error ? "error" : undefined}
           >
             {saved}
-          </span>
+          </StatusBadge>
         </div>
         <div>
           <Link
@@ -554,7 +554,9 @@ export default function StudioEditor() {
                 try {
                   await draft.flush();
                   const copy = await draft.repository.duplicate(board.id);
-                  navigate(`/app/studio/boards/${copy.board.id}`);
+                  navigate(`/app/studio/boards/${copy.board.id}`, {
+                    state: { hostNotice: "Board duplicated and saved." },
+                  });
                 } catch (e) {
                   setError(
                     e instanceof Error ? e.message : "Couldn’t duplicate.",

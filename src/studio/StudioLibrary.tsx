@@ -52,7 +52,9 @@ export default function StudioLibrary() {
     try {
       const board = copyBoard(source);
       const record = await repository.create(board, `create:${board.id}`);
-      navigate(`/app/studio/boards/${record.board.id}`);
+      navigate(`/app/studio/boards/${record.board.id}`, {
+        state: { hostNotice: "Board saved to your workspace. Make it yours." },
+      });
     } catch (cause) {
       setError(
         cause instanceof Error ? cause.message : "Couldn’t create your board.",
@@ -103,8 +105,8 @@ export default function StudioLibrary() {
             Make a game of it.
           </h1>
           <p>
-            A question board, a room code, and an entirely new reason to get
-            competitive. Build your own. Or start with one of ours.
+            A question board, a room code, and a new reason to get competitive.
+            Build your own. Or start with one of ours.
           </p>
           <div className="hero-actions">
             {can("boards.create") && (
@@ -184,7 +186,11 @@ export default function StudioLibrary() {
                 : importJson(text);
               const record = await repository.create(board, `file:${board.id}`);
               setError("");
-              navigate(`/app/studio/boards/${record.board.id}`);
+              navigate(`/app/studio/boards/${record.board.id}`, {
+                state: {
+                  hostNotice: "Board saved to your workspace. Make it yours.",
+                },
+              });
             } catch (e) {
               setError(
                 e instanceof Error

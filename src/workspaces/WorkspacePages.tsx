@@ -1,11 +1,13 @@
+import { PageHeader } from "../app/PageHeader";
+import { StatusBadge } from "../app/StatusBadge";
 import WorkspaceMembers from "./WorkspaceMembers";
 import { useCallback, useEffect, useState, type FormEvent } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { NavLink, Link, useNavigate, useParams } from "react-router-dom";
 import { useOptionalWorkspace } from "./WorkspaceContext";
 import { useHostAuth } from "../auth/HostAuth";
 import { request } from "../lib/api";
 import { workspaceNameSchema } from "../../shared/workspaces";
-import { Logo, Tag, Avatar } from "../components/Visuals";
+import { Logo, Avatar } from "../components/Visuals";
 import { ErrorMessage } from "../components/Layout";
 import VerificationNotice from "../auth/VerificationNotice";
 type Mode = "create" | "accept" | "general" | "members" | "activity";
@@ -74,7 +76,9 @@ function WorkspacePageContent({ mode }: { mode: Mode }) {
           method: "POST",
           body: JSON.stringify({ name }),
         });
-        navigate(`/app/w/${result.id}`);
+        navigate(`/app/w/${result.id}`, {
+          state: { hostNotice: "Workspace created. Invite your people." },
+        });
       } else {
         await request(base, {
           method: "PATCH",
@@ -97,39 +101,48 @@ function WorkspacePageContent({ mode }: { mode: Mode }) {
             : "Your shared space.";
   return (
     <>
-      <section className="page-hero">
-        <Tag>{current?.name || "RUCKUS TOGETHER"}</Tag>
-        <h1>{title}</h1>
-        <p>
-          {mode === "create"
-            ? "Shared boards, clear roles and a brand your room recognizes."
-            : mode === "accept"
-              ? `Signed in as ${auth.user?.email}. Invitations are bound to the email that received them.`
-              : mode === "members"
-                ? "Give everyone the right seat. Hosts make and run boards; Viewers read; Admins manage the workspace."
-                : mode === "activity"
-                  ? "Recent workspace changes, recorded as they happen."
-                  : "Manage the name, people and Brand Kits in this workspace."}
-        </p>
-        {context && (
-          <nav className="workspace-tabs" aria-label="Workspace settings">
-            {[
-              ["/workspace", "General"],
-              ["/members", "Members"],
-              ["/brand", "Brand"],
-              ...(context.can("audit.read") ? [["/activity", "Activity"]] : []),
-            ].map(([suffix, label]) => (
-              <Link key={suffix} to={context.path(suffix)}>
-                {label}
-              </Link>
-            ))}
-          </nav>
-        )}
+      <section className="host-page-section">
+        <PageHeader
+          eyebrow={current?.name || "RUCKUS TOGETHER"}
+          title={title}
+          meta={
+            <>
+              {context && (
+                <nav className="workspace-tabs" aria-label="Workspace settings">
+                  {[
+                    ["/workspace", "General"],
+                    ["/members", "Members"],
+                    ["/brand", "Brand"],
+                    ...(context.can("audit.read")
+                      ? [["/activity", "Activity"]]
+                      : []),
+                  ].map(([suffix, label]) => (
+                    <NavLink key={suffix} to={context.path(suffix)}>
+                      {label}
+                    </NavLink>
+                  ))}
+                </nav>
+              )}
+            </>
+          }
+        >
+          <p>
+            {mode === "create"
+              ? "Shared boards, clear roles and a brand your room recognizes."
+              : mode === "accept"
+                ? `Signed in as ${auth.user?.email}. Invitations are bound to the email that received them.`
+                : mode === "members"
+                  ? "Give everyone the right seat. Hosts make and run boards; Viewers read; Admins manage the workspace."
+                  : mode === "activity"
+                    ? "Recent workspace changes, recorded as they happen."
+                    : "Manage the name, people and Brand Kits in this workspace."}
+          </p>
+        </PageHeader>
       </section>
       <section className="section workspace-content">
         <VerificationNotice />
         <ErrorMessage message={error} />
-        {message && <p role="status">{message}</p>}
+        {message && <StatusBadge>{message}</StatusBadge>}
         {loading && <p role="status">Loading workspace details…</p>}
         {mode === "create" && (
           <form

@@ -1,3 +1,5 @@
+import { GAMES } from "../../shared/catalog";
+import type { CSSProperties } from "react";
 import { useWorkspace } from "../workspaces/context";
 import { Link } from "../workspaces/navigation";
 import { Icon, Tag } from "../components/Visuals";
@@ -6,59 +8,122 @@ export function Library() {
   const { can, current } = useWorkspace();
   return (
     <>
-      <section className="page-hero">
-        <Tag>EVERY KIND OF LOUD, IN ONE PLACE</Tag>
-        <h1>
-          Your next
-          <br />
-          <span>great lineup.</span>
-        </h1>
-        <p>
-          Play an Original right away, or bring your own questions to the room.
-        </p>
-      </section>
-      <section className="section">
-        <div className="occasion-grid">
-          <Link className="occasion" to="/app/originals">
-            <Icon name="bolt" />
-            <h2>Originals</h2>
-            <p>
-              Six games. Fast thinkers, wild pitchers, terrible artists:
-              everyone gets a turn.
-            </p>
-            <span>Choose a game ↗</span>
+      <section className="section library-hub">
+        <header className="library-intro">
+          <span className="eyebrow">EVERY KIND OF LOUD, IN ONE PLACE</span>
+          <h1>
+            Your next <span>great lineup.</span>
+          </h1>
+          <p>
+            Originals set the rules. Content Packs bring fresh material. Studio
+            makes it personal. Events bring it all together.
+          </p>
+        </header>
+        <div className="library-discovery">
+          <Link className="library-originals" to="/app/originals">
+            <div className="library-originals-copy">
+              <span className="eyebrow">01 / RUCKUS ORIGINALS</span>
+              <h2>
+                Find your
+                <br />
+                kind of loud.
+              </h2>
+              <p>
+                Fast thinkers. Wild pitchers. Terrible artists. Six games, ready
+                when your room is.
+              </p>
+              <span className="library-direction">
+                Choose a game <Icon name="arrow" />
+              </span>
+            </div>
+            <div className="library-game-ensemble" aria-hidden="true">
+              {GAMES.map((game, index) => (
+                <div
+                  key={game.id}
+                  style={{ "--game-color": game.color } as CSSProperties}
+                >
+                  <span>0{index + 1}</span>
+                  <Icon name={game.icon} />
+                </div>
+              ))}
+            </div>
           </Link>
-          <Link className="occasion" to="/app/content-packs">
-            <Icon name="asterisk" />
+          <Link className="library-packs" to="/app/content-packs">
+            <span className="eyebrow">
+              02 / FRESH MATERIAL. SAME GOOD GAMES.
+            </span>
+            <div className="library-pack-art" aria-hidden="true">
+              <Icon name="asterisk" />
+              <span className="orbit-line" />
+            </div>
             <h2>Content Packs</h2>
             <p>
-              Fresh questions, scenes and creative prompts for your Originals.
-              Browse Ruckus packs or write privately for this workspace.
+              New questions. Different scenes. Your next excellent prompt. Find
+              material for an Original, or write your own.
             </p>
-            <span>Find your next pack ↗</span>
+            <span className="library-direction">
+              Find your next pack <Icon name="arrow" />
+            </span>
           </Link>
-          <Link className="occasion" to="/app/studio">
-            <Icon name="screen" />
+        </div>
+        <div className="library-making">
+          <div className="library-studio">
+            <span className="eyebrow">03 / THE CREATOR’S SEAT</span>
             <h2>
-              {current.kind === "personal" ? "My boards" : "Shared boards"}
+              Your questions.
+              <br />
+              Their competitive side.
             </h2>
             <p>
-              This workspace’s saved boards, plus real starter templates and a
-              searchable question library.
+              Trivia, True / False, polls. Bring the inside knowledge. Studio
+              turns it into something the room can play.
             </p>
-            <span>Open Studio ↗</span>
-          </Link>
-          {can("boards.create") && (
-            <Link className="occasion" to="/app/studio/boards/new">
-              <Icon name="asterisk" />
-              <h2>Something new</h2>
-              <p>
-                Build trivia, True / False, or polls around the things your
-                people know.
-              </p>
-              <span>Create a board ↗</span>
+            <Link className="library-direction" to="/app/studio">
+              Open Studio <Icon name="arrow" />
             </Link>
-          )}
+            <span className="library-board-label">
+              {current.kind === "personal" ? "My boards" : "Shared boards"} +
+              editable starters
+            </span>
+            {can("boards.create") && (
+              <Link className="library-new-board" to="/app/studio/boards/new">
+                Something new? Create a board ↗
+              </Link>
+            )}
+          </div>
+          <Link className="library-events" to="/app/events">
+            <span className="eyebrow">04 / GIVE THE NIGHT A RUN OF SHOW</span>
+            <h2>
+              One room.
+              <br />A whole lineup.
+            </h2>
+            <p>
+              Events carry your crew from Original to Studio board to the next
+              good thing. One invitation, all the way through.
+            </p>
+            <div className="library-sequence" aria-hidden="true">
+              <span>
+                01
+                <br />
+                Choose
+              </span>
+              <Icon name="arrow" />
+              <span>
+                02
+                <br />
+                Arrange
+              </span>
+              <Icon name="arrow" />
+              <span>
+                03
+                <br />
+                Play
+              </span>
+            </div>
+            <span className="library-direction">
+              Build an Event <Icon name="arrow" />
+            </span>
+          </Link>
         </div>
       </section>
     </>

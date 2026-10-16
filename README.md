@@ -2,7 +2,7 @@
 
 Turn any shared screen into something the room can play with. Six multiplayer Originals meet Studio for custom trivia, True / False and polls. Hosts have personal and shared workspaces; players join from phones without accounts.
 
-This is `AVolatile/ruckus-development`, the startup repository, separate from the original portfolio/demo. Phase 4 adds persistent Content Packs, private workspace authoring and frozen standalone/Event content, while preserving Ruckus’s identity, gameplay and repaired host/phone audio.
+This is `AVolatile/ruckus-development`, the startup repository, separate from the original portfolio/demo. Phase 4 adds persistent Content Packs, private workspace authoring and frozen standalone/Event content. Phase 4.5/4.5B extends the original Ruckus page compositions into host tools, with compact navigation, distinct shelves/editors and acknowledged feedback; human art-direction approval is pending. Gameplay and repaired host/phone audio remain preserved.
 
 ## Run locally
 
@@ -76,6 +76,8 @@ Phase 3.5 delivers **Audio & Game Feel**: one lazy Web Audio engine, all six gam
 The 27 original procedural assets are a **pre-release reference pack** pending human audible approval. No sampled/downloaded music was added. Validate with `npm run audio:validate`; optional regeneration uses Python/NumPy and ffmpeg. [Audio architecture](docs/AUDIO-ARCHITECTURE.md) · [Sonic design](docs/SONIC-DESIGN.md) · [Provenance](audio/ASSET-PROVENANCE.md) · [Phase 3.5 report](docs/PHASE-3-5-REPORT.md).
 
 Phase 4 delivers **Content Platform & Packs**: seven Ruckus packs, private workspace authoring, discovery, immutable revisions, explicit import/export and exact standalone/Event launch snapshots. Open **Library → Content Packs**. Run `npm run content:validate`, review `npm run content:diff`, then explicitly run `npm run content:seed` after migrations. Startup never seeds. [Content platform](docs/CONTENT-PLATFORM.md) · [Pack guide](docs/CONTENT-PACKS.md) · [Provenance](docs/CONTENT-PROVENANCE.md) · [Phase 4 report](docs/PHASE-4-REPORT.md).
+
+Phase 4.5 adds **Host Experience & Visual Cohesion**: quiet recoverable local import, direct Packs navigation and acknowledged feedback. Following human review, Phase 4.5B corrects Library, Packs, Events and Brand composition using the original repository’s page archetypes. **Human art-direction approval is pending Anthony’s review.** [Host design system](docs/HOST-DESIGN-SYSTEM.md) · [Visual audit](docs/PHASE-4-5-VISUAL-AUDIT.md) · [Phase 4.5 report](docs/PHASE-4-5-REPORT.md).
 
 Next: **Phase 5 — Persistent Session History & Analytics**, built from actual completed outcomes. No Phase 5 implementation is included.
 

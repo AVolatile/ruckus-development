@@ -67,10 +67,13 @@ test("Library pack discovery, structured authoring, reordering, preview and port
   const wid = await workspace(page),
     base = `/api/v1/workspaces/${wid}/content-packs`;
   let connections = 0;
-  page.on("websocket", () => connections++);
+  page.on("websocket", (socket) => {
+    // Source-mode QA has a Vite HMR socket; this boundary concerns game realtime.
+    if (new URL(socket.url()).pathname.startsWith("/socket.io")) connections++;
+  });
   await page.goto(`/app/w/${wid}/library`);
   await page
-    .getByRole("link", { name: /Content Packs Fresh questions/ })
+    .getByRole("link", { name: /Content Packs.*Find your next pack/ })
     .click();
   await expect(
     page.getByRole("heading", { name: "Content Packs.", exact: true }),

@@ -1,3 +1,5 @@
+import { PageHeader } from "../app/PageHeader";
+import { StatusBadge } from "../app/StatusBadge";
 import { downloadPack } from "./portable";
 import { useParams } from "react-router-dom";
 import { useState } from "react";
@@ -61,18 +63,23 @@ export default function PackEditor() {
   return (
     <section className="events-page content-page">
       <Link to={`/app/content-packs/${packId}`}>← Pack details</Link>
-      <header className="page-hero">
-        <span className="eyebrow">
-          WORKSPACE CONTENT / {d.content.gameType}
-        </span>
-        <h1>{d.name || "Your next pack"}</h1>
-        <p>Write for your room. Revisions preserve every acknowledged save.</p>
-      </header>
-      <div className="event-panel">
-        <p role="status">
-          {draft.status}
-          {draft.revisionNumber ? ` · Revision ${draft.revisionNumber}` : ""}
+      <PageHeader
+        eyebrow={`${current.name} / ${d.content.gameType} / PACK EDITOR`}
+        title={d.name}
+        meta={
+          <StatusBadge
+            tone={
+              draft.conflict ? "conflict" : draft.error ? "error" : undefined
+            }
+          >{`${draft.status} · Revision ${draft.record?.revisionNumber ?? 1}`}</StatusBadge>
+        }
+      >
+        <p>
+          Write for your room. Changes save automatically; mark the finished
+          pack ready when it’s good to go.
         </p>
+      </PageHeader>
+      <div className="pack-save-tools">
         {draft.error && <p role="alert">{draft.error}</p>}
         {!errors.success && (
           <ul role="alert">
@@ -129,7 +136,7 @@ export default function PackEditor() {
         disabled={!can("content.update")}
         className="event-panel pack-metadata"
       >
-        <legend>Pack details</legend>
+        <legend>01 / Give it an identity</legend>
         <div className="event-fields">
           <label>
             Name

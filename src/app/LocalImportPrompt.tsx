@@ -1,5 +1,7 @@
 import { useWorkspace } from "../workspaces/WorkspaceContext";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
+import { StatusBadge } from "./StatusBadge";
 import { useHostAuth } from "../auth/HostAuth";
 import { LocalBoardRepository } from "../studio/LocalBoardRepository";
 import { CloudBoardRepository } from "../studio/repository";
@@ -63,11 +65,21 @@ export default function LocalImportPrompt() {
       };
     }
   });
-  const [dismissed, setDismissed] = useState(false),
+  const dismissalKey = `ruckus-import-dismissed:${user!.id}`;
+  const { pathname } = useLocation();
+  const [expanded, setExpanded] = useState(false);
+  const [dismissed, setDismissed] = useState(() => {
+      try {
+        return sessionStorage.getItem(dismissalKey) === "true";
+      } catch {
+        return false;
+      }
+    }),
     [busy, setBusy] = useState(false),
     [results, setResults] = useState<ImportResult[]>([]);
+  useEffect(() => setExpanded(false), [pathname]);
   if (
-    dismissed ||
+    (dismissed && !pathname.endsWith("/settings")) ||
     !initial.show ||
     (!initial.candidates.length && !initial.error)
   )
@@ -125,87 +137,112 @@ export default function LocalImportPrompt() {
       className="local-import-prompt"
       aria-labelledby="local-import-title"
     >
-      <div>
-        <span className="eyebrow">YOUR WORK CAME WITH YOU</span>
-        <h2 id="local-import-title">Bring your local boards along.</h2>
-        <p>
-          {initial.candidates.length
-            ? `${initial.candidates.length} local board${initial.candidates.length === 1 ? "" : "s"} detected on this device. Choose a destination for ${user?.email}. The originals stay here.`
-            : initial.error}
-        </p>
-      </div>
-      <label>
-        Import destination
-        <select
-          value={destination}
-          disabled={busy}
-          onChange={(e) => {
-            setDestination(e.target.value);
-            setResults([]);
-          }}
-        >
-          {items
-            .filter((w) => w.permissions.includes("boards.create"))
-            .map((w) => (
-              <option key={w.id} value={w.id}>
-                {w.name}
-                {w.kind === "personal" ? " (personal)" : ""}
-              </option>
-            ))}
-        </select>
-      </label>
-      <div className="hero-actions">
-        {!!initial.candidates.length && (
-          <button
-            className="button small"
-            disabled={busy}
-            onClick={() => void importBoards()}
-          >
-            {busy
-              ? "Importing…"
-              : results.length
-                ? "Retry import safely"
-                : "Import local boards"}
-          </button>
-        )}
+      <div className="local-import-summary">
+        <span>
+          {initial.error
+            ? "Local board backup available"
+            : `${initial.candidates.length} local board${initial.candidates.length === 1 ? "" : "s"} on this device`}
+        </span>
         <button
-          className="button small outline"
-          disabled={busy}
-          onClick={() => setDismissed(true)}
+          className="button small text-button"
+          aria-expanded={expanded}
+          aria-controls="local-import-details"
+          onClick={() => setExpanded((v) => !v)}
         >
-          Not now
-        </button>
-        <button
-          className="button small outline"
-          onClick={() =>
-            download(
-              "ruckus-local-backup.json",
-              localStorage.getItem("ruckus-studio-v1") || "[]",
-              "application/json",
-            )
-          }
-        >
-          Export local backup
+          {expanded ? "Close import options ↑" : "Review local boards →"}
         </button>
       </div>
-      {!!results.length && (
-        <div role="status">
+      <div id="local-import-details" hidden={!expanded}>
+        <div>
+          <span className="eyebrow">YOUR WORK CAME WITH YOU</span>
+          <h2 id="local-import-title">Bring your local boards along.</h2>
           <p>
-            {results.filter((result) => result.id).length} saved to your
-            account. {results.filter((result) => result.code).length} need
-            attention. Local originals are unchanged.
+            {initial.candidates.length
+              ? `${initial.candidates.length} local board${initial.candidates.length === 1 ? "" : "s"} detected on this device. Choose a destination for ${user?.email}. The originals stay here.`
+              : initial.error}
           </p>
-          <ul>
-            {results.map((result) => (
-              <li key={result.key}>
-                {initial.candidates.find((item) => item.key === result.key)
-                  ?.board?.title || result.key}
-                : {result.id ? "Imported ✓" : result.message}
-              </li>
-            ))}
-          </ul>
         </div>
-      )}
+        <label>
+          Import destination
+          <select
+            value={destination}
+            disabled={busy}
+            onChange={(e) => {
+              setDestination(e.target.value);
+              setResults([]);
+            }}
+          >
+            {items
+              .filter((w) => w.permissions.includes("boards.create"))
+              .map((w) => (
+                <option key={w.id} value={w.id}>
+                  {w.name}
+                  {w.kind === "personal" ? " (personal)" : ""}
+                </option>
+              ))}
+          </select>
+        </label>
+        <div className="hero-actions">
+          {!!initial.candidates.length && (
+            <button
+              className="button small"
+              disabled={busy}
+              onClick={() => void importBoards()}
+            >
+              {busy
+                ? "Importing…"
+                : results.length
+                  ? "Retry import safely"
+                  : "Import local boards"}
+            </button>
+          )}
+          <button
+            className="button small outline"
+            disabled={busy}
+            onClick={() => {
+              setDismissed(true);
+              setExpanded(false);
+              try {
+                sessionStorage.setItem(dismissalKey, "true");
+              } catch {
+                /* Optional tab preference. */
+              }
+            }}
+          >
+            Not now
+          </button>
+          <button
+            className="button small outline"
+            onClick={() =>
+              download(
+                "ruckus-local-backup.json",
+                localStorage.getItem("ruckus-studio-v1") || "[]",
+                "application/json",
+              )
+            }
+          >
+            Export local backup
+          </button>
+        </div>
+        {!!results.length && (
+          <div className="local-import-results">
+            <StatusBadge
+              tone={results.some((result) => result.code) ? "error" : "saved"}
+            >
+              {`${results.filter((result) => result.id).length} saved to your account. ${results.filter((result) => result.code).length} need attention. Local originals are unchanged.`}
+            </StatusBadge>
+            <ul>
+              {results.map((result) => (
+                <li key={result.key}>
+                  {initial.candidates.find((item) => item.key === result.key)
+                    ?.board?.title || result.key}
+                  : {result.id ? "Imported ✓" : result.message}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
     </section>
   );
 }

@@ -60,6 +60,9 @@ test.describe("real account vertical slice", () => {
       ),
     ).toBe(true);
     await page
+      .getByRole("button", { name: "Review local boards →", exact: true })
+      .click();
+    await page
       .getByRole("button", { name: "Import local boards", exact: true })
       .click();
     await expect(

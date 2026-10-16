@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState, useRef, type ReactNode } from "react";
 import {
   Link,
   Navigate,
@@ -112,11 +112,22 @@ export function PersonalWorkspaceRedirect() {
 export function WorkspaceSwitcher() {
   const { current, items } = useWorkspace();
   const [open, setOpen] = useState(false);
+  const trigger = useRef<HTMLButtonElement>(null);
   return (
-    <div className="workspace-switcher">
+    <div
+      className="workspace-switcher"
+      onKeyDown={(event) => {
+        if (event.key === "Escape" && open) {
+          event.stopPropagation();
+          setOpen(false);
+          trigger.current?.focus();
+        }
+      }}
+    >
       <button
         className="button small outline"
         aria-expanded={open}
+        ref={trigger}
         aria-controls="workspace-options"
         onClick={() => setOpen((v) => !v)}
       >

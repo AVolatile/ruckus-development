@@ -1,3 +1,4 @@
+import { StatusBadge } from "../app/StatusBadge";
 import {
   useCallback,
   useEffect,
@@ -5,10 +6,10 @@ import {
   useRef,
   type FormEvent,
 } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { NavLink, Link, useNavigate, useParams } from "react-router-dom";
 import { useWorkspace } from "../workspaces/WorkspaceContext";
 import { request, ApiClientError } from "../lib/api";
-import { Tag, Avatar } from "../components/Visuals";
+import { Avatar, Tag } from "../components/Visuals";
 import { ErrorMessage } from "../components/Layout";
 import {
   brandWriteSchema,
@@ -19,6 +20,7 @@ import {
 } from "../../shared/brand";
 import BrandFields from "./BrandFields";
 import BrandPreview from "./BrandPreview";
+import { BrandSpecimen } from "./BrandSpecimen";
 export default function BrandPage() {
   const { current, path, can } = useWorkspace(),
     { brandKitId } = useParams(),
@@ -45,6 +47,7 @@ export default function BrandPage() {
   const editing = !!brandKitId,
     creating = brandKitId === "new",
     manage = can("brand.manage");
+  const featuredKit = items.find((kit) => kit.isDefault) ?? items[0];
   const baseline = useRef("");
   const signature = JSON.stringify({ name, config }),
     dirty =
@@ -221,27 +224,36 @@ export default function BrandPage() {
   }
   return (
     <>
-      <section className="page-hero">
-        <Tag>{current.name} / BRAND</Tag>
-        <h1>
-          Your room.
-          <br />
-          <span>Your signature.</span>
-        </h1>
-        <p>
-          Brand the experience your people share. Ruckus stays familiar behind
-          the scenes.
-        </p>
-        <nav className="workspace-tabs" aria-label="Workspace settings">
-          <Link to={path("/workspace")}>General</Link>
-          <Link to={path("/members")}>Members</Link>
-          <Link to={path("/brand")}>Brand</Link>
-          {can("audit.read") && <Link to={path("/activity")}>Activity</Link>}
-        </nav>
+      <section
+        className={`section brand-world-intro ${editing ? "is-editing" : ""}`}
+      >
+        <header>
+          <Tag>YOUR BRAND × RUCKUS</Tag>
+          <h1>
+            Your room.
+            <br />
+            <span>Your signature.</span>
+          </h1>
+          <p>
+            Brand the experience your people share. Ruckus stays familiar behind
+            the scenes.
+          </p>
+        </header>
+        <div className="brand-world-context">
+          <span className="eyebrow">{current.name} / BRAND KITS</span>
+          <nav className="workspace-tabs" aria-label="Workspace settings">
+            <NavLink to={path("/workspace")}>General</NavLink>
+            <NavLink to={path("/members")}>Members</NavLink>
+            <NavLink to={path("/brand")}>Brand</NavLink>
+            {can("audit.read") && (
+              <NavLink to={path("/activity")}>Activity</NavLink>
+            )}
+          </nav>
+        </div>
       </section>
       <section className="section brand-workspace">
         <ErrorMessage message={error} />
-        {status && <p role="status">{status}</p>}
+        {status && <StatusBadge>{status}</StatusBadge>}
         {loading ? (
           <p role="status">Loading Brand Kits…</p>
         ) : !editing ? (
@@ -255,34 +267,37 @@ export default function BrandPage() {
               )}
             </div>
             {items.length ? (
-              <div className="brand-kit-grid">
-                {items.map((kit) => (
-                  <article className="brand-kit-card" key={kit.id}>
-                    <div className="brand-swatches" aria-label="Brand palette">
-                      {[
-                        kit.config.primaryColor,
-                        kit.config.secondaryColor,
-                        kit.config.accentColor,
-                      ].map((color, i) => (
-                        <span key={i} style={{ background: color }} />
-                      ))}
-                    </div>
-                    <div>
-                      <h3>{kit.name}</h3>
-                      <p>
-                        {kit.config.organizationDisplayName} · Revision{" "}
-                        {kit.revisionNumber}
-                        {kit.isDefault ? " · Default" : ""}
-                      </p>
-                      <Link
-                        className="button small outline"
-                        to={path(`/brand/${kit.id}`)}
-                      >
-                        {manage ? "Edit & preview" : "View preview"} ↗
-                      </Link>
-                    </div>
-                  </article>
-                ))}
+              <div className="brand-gallery">
+                <div className="brand-kit-grid">
+                  {items.map((kit) => (
+                    <article className="brand-kit-card" key={kit.id}>
+                      <BrandSpecimen
+                        config={kit.config}
+                        workspaceId={current.id}
+                      />
+                      <div>
+                        <h3>{kit.name}</h3>
+                        <p>
+                          {kit.config.organizationDisplayName} · Revision{" "}
+                          {kit.revisionNumber}
+                          {kit.isDefault ? " · Default" : ""}
+                        </p>
+                        <Link
+                          className="button small outline"
+                          to={path(`/brand/${kit.id}`)}
+                        >
+                          {manage ? "Edit & preview" : "View preview"} ↗
+                        </Link>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+                {featuredKit && (
+                  <BrandPreview
+                    config={featuredKit.config}
+                    workspaceId={current.id}
+                  />
+                )}
               </div>
             ) : (
               <div className="studio-empty">
@@ -344,15 +359,33 @@ export default function BrandPage() {
               >
                 ← All Brand Kits
               </Link>
-              <p role="status">
-                {busy
-                  ? "Saving…"
-                  : dirty
-                    ? "Unsaved changes"
-                    : record
-                      ? `Saved · revision ${record.revisionNumber}`
-                      : "New Brand Kit"}
-              </p>
+              <StatusBadge
+                tone={
+                  conflict
+                    ? "conflict"
+                    : error
+                      ? "error"
+                      : busy
+                        ? "saving"
+                        : dirty
+                          ? "unsaved"
+                          : record
+                            ? "saved"
+                            : "draft"
+                }
+              >
+                {conflict
+                  ? "Conflict detected"
+                  : error
+                    ? "Save needs attention"
+                    : busy
+                      ? "Saving…"
+                      : dirty
+                        ? "Unsaved changes"
+                        : record
+                          ? `Saved · revision ${record.revisionNumber}`
+                          : "New Brand Kit"}
+              </StatusBadge>
             </div>
             {confirm && (
               <div className="workspace-panel">

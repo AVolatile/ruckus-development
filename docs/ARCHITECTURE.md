@@ -1,4 +1,4 @@
-# Ruckus architecture — Phase 4
+# Ruckus architecture — Phase 4.5
 
 Public marketing/account routes remain separate from host tools and guest capability routes. `/app` requires a server session. `/app/w/:workspaceId/...` additionally resolves an active membership before rendering a workspace-scoped repository and the existing AppShell/Studio. Compatibility `/app/*` and Phase 0 redirects preserve suffix/query/hash and deterministically open the personal workspace. Invitations resume through validated app-only login/signup return paths. Account forms and workspace settings remain lazy; public routes avoid question banks and realtime connections.
 
@@ -60,3 +60,7 @@ Canonical host routes: `/app/w/:workspaceId/events`, `/events/new`, `/events/:ev
 ## Phase 4 content foundation
 
 Phase 4 adds the [content platform](CONTENT-PLATFORM.md): authenticated system/private pack catalogs, strict six-game documents, immutable revisions and explicit seeds. Standalone and Event launch copy exact revisions before room creation; the runtime performs no pack queries. Canonical host routes are `/app/w/:workspaceId/content-packs`, `/new`, `/:packId` and `/:packId/edit`. Library and Original details link into this surface. Public/player routes remain separate.
+
+## Host presentation boundary
+
+Phase 4.5 adds `PageHeader`, `StatusBadge` and acknowledged route `ActionNotice` composition with a host-only CSS token layer. The existing repository, autosave, permission, auth, socket and gameplay boundaries are unchanged. Local import is collapsed by default; its account-scoped tab dismissal preserves backup/import recovery in Settings. Direct Packs navigation and active workspace tabs improve route identity. See the [host design system](HOST-DESIGN-SYSTEM.md) for tokens, component contracts and reproducible rendered QA.

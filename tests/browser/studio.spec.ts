@@ -32,7 +32,9 @@ test("Studio: create, validation, autosave, reorder, preview, JSON/CSV, duplicat
   await page
     .getByLabel("The little fact after the reveal")
     .fill("Last is the final answer.");
-  await expect(page.getByRole("status")).toContainText("Saved", {
+  await expect(
+    page.locator('.studio-editor-top [role="status"]'),
+  ).toContainText("Saved", {
     timeout: 4000,
   });
   await page.reload();
@@ -58,7 +60,9 @@ test("Studio: create, validation, autosave, reorder, preview, JSON/CSV, duplicat
     .getByRole("button", { name: "Delete question", exact: true })
     .click();
   await expect(page.locator(".question-rail nav button")).toHaveCount(1);
-  await expect(page.getByRole("status")).toContainText("Saved");
+  await expect(
+    page.locator('.studio-editor-top [role="status"]'),
+  ).toContainText("Saved");
   const editor = page.url();
   await page.getByRole("link", { name: "Preview", exact: true }).click();
   await page.getByRole("button", { name: "Preview reveal" }).click();

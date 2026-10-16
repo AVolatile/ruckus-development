@@ -66,7 +66,7 @@ export function Games() {
   );
   return (
     <>
-      <section className="page-hero">
+      <section className="section originals-intro">
         <Tag>RUCKUS ORIGINALS / SIX WAYS TO MAKE A SCENE.</Tag>
         <h1>
           Find your
@@ -74,9 +74,8 @@ export function Games() {
           <span>kind of loud.</span>
         </h1>
         <p>
-          The fast thinkers. The wild pitchers. The terrible artists.
-          <br />
-          There’s a place for everyone at this party.
+          The fast thinkers. The wild pitchers. The terrible artists. There’s a
+          place for everyone at this party.
         </p>
       </section>
       <section className="section library">

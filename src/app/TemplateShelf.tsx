@@ -53,7 +53,11 @@ export default function TemplateShelf() {
                         draft,
                         `template:${draft.id}`,
                       );
-                      navigate(`/app/studio/boards/${copy.id}`);
+                      navigate(`/app/studio/boards/${copy.id}`, {
+                        state: {
+                          hostNotice: "Starter board saved. Make it yours.",
+                        },
+                      });
                     } catch (cause) {
                       setError(
                         cause instanceof Error

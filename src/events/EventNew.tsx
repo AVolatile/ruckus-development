@@ -1,3 +1,4 @@
+import { PageHeader } from "../app/PageHeader";
 import { GAMES } from "../../shared/catalog";
 import { useState } from "react";
 import { emptyEvent, type EventRecord } from "../../shared/events";
@@ -13,11 +14,12 @@ export default function EventNew() {
   return (
     <section className="events-page">
       <Link to="/app/events">← Workspace events</Link>
-      <div className="page-hero">
-        <span className="eyebrow">THE START OF SOMETHING GOOD</span>
-        <h1>What’s the occasion?</h1>
+      <PageHeader
+        eyebrow="EVENTS / THE START OF SOMETHING GOOD"
+        title="What’s the occasion?"
+      >
         <p>Name the event, then build a lineup your room will remember.</p>
-      </div>
+      </PageHeader>
       <form
         className="event-panel"
         onSubmit={(e) => {
@@ -55,7 +57,12 @@ export default function EventNew() {
               })(),
             }),
           })
-            .then((r) => navigate(`/app/events/${r.id}`, { replace: true }))
+            .then((r) =>
+              navigate(`/app/events/${r.id}`, {
+                replace: true,
+                state: { hostNotice: "Event created. Build your lineup." },
+              }),
+            )
             .catch((e) => {
               setError(e.message);
               setBusy(false);

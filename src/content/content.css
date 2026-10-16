@@ -143,3 +143,404 @@
 .pack-lineup > p {
   margin-top: 12px;
 }
+/* Host shelf: the game accent carries identity; metadata stays quiet. */
+.host-app .pack-card {
+  padding: 0 0 20px;
+  gap: 14px;
+  background: var(--paper);
+  overflow-wrap: break-word;
+}
+.host-app .pack-card > :not(.pack-card-heading) {
+  margin-inline: 20px;
+}
+.host-app .pack-card > .eyebrow {
+  margin-top: 20px;
+  font-size: 10px;
+}
+.host-app .pack-card-heading {
+  background: var(--pack-accent);
+  border-block: 1px solid var(--ink);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+  min-height: 112px;
+}
+.host-app .pack-card-heading .icon {
+  width: 36px;
+  height: 36px;
+}
+.host-app .pack-card h2 {
+  font-size: var(--host-card-title);
+  min-width: 0;
+  overflow-wrap: break-word;
+}
+.host-app .pack-card > p {
+  font-size: 14px;
+  flex: 1;
+}
+.host-app .pack-card > span:not(.eyebrow) {
+  font-size: 12px;
+}
+.host-app .pack-card > b {
+  font-size: 13px;
+}
+.host-app .pack-filters {
+  padding: 20px 0;
+  margin-bottom: 20px;
+  border-block: 1px solid var(--ink);
+}
+.host-app .pack-filters .event-fields {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  align-items: end;
+  margin: 0 0 12px;
+  gap: 12px 16px;
+}
+.host-app .pack-filters label:first-child {
+  grid-column: span 3;
+}
+.host-app .pack-filters button[type="submit"] {
+  background: var(--ink);
+  color: var(--paper);
+  border-color: var(--ink);
+}
+.host-app .pack-save-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--line);
+}
+.host-app .pack-save-tools > :is(ul, [role="alert"]) {
+  flex-basis: 100%;
+}
+.host-app .pack-save-tools .event-actions {
+  margin: 0;
+}
+.host-app .pack-metadata {
+  border: 0;
+  border-radius: 0;
+  padding: 20px 0;
+  border-bottom: 1px solid var(--ink);
+}
+.host-app .pack-metadata .event-fields {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px 24px;
+}
+.host-app .pack-metadata label {
+  margin: 0;
+}
+.host-app .pack-metadata label:nth-child(2) {
+  grid-column: span 2;
+}
+.host-app .pack-metadata label:nth-child(3) {
+  grid-column: 1/-1;
+}
+.host-app .pack-metadata textarea {
+  min-height: 76px;
+}
+.host-app .pack-items {
+  gap: 16px;
+}
+.host-app .pack-item {
+  margin: 0;
+  background: #fffefa;
+  border-left: 5px solid var(--blue);
+}
+.host-app .pack-item h3 {
+  font-size: 20px;
+  margin-bottom: 16px;
+}
+.host-app .pack-item h4 {
+  font-family: var(--display);
+  font-size: 22px;
+  letter-spacing: -0.025em;
+  margin: 16px 0;
+}
+.host-app .pack-item .event-fields {
+  margin: 16px 0;
+}
+.host-app .pack-item .event-fields label {
+  background: #eeeee5;
+  border-radius: 6px;
+  padding: 12px;
+  margin: 0;
+}
+.host-app .pack-item .event-fields label:nth-child(4n + 1) {
+  background: #e2f1fa;
+}
+.host-app .pack-item .event-fields label:nth-child(4n + 2) {
+  background: #e0f2c8;
+}
+.host-app .pack-item .event-fields label:nth-child(4n + 3) {
+  background: #ffe0ee;
+}
+.host-app .pack-item .event-fields label:nth-child(4n) {
+  background: #fff0c5;
+}
+.host-app .pack-item .event-actions {
+  padding-top: 8px;
+}
+.host-app .pack-item button,
+.host-app .pack-choice button {
+  border-color: var(--ink);
+  font-size: 13px;
+}
+.host-app .pack-lineup {
+  border: 0;
+  padding: 20px 0;
+}
+@media (max-width: 768px) {
+  .host-app .pack-filters .event-fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .host-app .pack-filters label:first-child {
+    grid-column: auto;
+  }
+  .host-app .pack-metadata .event-fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .host-app .pack-metadata label:nth-child(2) {
+    grid-column: auto;
+  }
+}
+@media (max-width: 480px) {
+  .host-app .pack-filters .event-fields,
+  .host-app .pack-metadata .event-fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .host-app .pack-filters .event-fields > *,
+  .host-app .pack-metadata label {
+    grid-column: auto;
+  }
+  .host-app .pack-filters label:first-child {
+    grid-column: auto;
+  }
+  .host-app .pack-card-heading {
+    min-height: 100px;
+  }
+}
+.host-app .pack-filters > .event-fields {
+  grid-template-columns: minmax(0, 2fr) auto minmax(0, 1fr);
+}
+.host-app .pack-filters > .event-fields label:first-child {
+  grid-column: auto;
+}
+.host-app .pack-more-filters {
+  margin: 12px 0;
+}
+.host-app .pack-more-filters summary {
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 13px;
+  padding-block: 8px;
+}
+.host-app .pack-more-filters summary span {
+  font-weight: 400;
+  margin-left: 8px;
+}
+.host-app .pack-more-filters .event-fields {
+  margin-top: 12px;
+}
+.host-app .pack-more-filters label:first-child {
+  grid-column: auto;
+}
+@media (max-width: 600px) {
+  .host-app .pack-filters > .event-fields {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .host-app .pack-filters > .event-fields > label:last-child {
+    grid-column: 1/-1;
+  }
+  .host-app .pack-more-filters summary span {
+    display: block;
+    margin-left: 16px;
+  }
+}
+
+/* Original game-cover anatomy, scaled for a shelf of playable material. */
+.host-app .pack-shelf-intro {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 24px;
+  margin: 20px 0 28px;
+}
+.host-app .pack-shelf-intro h1 {
+  font-size: var(--host-display);
+  margin: 14px 0;
+}
+.pack-shelf-intro p {
+  max-width: 56ch;
+  color: #565461;
+}
+.pack-shelf-intro > .button {
+  flex-shrink: 0;
+}
+.host-app .pack-card > .pack-game-cover {
+  margin: 0;
+  background: var(--pack-accent);
+  border-bottom: 1.5px solid var(--ink);
+  border-radius: 8px 8px 0 0;
+  padding: 16px 20px 8px;
+}
+.pack-cover-labels {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 16px;
+  font-size: 11px;
+  font-weight: 800;
+}
+.pack-cover-labels > span:last-child {
+  border: 1px solid var(--ink);
+  border-radius: 4px;
+  padding: 3px 6px;
+  font-size: 9px;
+}
+.pack-game-art {
+  display: grid;
+  place-items: center;
+  position: relative;
+  height: 115px;
+}
+.pack-game-art > .icon {
+  width: 64px;
+  height: 64px;
+  transform: rotate(-9deg);
+  z-index: 1;
+}
+.pack-game-art .orbit-line {
+  width: 112px;
+  height: 86px;
+}
+.host-app .pack-card > h2 {
+  margin-top: 6px;
+}
+.host-app .pack-card > .pack-card-foot {
+  margin-top: auto;
+  border-top: 1px solid var(--line);
+  padding-top: 14px;
+  display: grid;
+  gap: 12px;
+  font-size: 12px;
+}
+.pack-card-foot > span:last-child {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 800;
+  font-size: 13px;
+}
+.pack-card-foot .icon {
+  width: 24px;
+  height: 24px;
+}
+.host-app .pack-card:hover {
+  transform: translateY(-5px) rotate(-0.5deg);
+  box-shadow: 4px 5px 0 var(--ink);
+}
+.host-app .pack-card:active {
+  transform: translateY(1px);
+  box-shadow: none;
+}
+.pack-detail-intro {
+  display: grid;
+  grid-template-columns: 180px minmax(0, 1fr);
+  gap: 32px;
+  align-items: center;
+  padding-block: 24px 32px;
+  border-bottom: 1px solid var(--ink);
+  margin-bottom: 24px;
+}
+.pack-detail-mark {
+  background: var(--pack-accent);
+  border: 1.5px solid var(--ink);
+  border-radius: 10px;
+  height: 180px;
+  display: grid;
+  place-items: center;
+  position: relative;
+}
+.pack-detail-mark > .icon {
+  width: 80px;
+  height: 80px;
+  transform: rotate(-9deg);
+}
+.host-app .pack-detail-intro h1 {
+  margin: 14px 0;
+  font-size: var(--host-display);
+}
+.pack-detail-meta {
+  margin-top: 16px;
+  font-size: 12px;
+  color: #565461;
+}
+@media (max-width: 768px) {
+  .host-app .pack-shelf-intro {
+    align-items: start;
+    flex-direction: column;
+  }
+  .pack-detail-intro {
+    grid-template-columns: 110px minmax(0, 1fr);
+    gap: 24px;
+  }
+  .pack-detail-mark {
+    height: 130px;
+  }
+  .pack-detail-mark > .icon {
+    width: 60px;
+    height: 60px;
+  }
+  .pack-detail-mark .orbit-line {
+    width: 94px;
+    height: 75px;
+  }
+}
+@media (max-width: 480px) {
+  .pack-detail-intro {
+    grid-template-columns: 1fr;
+  }
+  .pack-detail-mark {
+    width: 100%;
+    height: 125px;
+  }
+}
+.host-app .pack-filters {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 0 16px;
+}
+.host-app .pack-filters > .event-fields {
+  grid-column: 1 / -1;
+}
+.host-app .pack-more-filters {
+  margin-bottom: 0;
+}
+.host-app .pack-more-filters[open] {
+  grid-column: 1 / -1;
+  margin-bottom: 12px;
+}
+.host-app .pack-filters > button[type="button"] {
+  font-size: 12px;
+  min-height: 36px;
+  padding: 8px;
+}
+@media (max-width: 480px) {
+  .host-app .pack-more-filters summary > span {
+    display: none;
+  }
+  .pack-detail-intro > .pack-detail-mark {
+    height: 90px;
+  }
+  .pack-detail-mark > .icon {
+    width: 48px;
+    height: 48px;
+  }
+  .pack-detail-mark .orbit-line {
+    width: 80px;
+    height: 64px;
+  }
+}

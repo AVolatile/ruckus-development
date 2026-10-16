@@ -1,4 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
+import { gameById } from "../../shared/catalog";
+import { Icon, Tag } from "../components/Visuals";
 import {
   eventTemplateSpecs,
   type EventRecord,
@@ -44,27 +46,44 @@ export default function EventList() {
         method: "POST",
         body: JSON.stringify({ templateId }),
       });
-      navigate(`/app/events/${event.id}`);
+      navigate(`/app/events/${event.id}`, {
+        state: { hostNotice: "Starter saved. Your lineup is ready to edit." },
+      });
     } catch (e) {
       setError((e as Error).message);
       setBusy(false);
     }
   }
   return (
-    <section className="events-page">
-      <div className="page-hero">
-        <span className="eyebrow">YOUR PEOPLE. ONE INVITATION.</span>
-        <h1>Make a night of it.</h1>
-        <p>
-          Line up Originals and your Studio boards. Give the room one code, then
-          carry the same crew through every game.
-        </p>
-        {can("events.create") && (
-          <Link className="button" to="/app/events/new">
-            Create an event ↗
-          </Link>
-        )}
-      </div>
+    <section className="events-page event-lineup-page">
+      <header className="event-lineup-intro">
+        <div>
+          <Tag>EVENTS / YOUR PEOPLE. ONE INVITATION.</Tag>
+          <h1>
+            Make a <span>night of it.</span>
+          </h1>
+          <p>
+            Line up Originals and your Studio boards. Give the room one code,
+            then carry the same crew through every game.
+          </p>
+          {can("events.create") && (
+            <Link className="button" to="/app/events/new">
+              Create an event ↗
+            </Link>
+          )}
+        </div>
+        <ol className="event-show-steps" aria-label="Build your show">
+          <li>
+            <span>01</span> Set the scene.
+          </li>
+          <li>
+            <span>02</span> Pick your trouble.
+          </li>
+          <li>
+            <span>03</span> Your house rules.
+          </li>
+        </ol>
+      </header>
       {error && <p role="alert">{error}</p>}
       <div className="section-heading">
         <h2>
@@ -122,26 +141,50 @@ export default function EventList() {
           <div className="section-heading">
             <div>
               <span className="eyebrow">RUCKUS STARTERS</span>
-              <h2>A little structure. A lot of possibility.</h2>
+              <h2>Pick your trouble.</h2>
               <p>
                 Editable starting lineups made from real Originals. Add Studio
                 boards to make them your own.
               </p>
             </div>
           </div>
-          <div className="event-card-grid">
+          <div className="event-starter-lineups">
             {eventTemplateSpecs.map((t) => (
-              <article className="event-card starter" key={t.id}>
-                <span className="eyebrow">{t.games.length} ORIGINALS</span>
-                <h3>{t.name}</h3>
-                <p>{t.description}</p>
-                <button
-                  className="button outline"
-                  disabled={busy}
-                  onClick={() => void create(t.id)}
+              <article className="event-starter" key={t.id}>
+                <div className="event-starter-copy">
+                  <span className="eyebrow">
+                    {t.games.length} ORIGINALS / EDITABLE LINEUP
+                  </span>
+                  <h3>{t.name}</h3>
+                  <p>{t.description}</p>
+                  <button
+                    className="button small outline"
+                    disabled={busy}
+                    onClick={() => void create(t.id)}
+                  >
+                    Use starter ↗
+                  </button>
+                </div>
+                <ol
+                  className="starter-game-sequence"
+                  aria-label={`${t.name} lineup`}
                 >
-                  Use starter ↗
-                </button>
+                  {t.games.map((slug, index) => {
+                    const game = gameById(slug);
+                    return (
+                      <li
+                        key={slug}
+                        style={{ "--game-color": game.color } as CSSProperties}
+                      >
+                        <span aria-hidden="true">
+                          {String(index + 1).padStart(2, "0")}
+                        </span>
+                        <Icon name={game.icon} />
+                        <span>{game.name}</span>
+                      </li>
+                    );
+                  })}
+                </ol>
               </article>
             ))}
           </div>

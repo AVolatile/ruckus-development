@@ -1,7 +1,9 @@
+import type { CSSProperties } from "react";
 import { PackChooser } from "../content/PackChooser";
 import { GAMES, PACKS } from "../../shared/catalog";
 import type { EventDefinition, PlaylistItem } from "../../shared/events";
 import type { BoardSummary } from "../../shared/cloud";
+import { Icon } from "../components/Visuals";
 export function PlaylistEditor({
   definition,
   update,
@@ -38,10 +40,10 @@ export function PlaylistEditor({
     transitionLabel: "",
   });
   return (
-    <section className="event-panel">
+    <section className="event-panel event-run-of-show">
       <div className="section-heading">
         <div>
-          <span className="eyebrow">THE RUN OF SHOW</span>
+          <span className="eyebrow">02 / PICK YOUR TROUBLE</span>
           <h2>Your lineup.</h2>
           <p>
             {items.filter((i) => i.enabled).length} enabled · up to 50 segments
@@ -60,13 +62,33 @@ export function PlaylistEditor({
             <li
               className={!item.enabled ? "disabled-item" : ""}
               key={item.itemId}
+              style={
+                {
+                  "--segment-accent":
+                    item.type === "original"
+                      ? GAMES.find((g) => g.id === item.gameSlug)!.color
+                      : "var(--blue)",
+                  "--segment-ink":
+                    item.type === "original" ? "var(--ink)" : "white",
+                } as CSSProperties
+              }
             >
               <div className="playlist-item-heading">
                 <span className="event-number">
                   {String(index + 1).padStart(2, "0")}
                 </span>
+                <span className="event-game-icon" aria-hidden="true">
+                  <Icon
+                    name={
+                      item.type === "original"
+                        ? GAMES.find((g) => g.id === item.gameSlug)!.icon
+                        : "screen"
+                    }
+                  />
+                </span>
                 <div>
                   <span className="eyebrow">
+                    {index === 0 ? "OPENING SEGMENT" : "THEN"} /{" "}
                     {item.type === "original" ? "ORIGINAL" : "STUDIO"}
                   </span>
                   <h3>{title}</h3>

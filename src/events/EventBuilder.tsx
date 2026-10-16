@@ -1,3 +1,4 @@
+import { StatusBadge } from "../app/StatusBadge";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import type { BrandRecord, BrandSnapshot } from "../../shared/brand";
@@ -161,9 +162,13 @@ export default function EventBuilder({
             {preview ? "EVENT PREVIEW · NO LIVE ROOM" : "EXPERIENCE BUILDER"}
           </span>
           <h1>{d.title}</h1>
-          <p role="status" aria-live="polite">
+          <StatusBadge
+            tone={
+              draft.conflict ? "conflict" : draft.error ? "error" : undefined
+            }
+          >
             {draft.status}
-          </p>
+          </StatusBadge>
         </div>
         <div className="event-actions">
           {edit && (
@@ -231,7 +236,11 @@ export default function EventBuilder({
           </div>
         </div>
       )}
-      {notice && <p role="status">{notice}</p>}
+      {notice && (
+        <StatusBadge tone={notice.includes("Repair") ? "error" : "saved"}>
+          {notice}
+        </StatusBadge>
+      )}
       {validation && (
         <section className="event-validation" aria-label="Event readiness">
           <h2>
@@ -260,7 +269,7 @@ export default function EventBuilder({
           <section className="event-panel">
             <div className="section-heading">
               <div>
-                <span className="eyebrow">SET THE SCENE</span>
+                <span className="eyebrow">01 / SET THE SCENE</span>
                 <h2>Give it a name.</h2>
               </div>
             </div>
@@ -368,6 +377,9 @@ export default function EventBuilder({
             }}
           />
           <section className="event-panel">
+            <span className="eyebrow event-step-label">
+              03 / YOUR HOUSE RULES
+            </span>
             <h2>How the room runs.</h2>
             <div className="event-checks">
               {Object.entries(settingLabels).map(([key, label]) => (
@@ -554,7 +566,12 @@ export default function EventBuilder({
                       body: JSON.stringify({ targetWorkspaceId: target }),
                     },
                   );
-                  navigate(`/app/w/${target}/events/${result.id}`);
+                  navigate(`/app/w/${target}/events/${result.id}`, {
+                    state: {
+                      hostNotice:
+                        "Editable event copy saved to your workspace.",
+                    },
+                  });
                 })
               }
             >
@@ -591,7 +608,12 @@ export default function EventBuilder({
                     method: "POST",
                     body: "{}",
                   });
-                  navigate("/app/events");
+                  navigate("/app/events", {
+                    state: {
+                      hostNotice:
+                        "Event archived. Existing launches remain intact.",
+                    },
+                  });
                 })
               }
             >

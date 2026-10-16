@@ -1,3 +1,4 @@
+import { StatusBadge } from "../app/StatusBadge";
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useWorkspace } from "./context";
@@ -69,7 +70,7 @@ export default function WorkspaceMembers() {
   return (
     <>
       <ErrorMessage message={error} />
-      {message && <p role="status">{message}</p>}
+      {message && <StatusBadge>{message}</StatusBadge>}
       {loading && <p role="status">Loading members…</p>}
 
       {canInvite && current?.kind === "organization" && (

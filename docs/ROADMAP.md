@@ -24,6 +24,10 @@ Delivered a central lazy AudioEngine, normalized standalone/Event cues, all Orig
 
 Delivered persistent system/private workspace packs, strict six-game schemas, parity-preserving defaults, discovery, structured authoring, immutable revisions and pinned standalone/Event content. Explicit validate/diff/seed tooling controls built-in releases. Topic compatibility and repaired audio remain intact. No billing or entitlements were added.
 
+## Phase 4.5 — Host Experience & Visual Cohesion
+
+Restores original-demo brand direction across authenticated host tools: shared working scale, lightweight shell, recoverable compact local import, content shelf/game accents, grouped editors and acknowledged feedback. See [visual audit](PHASE-4-5-VISUAL-AUDIT.md), [design system](HOST-DESIGN-SYSTEM.md) and [report](PHASE-4-5-REPORT.md). The first art-direction pass was rejected in human review; Phase 4.5B corrects page composition from the original Home/Games/Studio/Setup/Brand archetypes. Human approval is pending Anthony’s review. This is a presentation milestone; gameplay/audio and persistence semantics remain unchanged.
+
 ## Recommended Phase 5 — Persistent Session History & Analytics
 
 Persist actual completed-session outcomes with clear workspace access and retention, then derive useful host reports. Avoid high-frequency gameplay database writes; keep the authoritative engine independent.

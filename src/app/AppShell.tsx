@@ -1,3 +1,4 @@
+import { ActionNotice } from "./ActionNotice";
 import {
   WorkspaceSwitcher,
   useWorkspace,
@@ -14,6 +15,7 @@ const navigation = [
   ["/app/originals", "Originals"],
   ["/app/studio", "Studio"],
   ["/app/library", "Library"],
+  ["/app/content-packs", "Packs"],
   ["/app/events", "Events"],
 ];
 
@@ -61,10 +63,18 @@ export function AppShell() {
         </nav>
       </header>
       <div className="app-access-note">
-        <WorkspaceSwitcher /> <span>{user?.email}</span>
+        <WorkspaceSwitcher />{" "}
+        <Link
+          className="host-account-link"
+          to="/app/settings"
+          aria-label={`Account settings for ${user?.email}`}
+        >
+          Account ↗
+        </Link>
       </div>
       <main id="main">
         <LocalImportPrompt key={current.id} />
+        <ActionNotice />
         <Outlet />
       </main>
       <footer className="app-footer">

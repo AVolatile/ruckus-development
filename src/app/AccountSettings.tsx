@@ -1,9 +1,10 @@
+import { PageHeader } from "./PageHeader";
 import { AudioSettings } from "../audio/AudioControls";
 import VerificationNotice from "../auth/VerificationNotice";
 import { useState } from "react";
 import { Link, useNavigate } from "../workspaces/navigation";
 import { useHostAuth } from "../auth/HostAuth";
-import { Avatar, Tag } from "../components/Visuals";
+import { Avatar } from "../components/Visuals";
 import { ErrorMessage } from "../components/Layout";
 export function AccountSettings() {
   const auth = useHostAuth(),
@@ -12,17 +13,20 @@ export function AccountSettings() {
     [error, setError] = useState("");
   return (
     <>
-      <section className="page-hero">
-        <Tag>YOUR HOST ACCOUNT</Tag>
-        <h1>
-          Keep your
-          <br />
-          <span>good stuff.</span>
-        </h1>
-        <p>
-          Signed in as {auth.user?.email}. Your personal and shared workspaces
-          follow you when you sign in on another device.
-        </p>
+      <section className="host-page-section">
+        <PageHeader
+          eyebrow="HOST ACCOUNT"
+          title={
+            <>
+              Keep your <span>good stuff.</span>
+            </>
+          }
+        >
+          <p>
+            Signed in as {auth.user?.email}. Your personal workspace is yours;
+            shared workspace access follows your role.
+          </p>
+        </PageHeader>
       </section>
       {auth.user && <AudioSettings accountId={auth.user.id} />}
       <section className="section">

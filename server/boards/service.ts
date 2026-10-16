@@ -58,16 +58,19 @@ export class BoardService {
     wid: string,
     id: string,
   ): Promise<CustomBoard> {
+    return (await this.forLaunchWithRevision(actor, wid, id)).board;
+  }
+  async forLaunchWithRevision(actor: string, wid: string, id: string) {
     return this.db.transaction(async (tx) => {
       await lockWorkspace(tx, wid);
       await authorize(tx, actor, wid, "boards.launch");
       const [row] = await tx
-        .select({ board: revisions.content })
+        .select({ board: revisions.content, revisionId: revisions.id })
         .from(boards)
         .innerJoin(revisions, eq(boards.currentRevisionId, revisions.id))
         .where(scope(wid, id));
       if (!row) throw missing();
-      return row.board;
+      return row;
     });
   }
   async list(

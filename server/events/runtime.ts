@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { Room } from "../engine.js";
+import { buildSessionSummary, type RoomOutcomes } from "../history/outcomes.js";
 import type {
   AudioStage,
   AudioState,
@@ -42,6 +43,62 @@ export class EventRuntime {
   private stopped = false;
   private problem?: { message: string; requestId: string };
   private endRecorded = false;
+  private historyStartedAt = 0;
+  private historyJoined = 0;
+  private historyDemos = 0;
+  private historyGames: { index: number; outcome: RoomOutcomes }[] = [];
+  private frozenHistory: ReturnType<typeof buildSessionSummary> | undefined;
+  historySummary() {
+    if (this.frozenHistory !== undefined)
+      return structuredClone(this.frozenHistory);
+    const b = this.snapshot.brand;
+    const summary = buildSessionSummary(
+      this.room,
+      {
+        workspaceId: this.snapshot.workspaceId,
+        hostUserId: this.snapshot.launchedBy,
+        title: this.snapshot.definition.title,
+        type: "event",
+        source: {
+          eventId: this.snapshot.eventId,
+          eventRevisionId: this.snapshot.eventRevisionId,
+        },
+        brand: b
+          ? {
+              kitId: b.brandKitId,
+              revisionId: b.revisionId,
+              name: b.name,
+              displayName: b.config.organizationDisplayName,
+              primary: b.config.primaryColor,
+              surface: b.config.surfaceColor,
+              accent: b.config.accentColor,
+            }
+          : null,
+      },
+      {
+        id: this.snapshot.id,
+        startedAt: this.historyStartedAt,
+        joined: this.historyJoined,
+        demos: this.historyDemos,
+        outcomes: [
+          ...this.historyGames,
+          { index: this.segmentIndex, outcome: this.room.outcomes },
+        ],
+        segments: this.snapshot.segments,
+        scores:
+          this.snapshot.definition.eventSettings.carryScoresAcrossGames &&
+          [...this.historyGames.map((g) => g.outcome), this.room.outcomes].some(
+            (o) => o.games.some((g) => g.scored && g.rounds > 0),
+          )
+            ? this.view().event!.scores
+            : null,
+        completed: this.state === "EVENT_FINAL",
+      },
+    );
+    if (["EVENT_FINAL", "ENDED"].includes(this.state))
+      this.frozenHistory = summary;
+    return structuredClone(summary);
+  }
   constructor(
     readonly code: string,
     readonly snapshot: LaunchSnapshot,
@@ -208,6 +265,7 @@ export class EventRuntime {
         throw new Error(
           "Two players make a party. Add guests or demo players.",
         );
+      this.historyStartedAt = Date.now();
       if (this.snapshot.definition.eventSettings.showEventIntro)
         this.transition("EVENT_INTRO", "EVENT_INTRO_ENTER");
       else this.transition("SEGMENT_INTRO", "SEGMENT_INTRO_ENTER");
@@ -270,6 +328,10 @@ export class EventRuntime {
       );
     }
     previous.dispose();
+    this.historyGames.push({
+      index: this.segmentIndex,
+      outcome: previous.outcomes,
+    });
     this.segmentIndex = index;
     this.room = next;
     this.room.players = players;
@@ -295,6 +357,7 @@ export class EventRuntime {
   }
   private end(reason: string) {
     if (this.state === "ENDED") return;
+    this.room.outcomes.observe(this.room);
     this.room.dispose();
     this.transition("ENDED", "EVENT_END");
     if (!this.endRecorded) {
@@ -330,12 +393,17 @@ export class EventRuntime {
       throw new Error(
         "This event is underway. Join the next event with your host.",
       );
-    return this.room.join(name, avatar, socket);
+    const joined = this.room.join(name, avatar, socket);
+    this.historyJoined++;
+    return joined;
   }
   addBots(n: number) {
     if (this.state !== "LOBBY")
       throw new Error("Add demo players in the event lobby.");
+    const before = this.players.size;
     this.room.addBots(n);
+    this.historyJoined += this.players.size - before;
+    this.historyDemos += this.players.size - before;
   }
   playerByToken(token: string) {
     return this.room.playerByToken(token);

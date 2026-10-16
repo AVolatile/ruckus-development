@@ -1,3 +1,4 @@
+import { HistorySaved } from "../history/HistorySaved";
 import { useState, type CSSProperties, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import type { RoomView } from "../../shared/types";
@@ -29,6 +30,7 @@ export function EventFrame({
       )}
       <div className="event-live-content">
         {children}
+        {room.history && <HistorySaved room={room} />}
         <footer className="event-attribution">
           {brand?.footer && <span>{brand.footer}</span>}
           <span>Powered by Ruckus</span>

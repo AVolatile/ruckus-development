@@ -1,4 +1,4 @@
-# Ruckus architecture — Phase 4.5
+# Ruckus architecture — Phase 5
 
 Public marketing/account routes remain separate from host tools and guest capability routes. `/app` requires a server session. `/app/w/:workspaceId/...` additionally resolves an active membership before rendering a workspace-scoped repository and the existing AppShell/Studio. Compatibility `/app/*` and Phase 0 redirects preserve suffix/query/hash and deterministically open the personal workspace. Invitations resume through validated app-only login/signup return paths. Account forms and workspace settings remain lazy; public routes avoid question banks and realtime connections.
 
@@ -64,3 +64,13 @@ Phase 4 adds the [content platform](CONTENT-PLATFORM.md): authenticated system/p
 ## Host presentation boundary
 
 Phase 4.5 adds `PageHeader`, `StatusBadge` and acknowledged route `ActionNotice` composition with a host-only CSS token layer. The existing repository, autosave, permission, auth, socket and gameplay boundaries are unchanged. Local import is collapsed by default; its account-scoped tab dismissal preserves backup/import recovery in Settings. Direct Packs navigation and active workspace tabs improve route identity. See the [host design system](HOST-DESIGN-SYSTEM.md) for tokens, component contracts and reproducible rendered QA.
+
+## Completion history boundary — Phase 5
+
+`RoomOutcomes` keeps bounded in-memory aggregate counters beside the authoritative engine. EventRuntime retains them before replacing inner Rooms. The terminal socket adapter validates/freezes a summary once, then SessionFinalizer writes asynchronously through SessionHistoryService. A run UUID plus hash and one transaction protect retries; database failure cannot delay a gameplay acknowledgement or final screen. No per-answer, timer, heartbeat, creative-input or reconnect write is added.
+
+History uses run, segment and session-local participant tables, immutable results, source-independent frozen metadata and retention-capable child cascades. Standalone rematches get new identities; Event launch UUID identifies its run. Host-only persistence status distinguishes saving, committed and failed. `server/broadcast.ts` validates the current room instance and existing recipient capabilities; expiry retires subscriptions/identities before a code can be reused. Delayed completion callbacks cannot revive an expired room or reach a replacement. [History architecture/privacy/failure policy](SESSION-HISTORY.md).
+
+Added authenticated GET `/workspaces/:workspaceId/sessions`, `/sessions/:sessionId` and `/analytics/summary` beneath `/api/v1`. `history.read` and `analytics.read` belong to all four workspace roles; membership remains independently checked. Lists are metadata-only keyset pages, recap children are bounded, and analytics uses PostgreSQL aggregates. No player history route exists.
+
+Host routes are `/app/w/:workspaceId/history`, `/history/:sessionId` and `/history/analytics`. One History shell item contains Sessions/Analytics tabs; old `/app/analytics` resolves to real personal-workspace analytics. History CSS and route components remain lazy. Original 4.5B compositions are preserved; the new pages use chronological, outcome and editorial-usage archetypes. Human art-direction approval is pending.

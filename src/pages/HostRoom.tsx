@@ -1,3 +1,4 @@
+import { HistorySaved } from "../history/HistorySaved";
 import { useCallback, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { gameById, gameForRoom } from "../../shared/catalog";
@@ -396,6 +397,7 @@ export function HostRoom() {
             )}
             {room.board?.scoring !== false && <Awards room={room} />}
             <BoardSummary room={room} />
+            <HistorySaved room={room} />
             <div className="session-stats">
               <span>
                 <b>{room.stats.rounds}</b> rounds

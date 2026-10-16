@@ -61,8 +61,9 @@ export function BoardSummary({ room }: { room: RoomView }) {
         Export session summary ↗
       </button>
       <p>
-        Display names and game results only. Saved by you, not stored as
-        employee analytics.
+        Display names and aggregate game results only. Your host workspace keeps
+        a recap after a qualified session; creative submissions are not
+        retained.
       </p>
     </section>
   );

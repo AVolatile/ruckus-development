@@ -61,3 +61,11 @@ Brand current pointers reference same-kit immutable revisions. A partial unique 
 ## Phase 4 content foundation
 
 Phase 4 migration `0004_adorable_eternity.sql` adds content_packs/content_pack_revisions with owner/workspace consistency, active discovery indexes, same-pack deferred current pointer and immutable revision trigger. Existing board, Brand, Event and launch-history rows remain unchanged. Explicit `content:seed` follows reviewed migrations; readiness requires all six default packs. See [content platform](CONTENT-PLATFORM.md) for schema and release workflow.
+
+## Session History — Phase 5
+
+Additive `0005_broad_terrax.sql` creates session_runs, session_segments and session_participants, workspace/nullable-host FKs, bounds, access-path indexes and result UPDATE protection. `0006_dark_vindicator.sql` raises aggregate segment attendance to the existing 50-question × 30-player ceiling while detail arrays stay capped at 300. `0007_goofy_lily_hollister.sql` adds nullable final_order so shared Event ranks retain exact live display order. Generated filenames and already-applied history are retained. The nullable field also leaves earlier local development fixtures explicitly without inferred order; no fake result backfill is performed.
+
+`server/db/history-schema.ts` is re-exported by schema.ts. The run UUID is its idempotency key; a canonical hash rejects mismatched retries. One transaction writes run/children/safe audit. Source IDs are frozen provenance without source-content FKs; source deletion must not remove results. Workspace deletion cascades history children; host attribution can become null. Results reject updates; DELETE remains available to future reviewed retention tooling. Existing cross-domain deletion constraints still need a product deletion policy.
+
+Indexes cover workspace/start/UUID, workspace/type/start/UUID, workspace/Event/date, unique run/sequence, game/run and run/rank. Detail arrays/results are bounded, no raw creative inputs persist, and no high-frequency gameplay query is added. Migrations run explicitly; readiness requires the history table. See [model/failure/retention policy](SESSION-HISTORY.md) and [analytics query semantics](ANALYTICS.md).

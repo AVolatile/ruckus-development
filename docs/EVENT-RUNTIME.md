@@ -30,7 +30,7 @@ Raw scores are not comparable: Hotwire awards 500–1,000 by speed, Room Tempera
 
 Each completed scored segment awards `round(1000 * (n - 1 - numberOfPlayersWithHigherScore) / (n - 1))` to participants, where n is the number eligible in at least one round of that segment. A sole participant earns 1,000 when they have a positive score. Equal scores share placement/points; top ties earn 1,000. When every raw score is zero, everyone earns zero. UUID orders equal totals for display only, and displayed ranks remain tied. A wholly scoreless Studio board awards no event points. Disconnected eligible players remain included; a guest who arrives after the last round earns no fabricated participation. Event points are accumulated once at game final.
 
-`carryScoresAcrossGames=false` disables accumulation and event leaderboard presentation. `showFinalEventLeaderboard=false` hides only the final aggregate display; existing event totals remain available in runtime state. Game result screens still show the game's own scores. No event points survive a server restart.
+`carryScoresAcrossGames=false` disables accumulation and event leaderboard presentation. `showFinalEventLeaderboard=false` hides only the final aggregate display; existing event totals remain available in runtime state. Game result screens still show the game's own scores. Live Event state is not restored after a server restart. Phase 5 preserves acknowledged finalized totals in Session History without reviving the room.
 
 ## Semantic audio cues
 
@@ -42,4 +42,8 @@ Phase 3.5 normalizes `RoomView.audio` for both standalone and Event rooms. The E
 
 ## Runtime and persistence limits
 
-Event definitions/revisions and launch snapshots/images persist in PostgreSQL. Room membership, answers, segment state and points remain in memory. A durable `event_runs` table was deliberately omitted: the launch snapshot UUID already provides future history identity without implying resumable runs. `event.ended` is a best-effort append-only operational record on completion or host/server end, not a durable results service. Failed end-audit writes log a generic message; there is no outbox/retry guarantee. Hostless rooms end under existing five-minute cleanup; inactive/ended rooms are removed under existing retention timers. Brand image delivery follows that live-room availability.
+Event definitions/revisions and launch snapshots/images persist in PostgreSQL. Room membership, answers, segment state and points remain in memory. Phase 3 deliberately omitted durable Event results. Phase 5 now uses that launch snapshot UUID as the session_runs identity without implying resumable live rooms. `event.ended` remains a best-effort append-only operational record on completion or host/server end; Phase 5 results have a separate transactional finalizer. Failed end-audit writes log a generic message; there is no outbox/retry guarantee. Hostless rooms end under existing five-minute cleanup; inactive/ended rooms are removed under existing retention timers. Brand image delivery follows that live-room availability.
+
+## Phase 5 completion hooks
+
+Before replacing an inner Room, retain its bounded outcome counters and original segment index. At EVENT_FINAL/ENDED, historySummary freezes actual played segments, source revisions and final placement standings. It does not rebuild points from historical game rules. Duplicate callbacks reuse the captured summary; the socket adapter attempts its run only once and the PostgreSQL writer independently enforces idempotency. Capturing incomplete first rounds yields no history. No raw submissions, private host notes, launch document or guest image bytes enter the summary. See [Session History](SESSION-HISTORY.md).

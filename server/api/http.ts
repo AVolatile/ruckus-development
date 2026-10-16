@@ -1,3 +1,4 @@
+import { installHistoryApi } from "./history.js";
 import { installContentPackApi } from "./content-packs.js";
 import { randomUUID } from "node:crypto";
 import { networkInterfaces } from "node:os";
@@ -230,6 +231,7 @@ export function installHostApi(app: Express, eventAdapter?: EventAdapter) {
   });
   installWorkspaceApi(app, db, emailTransport, env.origin);
   installEventApi(app, db, eventAdapter);
+  installHistoryApi(app, db);
   installContentPackApi(app, db);
   // Legacy board endpoints delegate to the authenticated personal workspace.
   app.get("/api/v1/me", (_req, res) => res.json({ user: res.locals.user }));
@@ -325,6 +327,7 @@ export function installHostApi(app: Express, eventAdapter?: EventAdapter) {
     safe(async (_req, res) => {
       try {
         await db.execute(sql`select workspace_id from events limit 0`);
+        await db.execute(sql`select workspace_id from session_runs limit 0`);
         await db.execute(
           sql`select current_revision_id from content_packs limit 0`,
         );

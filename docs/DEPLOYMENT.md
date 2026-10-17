@@ -15,3 +15,7 @@ The existing Docker runtime now includes migrations and their compiled runner, w
 ## Phase 3 Event snapshots
 
 Apply reviewed `0003_events_experience_builder.sql` explicitly before running the updated application. Readiness now requires the Events schema. Launch snapshots and their copied images add persistent database storage; plan monitoring, backups and retention before volume use. Live Event state still resides on one Node process. Guest image availability follows its in-memory room and is lost on restart; this is not durable Event recovery. Keep the same-origin public application/socket topology and validated HTTPS APP_ORIGIN. No deployment/migration hook is installed by this phase.
+
+## Phase 6 release gate
+
+Use the [production runbook](PRODUCTION-RUNBOOK.md) for explicit migration/hash compatibility, safe Node startup, `/healthz` versus `/readyz`, SIGUSR2 drain, bounded shutdown, durable queue inspection/retry and backup expectations. Docker/Render start Node's safe entrypoint directly. Preserve one authoritative node and wait for active rooms before maintenance; no rolling live-room handoff exists. Readiness rejects incompatible schema/unsafe DB durability while liveness keeps existing rooms available through dependency failure. Hosted SMTP/proxy/TLS/devices, protected database and observed backup restoration remain P0 external-pilot gates; this phase does not deploy or declare unconditional production readiness.

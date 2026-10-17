@@ -105,6 +105,7 @@ export class RateLimiter {
     const now = Date.now();
     const b = this.buckets.get(key);
     if (!b || b.reset <= now) {
+      if (!b && this.buckets.size >= 10000) return false;
       this.buckets.set(key, { count: 1, reset: now + windowMs });
       return true;
     }

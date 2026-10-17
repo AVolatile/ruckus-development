@@ -196,13 +196,7 @@ export async function playedSession(
       if (kind === "event") await command("advance");
     }
     await expect
-      .poll(
-        async () => {
-          await sync();
-          return state.history?.status;
-        },
-        { timeout: 15000 },
-      )
+      .poll(() => state.history?.status, { timeout: 15000 })
       .toBe("saved");
     // Anonymous guests never receive host history status or a history API identity.
     expect(

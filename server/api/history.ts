@@ -48,4 +48,19 @@ export function installHistoryApi(app: Express, db: Database) {
       ),
     ),
   );
+  app.delete(
+    base + "/sessions/:sessionId",
+    safe(async (q, r) => {
+      z.object({ confirm: z.literal("delete") })
+        .strict()
+        .parse(q.body);
+      await service.delete(
+        r.locals.user.id,
+        wid(q),
+        z.string().uuid().parse(q.params.sessionId),
+        r.locals.requestId,
+      );
+      r.status(204).end();
+    }),
+  );
 }

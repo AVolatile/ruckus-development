@@ -15,11 +15,21 @@ export function HistorySaved({ room }: { room: RoomView }) {
           Open saved recap ↗
         </Link>
       ) : (
-        <StatusBadge tone={h.status === "saving" ? "saving" : "error"}>
-          {h.status === "saving"
-            ? "Saving your recap…"
-            : "Recap couldn’t be saved. Live results are still here."}
-        </StatusBadge>
+        <>
+          <StatusBadge tone={h.status === "failed" ? "error" : "saving"}>
+            {h.status === "failed"
+              ? "Recap couldn’t be saved. Live results are still here."
+              : "Saving your recap…"}
+          </StatusBadge>
+          {h.status === "pending" && (
+            <Link
+              className="button light-outline small"
+              to={`/app/w/${h.workspaceId}/history/${h.sessionId}`}
+            >
+              Check recap ↗
+            </Link>
+          )}
+        </>
       )}
     </div>
   );

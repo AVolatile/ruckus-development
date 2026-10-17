@@ -1,4 +1,5 @@
 import "./history.css";
+import { DeleteRecap } from "./DeleteRecap";
 import { useState, type CSSProperties } from "react";
 import { useParams } from "react-router-dom";
 import { Link, useNavigate } from "../workspaces/navigation";
@@ -223,6 +224,7 @@ export default function SessionRecap() {
                 ))}
               </ol>
             </section>
+            <DeleteRecap id={s.id} />
             <section className="recap-next">
               <div>
                 <span className="eyebrow">03 / KEEP THE GOOD GOING</span>

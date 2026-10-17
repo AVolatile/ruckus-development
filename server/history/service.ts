@@ -6,7 +6,12 @@ import {
   sessionParticipants as participants,
 } from "../db/history-schema.js";
 import type { Database } from "../db/client.js";
-import { authorize } from "../workspaces/policy.js";
+import {
+  authorize,
+  lockWorkspace,
+  type Transaction,
+} from "../workspaces/policy.js";
+import { historyReceipts, historyOutbox } from "../db/outbox-schema.js";
 import { audit } from "../workspaces/audit.js";
 import { ApiError } from "../api/errors.js";
 import {
@@ -24,6 +29,7 @@ function canonical(value: unknown): string {
   if (Array.isArray(value)) return `[${value.map(canonical).join(",")}]`;
   if (value && typeof value === "object")
     return `{${Object.entries(value)
+      .filter(([, v]) => v !== undefined)
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([k, v]) => `${JSON.stringify(k)}:${canonical(v)}`)
       .join(",")}}`;
@@ -67,12 +73,13 @@ function conditions(wid: string, q: HistoryQuery, now?: Date): SQL[] {
 export class SessionHistoryService {
   constructor(private db: Database) {}
   /** Trusted runtime boundary only: never exposed as a client write endpoint. */
-  async finalize(input: SessionSummary) {
+  async finalize(input: SessionSummary, transaction?: Transaction) {
     const s = sessionSummarySchema.parse(input),
       hash = summaryHash(s);
     if (Buffer.byteLength(JSON.stringify(s)) > 2_000_000)
       throw new Error("Session summary exceeds its storage bound.");
-    return this.db.transaction(async (tx) => {
+    const write = async (tx: Transaction) => {
+      await tx.execute(sql`set local synchronous_commit='on'`);
       await tx.execute(sql`set local statement_timeout = '5s'`);
       await tx.execute(sql`set local lock_timeout = '3s'`);
       const { segments: gs, participants: ps, ...base } = s;
@@ -128,6 +135,39 @@ export class SessionHistoryService {
         },
       );
       return { id: s.id, created: true };
+    };
+    return transaction ? write(transaction) : this.db.transaction(write);
+  }
+  async delete(actor: string, wid: string, id: string, requestId?: string) {
+    return this.db.transaction(async (tx) => {
+      await lockWorkspace(tx, wid);
+      await authorize(tx, actor, wid, "history.delete");
+      const [run] = await tx
+        .select()
+        .from(runs)
+        .where(and(eq(runs.workspaceId, wid), eq(runs.id, id)));
+      if (!run) throw missing();
+      // Backfill only this deletion's minimal receipt for Phase 5 records.
+      await tx
+        .insert(historyReceipts)
+        .values({ id, workspaceId: wid, payloadHash: run.contentHash })
+        .onConflictDoNothing();
+      await tx
+        .select()
+        .from(historyReceipts)
+        .where(eq(historyReceipts.id, id))
+        .for("update");
+      await tx
+        .update(historyReceipts)
+        .set({ deletedAt: new Date() })
+        .where(eq(historyReceipts.id, id));
+      await tx.delete(historyOutbox).where(eq(historyOutbox.id, id));
+      await tx
+        .delete(runs)
+        .where(and(eq(runs.id, id), eq(runs.workspaceId, wid)));
+      await audit(tx, wid, actor, "session.history_deleted", "session", id, {
+        ...(requestId ? { requestId } : {}),
+      });
     });
   }
   async list(actor: string, wid: string, q: HistoryQuery) {
@@ -177,7 +217,27 @@ export class SessionHistoryService {
       .select()
       .from(runs)
       .where(and(eq(runs.workspaceId, wid), eq(runs.id, id)));
-    if (!row) throw missing();
+    if (!row) {
+      const [pending] = await this.db
+        .select({ status: historyOutbox.status })
+        .from(historyOutbox)
+        .where(
+          and(eq(historyOutbox.id, id), eq(historyOutbox.workspaceId, wid)),
+        );
+      if (pending && ["pending", "processing"].includes(pending.status))
+        throw new ApiError(
+          409,
+          "RECAP_PENDING",
+          "Your recap is still saving. Try again in a moment.",
+        );
+      if (pending?.status === "failed")
+        throw new ApiError(
+          503,
+          "RECAP_UNAVAILABLE",
+          "Your recap couldn’t finish saving. Ask your host to contact Ruckus support.",
+        );
+      throw missing();
+    }
     const [gs, ps] = await Promise.all([
       this.db
         .select()

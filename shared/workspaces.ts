@@ -3,6 +3,7 @@ export const roles = ["owner", "admin", "host", "viewer"] as const;
 export type WorkspaceRole = (typeof roles)[number];
 export const capabilities = [
   "history.read",
+  "history.delete",
   "analytics.read",
   "workspace.read",
   "workspace.update",
@@ -55,6 +56,7 @@ export const roleCapabilities: Record<WorkspaceRole, readonly Capability[]> = {
   owner: capabilities,
   admin: [
     ...host,
+    "history.delete",
     "workspace.update",
     "members.invite",
     "members.manage",

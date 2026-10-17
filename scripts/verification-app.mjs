@@ -14,8 +14,8 @@ if (
 const port = process.env.VERIFY_PORT || "4312",
   origin = `http://localhost:${port}`;
 const args = process.argv.includes("--compiled")
-  ? ["dist-server/server/index.js"]
-  : ["--import", "tsx", "server/index.ts"];
+  ? ["dist-server/server/start.js"]
+  : ["--import", "tsx", "server/start.ts"];
 const child = spawn(process.execPath, args, {
   env: {
     ...process.env,

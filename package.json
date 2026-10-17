@@ -7,9 +7,9 @@
     "node": ">=20.19"
   },
   "scripts": {
-    "dev": "tsx watch server/index.ts",
+    "dev": "tsx watch server/start.ts",
     "build": "npm run build:client && npm run build:server",
-    "start": "node dist-server/server/index.js",
+    "start": "node dist-server/server/start.js",
     "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.server.json",
     "lint": "eslint .",
     "test": "node --import tsx --test tests/*.test.ts",
@@ -17,10 +17,10 @@
     "format": "prettier --write src server shared tests *.ts *.js *.json docs/*.md README.md portfolio-assets/*.md",
     "assets": "python3 scripts/generate-assets.py && python3 scripts/generate-emails.py && .venv/bin/python scripts/refine-brand-assets.py",
     "dev:client": "vite --host 0.0.0.0",
-    "dev:server": "REALTIME_ONLY=true tsx watch server/index.ts",
+    "dev:server": "REALTIME_ONLY=true tsx watch server/start.ts",
     "build:client": "node scripts/validate-public-env.mjs && tsc --noEmit && vite build",
     "build:server": "tsc --noEmit -p tsconfig.server.json && tsc -p tsconfig.server.json",
-    "start:server": "REALTIME_ONLY=true node dist-server/server/index.js",
+    "start:server": "REALTIME_ONLY=true node dist-server/server/start.js",
     "setup:local": "node scripts/setup-local.mjs",
     "db:up": "docker compose up -d --wait",
     "db:down": "docker compose down",
@@ -30,13 +30,17 @@
     "test:integration": "node --env-file=.env.test --import tsx --test tests/integration/*.test.ts",
     "db:test:prepare": "node scripts/prepare-test-database.mjs",
     "db:migrate:production": "node dist-server/server/db/migrate.js",
+    "ops:history": "node --import tsx server/ops/cli.ts",
+    "ops:history:production": "node dist-server/server/ops/cli.js",
+    "test:capacity": "node --env-file=.env.test --import tsx scripts/reliability-capacity.mts",
     "audio:generate": "python3 scripts/generate-audio.py && prettier --write src/audio/assetCatalog.ts audio/assets.json",
     "audio:validate": "node scripts/validate-audio.mjs",
     "content:validate": "node --import tsx scripts/content.ts validate",
     "content:diff": "node --import tsx scripts/content.ts diff",
     "content:seed": "node --import tsx scripts/content.ts seed",
     "content:diff:production": "node dist-server/server/content-packs/cli.js diff",
-    "content:seed:production": "node dist-server/server/content-packs/cli.js seed"
+    "content:seed:production": "node dist-server/server/content-packs/cli.js seed",
+    "test:acceptance": "COMPILED_ACCEPTANCE=true node --env-file=.env.test --import tsx --test tests/integration/reliability-process.test.ts"
   },
   "dependencies": {
     "@better-auth/drizzle-adapter": "1.7.8",

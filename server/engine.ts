@@ -1,4 +1,5 @@
 import { randomInt, randomUUID } from "node:crypto";
+import { log } from "./ops/log.js";
 import { RoomOutcomes } from "./history/outcomes.js";
 import type { CustomBoard, CustomQuestion } from "../shared/boards.js";
 import type { BoardSessionSummary } from "../shared/types.js";
@@ -108,11 +109,10 @@ export class Room {
     try {
       this.outcomes.observe(this);
     } catch {
-      console.error(
-        JSON.stringify({
-          event: "session.capture_failed",
-          runId: this.outcomes.runId,
-        }),
+      log(
+        "session.capture_failed",
+        { sessionId: this.outcomes.runId },
+        "error",
       );
     }
     this.changedAt = Date.now();

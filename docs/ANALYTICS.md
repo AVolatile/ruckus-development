@@ -39,6 +39,8 @@ Indexes support workspace/start/UUID keyset access, workspace/type/start/UUID, w
 
 Owner/Admin/Host/Viewer can read through current membership. Players cannot call authenticated history endpoints. Source links open current permitted content or show unavailability while leaving the recap readable. CSV belongs to individual recaps; bulk history export is deferred.
 
-These metrics describe hosting usage and session-local participation. They do not measure fun, engagement, team health, proficiency, employee performance, sentiment or retention. Missing history after a process crash or exhausted retry is not evidence that play did not happen. There is no live monitoring, cross-workspace benchmarking, AI insight, billing entitlement or inferred player identity.
+These metrics describe hosting usage and session-local participation. They do not measure fun, engagement, team health, proficiency, employee performance, sentiment or retention. Missing history after a crash before durable enqueue, exhausted handoff or terminal materialization failure is not evidence that play did not happen. Phase 6 recovers committed queued work after restart. Confirmed recap deletion removes its Analytics contribution; there is no separate retained personal analytics rollup. There is no live monitoring, cross-workspace benchmarking, AI insight, billing entitlement or inferred player identity.
 
 Local rendered QA and Axe checks support the new surfaces; they do not establish comprehensive WCAG conformance, physical-device behavior or human design approval. Operational release gaps from previous phases remain.
+
+Phase 6 bounds database statements/transactions and includes a local synthetic query exercise, not a large-workspace benchmark. See [report](PHASE-6-REPORT.md) for exact sample counts/limits and [retention](RETENTION.md) for intentional removal.

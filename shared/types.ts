@@ -90,7 +90,7 @@ export interface Prompt {
 }
 export interface RoomView {
   history?: {
-    status: "saving" | "saved" | "failed";
+    status: "saving" | "pending" | "saved" | "failed";
     sessionId: string;
     workspaceId: string;
   };

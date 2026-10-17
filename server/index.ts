@@ -1,5 +1,10 @@
 import { broadcastRoom, retireRoom } from "./broadcast.js";
-import { SessionHistoryService } from "./history/service.js";
+import { HistoryOutbox } from "./history/outbox.js";
+import { HistoryWorker } from "./history/worker.js";
+import { Lifecycle } from "./ops/lifecycle.js";
+import { Readiness } from "./ops/readiness.js";
+import { log, metrics, failureCode } from "./ops/log.js";
+import { socketClientAddress } from "./ops/client-address.js";
 import {
   SessionFinalizer,
   type HistoryPersistence,
@@ -41,11 +46,14 @@ import { z } from "zod/v3";
 import { installHostApi } from "./api/http.js";
 import { ApiError } from "./api/errors.js";
 import { BoardService } from "./boards/service.js";
-import { db, pool, auth } from "./auth/config.js";
+import { db, pool, auth, config } from "./auth/config.js";
 import { fromNodeHeaders } from "better-auth/node";
+import { DrizzleQueryError } from "drizzle-orm";
 const app = express();
 const http = createServer(app);
-const port = Number(process.env.PORT) || 4310;
+const port = config.port;
+const lifecycle = new Lifecycle(config.draining);
+const readiness = new Readiness(config.databaseUrl, () => lifecycle.draining);
 const origins = allowedOrigins();
 publicAppOrigin();
 if (
@@ -83,8 +91,46 @@ import { EventService } from "./events/service.js";
 import { eventCommandSchema } from "../shared/events.js";
 type LiveRoom = Room | EventRuntime;
 const rooms = new Map<string, LiveRoom>();
-const historyWriter = new SessionFinalizer((summary) =>
-  new SessionHistoryService(db).finalize(summary),
+const outbox = new HistoryOutbox(db);
+function historyUpdate(id: string, status: "saved" | "failed") {
+  for (const room of rooms.values()) {
+    const state = historyState.get(room);
+    if (state?.runId !== id || !state.persistence) continue;
+    state.persistence = { ...state.persistence, status };
+    broadcast(room);
+  }
+}
+const historyWriter = new SessionFinalizer(
+  async (summary) => {
+    try {
+      const status = await outbox.enqueue(summary);
+      if (status === "saved") historyUpdate(summary.id, "saved");
+      if (status === "retired") historyUpdate(summary.id, "failed");
+      log("history.handoff", {
+        sessionId: summary.id,
+        workspaceId: summary.workspaceId,
+        result: status,
+      });
+    } catch (error) {
+      metrics.enqueueFailures++;
+      log(
+        "history.handoff_failed",
+        { sessionId: summary.id, code: failureCode(error) },
+        "error",
+      );
+      throw error;
+    }
+  },
+  [250, 1000, 3000],
+  () => {},
+  "pending",
+);
+const historyWorker = new HistoryWorker(
+  outbox,
+  () => readiness.dependencyReady(),
+  historyUpdate,
+  config.workerConcurrency,
+  config.workerPollMs,
 );
 const historyState = new WeakMap<
   LiveRoom,
@@ -122,6 +168,13 @@ function finalizeHistory(room: LiveRoom) {
           : null;
     if (summary)
       void historyWriter.submit(summary, (persistence) => {
+        if (state!.runId !== summary.id || historyState.get(room) !== state)
+          return;
+        if (
+          ["saved", "failed"].includes(state!.persistence?.status ?? "") &&
+          persistence.status === "pending"
+        )
+          return;
         state!.persistence = persistence;
         broadcast(room);
       });
@@ -134,9 +187,7 @@ function finalizeHistory(room: LiveRoom) {
           ? room.snapshot.workspaceId
           : state.context!.workspaceId,
     };
-    console.error(
-      JSON.stringify({ event: "session.summary_failed", sessionId: runId }),
-    );
+    log("session.summary_failed", { sessionId: runId }, "error");
   }
 }
 function roomView(
@@ -161,11 +212,50 @@ app.use((_req, res, next) => {
   res.setHeader("X-Frame-Options", "SAMEORIGIN");
   next();
 });
-app.get(["/api/health", "/health"], (_req, res) =>
-  res.json({ status: "ok", service: "ruckus", rooms: rooms.size }),
+app.get(["/api/health", "/health", "/healthz"], (_req, res) =>
+  res.set("Cache-Control", "no-store").json({ status: "ok" }),
 );
+app.get(["/ready", "/readyz"], (_req, res) => {
+  void readiness.ready().then((ready) =>
+    res
+      .set("Cache-Control", "no-store")
+      .status(ready ? 200 : 503)
+      .json({ status: ready ? "ready" : "unavailable" }),
+  );
+});
+app.use("/api", (req, res, next) => {
+  res.locals.requestId = randomUUID();
+  res
+    .set("X-Request-ID", res.locals.requestId)
+    .set("Cache-Control", "no-store");
+  if (["GET", "HEAD", "OPTIONS"].includes(req.method)) return next();
+  if (lifecycle.draining)
+    return res
+      .status(503)
+      .set("Retry-After", "30")
+      .json({
+        error: {
+          code: "TEMPORARILY_UNAVAILABLE",
+          message: "Ruckus is taking a short break. Try again shortly.",
+        },
+      });
+  void readiness.dependencyReady().then((ready) =>
+    ready
+      ? next()
+      : res
+          .status(503)
+          .set("Retry-After", "5")
+          .json({
+            error: {
+              code: "TEMPORARILY_UNAVAILABLE",
+              message:
+                "Ruckus couldn’t reach your saved work. Try again shortly.",
+            },
+          }),
+  );
+});
 installHostApi(app, {
-  capacity: () => rooms.size < 500,
+  capacity: () => lifecycle.acceptingRooms && rooms.size < 500,
   available: (id) =>
     [...rooms.values()].some(
       (r) =>
@@ -174,7 +264,7 @@ installHostApi(app, {
         r.phase !== "ended",
     ),
   open: (snapshot, req) => {
-    if (rooms.size >= 500)
+    if (!lifecycle.acceptingRooms || rooms.size >= 500)
       throw new ApiError(
         503,
         "STAGE_UNAVAILABLE",
@@ -201,7 +291,7 @@ installHostApi(app, {
       (reason) => {
         void new EventService(db)
           .ended(snapshot, reason)
-          .catch(() => console.error("Event end audit unavailable."));
+          .catch(() => log("event.end_audit_failed", {}, "warn"));
       },
     );
     rooms.set(code, room);
@@ -218,19 +308,32 @@ function broadcast(room: LiveRoom) {
 const fail = (error: unknown): Reply => ({
   ok: false,
   error:
-    error instanceof z.ZodError
-      ? error.issues[0]?.message
-      : error instanceof Error
-        ? error.message
-        : "Something went wrong. Try that action again.",
+    error instanceof DrizzleQueryError ||
+    (error &&
+      typeof error === "object" &&
+      "code" in error &&
+      typeof error.code === "string" &&
+      /^(?:[0-9A-Z]{5}|ECONNREFUSED|ECONNRESET|ETIMEDOUT)$/.test(error.code))
+      ? "Couldn’t reach your saved work. Try again shortly."
+      : error instanceof z.ZodError
+        ? error.issues[0]?.message
+        : error instanceof Error
+          ? error.message
+          : "Something went wrong. Try that action again.",
 });
 io.on("connection", (socket) => {
-  const ip = socket.handshake.address;
+  const ip = socketClientAddress(
+    socket.handshake.address,
+    socket.handshake.headers["x-forwarded-for"],
+    process.env.TRUST_PROXY === "loopback",
+  );
   function limit(key: string, count: number, ms: number) {
     if (!limiter.allow(`${key}:${ip}`, count, ms))
       throw new Error("A little too fast. Wait a moment and try again.");
   }
   function getRoom(host = false) {
+    if (lifecycle.stopping)
+      throw new Error("This stage is closing. Try again shortly.");
     const identity = socket.data.identity as Identity | undefined;
     const room = identity ? rooms.get(identity.code) : undefined;
     if (!room || !identity)
@@ -252,6 +355,8 @@ io.on("connection", (socket) => {
     if (typeof ack !== "function") return;
     try {
       limit("create", 8, 60000);
+      if (!lifecycle.acceptingRooms || !(await readiness.dependencyReady()))
+        throw new Error("Ruckus is taking a short break. Try again shortly.");
       let host;
       try {
         host = await auth.api.getSession({
@@ -315,6 +420,8 @@ io.on("connection", (socket) => {
         parsed.boardReference?.workspaceId ??
         (!board ? parsed.contentReference?.workspaceId : undefined) ??
         (await personalWorkspace(db, host.user.id));
+      if (!lifecycle.acceptingRooms || rooms.size >= 500)
+        throw new Error("Ruckus is taking a short break. Try again shortly.");
       let code = makeCode();
       while (rooms.has(code)) code = makeCode();
       const joinUrl = getPublicJoinUrl(
@@ -368,14 +475,23 @@ io.on("connection", (socket) => {
       if (parsed.demo) room.addBots(8);
       ack({ ok: true, identity, state: roomView(room) });
     } catch (error) {
+      metrics.roomCreateFailures++;
+      log(
+        "room.create_failed",
+        { code: error instanceof ApiError ? error.code : "ROOM_UNAVAILABLE" },
+        "warn",
+      );
       ack(fail(error));
     }
   });
   socket.on("room:join", (data, ack) => {
     if (typeof ack !== "function") return;
     try {
-      limit("join", 30, 60000);
+      if (lifecycle.stopping)
+        throw new Error("This stage is closing. Try again shortly.");
+      limit("join", 300, 60000);
       const parsed = joinSchema.parse(data);
+      limit(`join-room:${parsed.code}`, 60, 60000);
       const room = rooms.get(parsed.code);
       if (!room)
         throw new Error(
@@ -392,8 +508,9 @@ io.on("connection", (socket) => {
   socket.on("room:resume", (data, ack) => {
     if (typeof ack !== "function") return;
     try {
-      limit("resume", 60, 60000);
+      limit("resume", 600, 60000);
       const identity = identitySchema.parse(data);
+      limit(`resume-room:${identity.code}`, 120, 60000);
       const room = rooms.get(identity.code);
       if (!room)
         throw new Error("This room has expired. Ask your host for a new code.");
@@ -535,6 +652,7 @@ io.on("connection", (socket) => {
   });
 });
 const cleanup = setInterval(() => {
+  const started = performance.now();
   limiter.sweep();
   for (const room of rooms.values()) {
     if (
@@ -553,8 +671,10 @@ const cleanup = setInterval(() => {
       retireRoom(rooms, io.sockets.sockets.values(), room);
     }
   }
+  metrics.cleanupMs += performance.now() - started;
 }, 30000);
 cleanup.unref();
+let closeVite: (() => Promise<void>) | undefined;
 if (process.env.REALTIME_ONLY === "true") {
   app.get("/", (_req, res) =>
     res.json({ service: "ruckus-realtime", status: "ok" }),
@@ -579,28 +699,130 @@ if (process.env.REALTIME_ONLY === "true") {
     server: { middlewareMode: true, hmr: { server: http } },
     appType: "spa",
   });
+  closeVite = () => vite.close();
   app.use(vite.middlewares);
 }
+historyWorker.start();
+let historyObservation: Promise<void> | undefined;
+let lastObservationFailure = 0;
+const observeHistory = setInterval(
+  () => {
+    if (historyObservation || lifecycle.stopping) return;
+    const ids = [...rooms.values()]
+      .map((room) => historyState.get(room)?.persistence)
+      .filter((p) => p?.status === "pending" || p?.status === "saving")
+      .map((p) => p!.sessionId);
+    if (!ids.length) return;
+    historyObservation = (async () => {
+      if (!(await readiness.dependencyReady())) return;
+      for (const row of await outbox.states(ids))
+        if (row.status !== "pending") historyUpdate(row.id, row.status);
+    })()
+      .catch((error) => {
+        if (Date.now() - lastObservationFailure > 60000) {
+          log(
+            "history.feedback_unavailable",
+            { code: failureCode(error) },
+            "warn",
+          );
+          lastObservationFailure = Date.now();
+        }
+      })
+      .finally(() => {
+        historyObservation = undefined;
+      });
+  },
+  Math.min(1000, config.workerPollMs),
+);
+observeHistory.unref();
+const observations = setInterval(() => {
+  void outbox
+    .snapshot()
+    .then((queue) => {
+      console.log(
+        JSON.stringify({
+          level: "info",
+          timestamp: new Date().toISOString(),
+          event: "operations.snapshot",
+          rooms: rooms.size,
+          events: [...rooms.values()].filter((r) => r instanceof EventRuntime)
+            .length,
+          sockets: io.engine.clientsCount,
+          pool: {
+            total: pool.totalCount,
+            idle: pool.idleCount,
+            waiting: pool.waitingCount,
+          },
+          queue,
+          ...metrics,
+        }),
+      );
+    })
+    .catch(() =>
+      log(
+        "operations.snapshot_unavailable",
+        { code: "DB_UNAVAILABLE" },
+        "warn",
+      ),
+    );
+}, 60000);
+observations.unref();
 http.listen(port, "0.0.0.0", () => {
+  log("process.started");
+  if (config.production) return;
   console.log(
-    `\n  RUCKUS — Clock out of ordinary.\n  Host:  http://localhost:${port}\n${addresses.map((ip) => `  Phone: http://${ip}:${port}`).join("\n")}\n  Join QR origin: ${process.env.PUBLIC_JOIN_URL ?? "automatically detected LAN address"}\n`,
+    `\n  RUCKUS — Clock out of ordinary.\n  Host:  http://localhost:${port}\n${addresses.map((ip) => `  Phone: http://${ip}:${port}`).join("\n")}\n  Join QR origin: ${publicAppOrigin() ?? "automatically detected LAN address"}\n`,
   );
 });
-function shutdown() {
+async function shutdown() {
+  if (!lifecycle.stop()) return;
+  const started = performance.now();
+  log("shutdown.started");
+  const deadline = setTimeout(() => {
+    log(
+      "shutdown.deadline",
+      {
+        code: "SHUTDOWN_TIMEOUT",
+        durationMs: Math.round(performance.now() - started),
+      },
+      "error",
+    );
+    process.exit(1);
+  }, config.shutdownMs);
+  deadline.unref();
   clearInterval(cleanup);
+  clearInterval(observations);
+  clearInterval(observeHistory);
+  const workerStopped = historyWorker.stop();
+  http.close();
   for (const room of rooms.values()) {
     if (room.phase !== "final" && room.phase !== "ended") room.action("end");
     finalizeHistory(room);
     room.dispose();
   }
-  io.close();
-  http.close(() => {
-    void historyWriter
-      .drain()
-      .then(() => pool.end())
-      .finally(() => process.exit(0));
-  });
-  setTimeout(() => process.exit(0), 3000).unref();
+  try {
+    await historyWriter.drain();
+    await workerStopped;
+    await historyObservation;
+    await new Promise<void>((resolve) => io.close(() => resolve()));
+    for (const room of rooms.values())
+      retireRoom(rooms, io.sockets.sockets.values(), room);
+    await closeVite?.();
+    http.closeAllConnections();
+    await Promise.all([pool.end(), readiness.close()]);
+    clearTimeout(deadline);
+    log("shutdown.completed", {
+      durationMs: Math.round(performance.now() - started),
+    });
+    process.exit(0);
+  } catch (error) {
+    log("shutdown.failed", { code: failureCode(error) }, "error");
+    process.exit(1);
+  }
 }
-process.on("SIGTERM", shutdown);
-process.on("SIGINT", shutdown);
+process.on("SIGTERM", () => void shutdown());
+process.on("SIGINT", () => void shutdown());
+process.on("SIGUSR2", () => {
+  lifecycle.drain();
+  log("process.draining");
+});

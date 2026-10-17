@@ -2,7 +2,7 @@
 
 Turn any shared screen into something the room can play with. Six multiplayer Originals meet Studio for custom trivia, True / False and polls. Hosts have personal and shared workspaces; players join from phones without accounts.
 
-This is `AVolatile/ruckus-development`, the startup repository, separate from the original portfolio/demo. Phase 4 adds persistent Content Packs, private workspace authoring and frozen standalone/Event content. Phase 4.5/4.5B extends the original Ruckus page compositions into host tools, with compact navigation, distinct shelves/editors and acknowledged feedback; human art-direction approval is pending. Gameplay and repaired host/phone audio remain preserved. Phase 5 adds workspace Session History, frozen recaps and lightweight SQL usage analytics; live rooms remain memory-based.
+This is `AVolatile/ruckus-development`, the startup repository, separate from the original portfolio/demo. Phase 4 adds persistent Content Packs, private workspace authoring and frozen standalone/Event content. Phase 4.5/4.5B extends the original Ruckus page compositions into host tools, with compact navigation, distinct shelves/editors and acknowledged feedback; human art-direction approval is pending. Gameplay and repaired host/phone audio remain preserved. Phase 5 adds workspace Session History, frozen recaps and lightweight SQL usage analytics; live rooms remain memory-based. Phase 6 adds durable recap handoff/recovery, deliberate drain/shutdown, confirmed recap deletion and restricted operational tooling.
 
 ## Run locally
 
@@ -82,7 +82,9 @@ Phase 4.5 adds **Host Experience & Visual Cohesion**: quiet recoverable local im
 
 Phase 5 adds **Session History & Analytics** from actual qualified outcomes: frozen Original/Studio/Event recaps, exact final standings and source revisions, attendance summaries, CSV and date-bounded SQL usage. History writes are asynchronous with bounded retries; failure never blocks gameplay, and process loss can still lose an uncommitted recap. Player identities remain session-local. [Session History](docs/SESSION-HISTORY.md) · [Analytics](docs/ANALYTICS.md) · [Phase 5 report](docs/PHASE-5-REPORT.md).
 
-Next: production reliability and retention work, informed by real hosting use. No Phase 6 implementation is included.
+Phase 6 hardens completed-history delivery with a PostgreSQL outbox, crash/restart recovery, bounded worker leases/retries, separate health/readiness, drain/shutdown, safe logs and Owner/Admin confirmed recap deletion. Active rooms and pre-enqueue summaries remain vulnerable to process loss. No production deployment or human approval is implied. [Phase 6 report](docs/PHASE-6-REPORT.md) · [Runbook](docs/PRODUCTION-RUNBOOK.md) · [Reliability](docs/RELIABILITY.md) · [Retention](docs/RETENTION.md) · [Release gates](docs/PRODUCTION-SECURITY-REVIEW.md).
+
+Next: resolve the documented external-pilot gates and learn from constrained hosting before choosing Phase 7. No Phase 7 implementation is included.
 
 - [Phase 2 report](docs/PHASE-2-REPORT.md) and [audit](docs/PHASE-2-AUDIT.md)
 - [Architecture/API](docs/ARCHITECTURE.md)

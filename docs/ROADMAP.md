@@ -32,9 +32,11 @@ Restores original-demo brand direction across authenticated host tools: shared w
 
 Implemented qualified completion-time persistence for standalone Originals, Studio and mixed Events. Immutable recaps preserve actual standings, source versions and session-local participation. Workspace History and SQL usage summaries use bounded pages/ranges, with recap CSV and current-source checks. In-memory runtime remains independent; bounded retry is not a durable outbox. Human visual approval remains pending. See [Session History](SESSION-HISTORY.md), [Analytics](ANALYTICS.md) and the [report](PHASE-5-REPORT.md).
 
-## Recommended Phase 6 — Reliability and retention
+## Phase 6 — Reliability, retention and observability
 
-Close production email/domain/proxy/backup validation and establish reviewed workspace history retention/deletion, failure monitoring and a reliable completion handoff if pilots require stronger delivery. Measure real hosting needs before introducing billing or distributed room state. No Phase 6 work has begun.
+Implemented a purpose-built durable PostgreSQL recap outbox, lease/restart recovery, bounded retries and retention, atomic idempotent materialization, deletion receipts, confirmed Owner/Admin recap removal, drain/idempotent shutdown, separate health/readiness, migration checks, bounded database deadlines and sanitized operational logs/CLI. Active rooms remain memory-only and a crash before durable enqueue can still lose a recap. Local technical verification does not resolve actual SMTP/proxy/backup/restore gates or human review. See [report](PHASE-6-REPORT.md), [runbook](PRODUCTION-RUNBOOK.md) and [security classification](PRODUCTION-SECURITY-REVIEW.md).
+
+Recommended next step: finish the P0 hosting/operational gates, run a restricted single-node pilot and use evidence to scope Phase 7. No Phase 7 product domain has been started.
 
 Before public account/collaboration release, complete actual SMTP/domain/DNS/TLS/proxy/cookie/device checks, backup restore, retention/account deletion, monitoring, dependency patch policy and independent security review. Local tests do not replace hosted validation.
 

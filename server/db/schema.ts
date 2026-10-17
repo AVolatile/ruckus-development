@@ -78,3 +78,4 @@ export * from "./event-schema.js";
 export * from "./content-schema.js";
 
 export * from "./history-schema.js";
+export * from "./outbox-schema.js";

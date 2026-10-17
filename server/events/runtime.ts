@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { log } from "../ops/log.js";
 import { Room } from "../engine.js";
 import { buildSessionSummary, type RoomOutcomes } from "../history/outcomes.js";
 import type {
@@ -316,12 +317,7 @@ export class EventRuntime {
         requestId,
       };
       this.sequence++;
-      console.error(
-        JSON.stringify({
-          event: "event.segment_initialization_failed",
-          requestId,
-        }),
-      );
+      log("event.segment_initialization_failed", { requestId }, "error");
       this.publish();
       throw new Error(
         `Couldn’t prepare the next game. Reference ${requestId}.`,

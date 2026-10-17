@@ -409,7 +409,7 @@ test("all migrations apply twice to a fresh disposable test database without his
       runs: 0,
       segments: 0,
       participants: 0,
-      migrations: 8,
+      migrations: 9,
     });
   } finally {
     await fresh.pool.end();

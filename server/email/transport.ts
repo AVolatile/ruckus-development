@@ -16,18 +16,41 @@ export class MemoryEmailTransport implements EmailTransport {
     this.messages.push(structuredClone(message));
   }
 }
-export function createEmailTransport(
-  env: NodeJS.ProcessEnv = process.env,
-): EmailTransport {
+export function emailConfiguration(env: NodeJS.ProcessEnv = process.env) {
   const production = env.NODE_ENV === "production";
   const mode =
     env.EMAIL_TRANSPORT ||
     (production ? "smtp" : env.NODE_ENV === "test" ? "memory" : "file");
   if (production && mode !== "smtp")
     throw new Error("Production requires SMTP email transport.");
-  if (mode === "memory" && env.NODE_ENV === "test")
-    return new MemoryEmailTransport();
-  if (mode === "file" && !production)
+  if (
+    (mode === "memory" && env.NODE_ENV === "test") ||
+    (mode === "file" && !production)
+  )
+    return { production, mode, port: 587 };
+  if (mode !== "smtp" || !env.SMTP_HOST || !env.EMAIL_FROM)
+    throw new Error(
+      "Configure SMTP_HOST and EMAIL_FROM for transactional email.",
+    );
+  const port = Number(env.SMTP_PORT || 587);
+  if (
+    !Number.isInteger(port) ||
+    port < 1 ||
+    port > 65535 ||
+    /[\r\n]/.test(env.EMAIL_FROM) ||
+    (env.SMTP_SECURE && !["true", "false"].includes(env.SMTP_SECURE))
+  )
+    throw new Error("Invalid SMTP configuration.");
+  if (Boolean(env.SMTP_USER) !== Boolean(env.SMTP_PASSWORD))
+    throw new Error("Configure both SMTP_USER and SMTP_PASSWORD.");
+  return { production, mode, port };
+}
+export function createEmailTransport(
+  env: NodeJS.ProcessEnv = process.env,
+): EmailTransport {
+  const { production, mode, port } = emailConfiguration(env);
+  if (mode === "memory") return new MemoryEmailTransport();
+  if (mode === "file")
     return {
       async send(message) {
         await mkdir(".local/mail", { recursive: true, mode: 0o700 });
@@ -38,20 +61,6 @@ export function createEmailTransport(
         );
       },
     };
-  if (mode !== "smtp" || !env.SMTP_HOST || !env.EMAIL_FROM)
-    throw new Error(
-      "Configure SMTP_HOST and EMAIL_FROM for transactional email.",
-    );
-  const port = Number(env.SMTP_PORT || 587);
-  if (
-    !Number.isInteger(port) ||
-    port < 1 ||
-    port > 65535 ||
-    /[\r\n]/.test(env.EMAIL_FROM)
-  )
-    throw new Error("Invalid SMTP configuration.");
-  if (Boolean(env.SMTP_USER) !== Boolean(env.SMTP_PASSWORD))
-    throw new Error("Configure both SMTP_USER and SMTP_PASSWORD.");
   const client = nodemailer.createTransport({
     host: env.SMTP_HOST,
     port,

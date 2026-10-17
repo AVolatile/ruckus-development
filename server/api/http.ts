@@ -10,10 +10,9 @@ import express, {
 } from "express";
 import { fromNodeHeaders, toNodeHandler } from "better-auth/node";
 import { z } from "zod/v3";
-import { sql } from "drizzle-orm";
+import { failureCode, log, metrics } from "../ops/log.js";
 import { installWorkspaceApi } from "./workspaces.js";
-import { auth, db, emailTransport } from "../auth/config.js";
-import { cloudEnvironment } from "../auth/environment.js";
+import { auth, db, emailTransport, config as env } from "../auth/config.js";
 import { BoardService } from "../boards/service.js";
 import { boardWriteSchema, importBatchSchema } from "../../shared/cloud.js";
 import { RateLimiter } from "../validation.js";
@@ -23,7 +22,6 @@ import {
   installEventAssets,
   type EventAdapter,
 } from "./events.js";
-const env = cloudEnvironment();
 const service = new BoardService(db);
 const limits = new RateLimiter();
 const sweep = setInterval(() => limits.sweep(), 60000);
@@ -46,7 +44,7 @@ export function installHostApi(app: Express, eventAdapter?: EventAdapter) {
     app.set("trust proxy", "loopback");
   }
   app.use("/api", (req, res, next) => {
-    res.locals.requestId = randomUUID();
+    res.locals.requestId ??= randomUUID();
     res.setHeader("X-Request-ID", res.locals.requestId);
     res.setHeader("Cache-Control", "no-store");
     const configured = new URL(env.origin);
@@ -322,26 +320,6 @@ export function installHostApi(app: Express, eventAdapter?: EventAdapter) {
       res.status(204).end();
     }),
   );
-  app.get(
-    "/ready",
-    safe(async (_req, res) => {
-      try {
-        await db.execute(sql`select workspace_id from events limit 0`);
-        await db.execute(sql`select workspace_id from session_runs limit 0`);
-        await db.execute(
-          sql`select current_revision_id from content_packs limit 0`,
-        );
-        const seeded = await db.execute(
-          sql`select count(*)::int as n from content_packs where owner_type='ruckus' and system_slug like '%-default' and status='ready' and archived_at is null`,
-        );
-        if (seeded.rows[0]?.n !== 6)
-          throw new Error("Content defaults require an explicit seed.");
-        res.json({ status: "ready" });
-      } catch {
-        res.status(503).json({ status: "unavailable" });
-      }
-    }),
-  );
   app.use("/api", (_req, _res, next) =>
     next(new ApiError(404, "NOT_FOUND", "That API endpoint isn’t available.")),
   );
@@ -378,16 +356,25 @@ export function installHostApi(app: Express, eventAdapter?: EventAdapter) {
         ["PERMISSION_DENIED", "WORKSPACE_NOT_FOUND"].includes(safeError.code) &&
         limits.allow(`denied-log:${res.locals.user?.id}`, 5, 60000)
       )
-        console.warn(
-          JSON.stringify({
-            event: "workspace.authorization_denied",
+        log(
+          "workspace.authorization_denied",
+          {
             requestId: res.locals.requestId,
             actorUserId: res.locals.user?.id,
             code: safeError.code,
-          }),
+          },
+          "warn",
         );
-      if (safeError.status >= 500)
-        console.error(`API failure ${res.locals.requestId || "unknown"}`);
+      metrics.apiFailures++;
+      if (limits.allow(`failure-log:${safeError.code}`, 60, 60000))
+        log(
+          "api.request_failed",
+          {
+            requestId: res.locals.requestId,
+            code: safeError.status >= 500 ? failureCode(error) : safeError.code,
+          },
+          safeError.status >= 500 ? "error" : "warn",
+        );
       res.status(safeError.status).json({
         error: {
           code: safeError.code,

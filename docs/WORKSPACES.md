@@ -30,3 +30,5 @@ Sensitive workspace/member/Brand/create-copy-delete actions append audit records
 ## Event permissions
 
 All members have `events.read`. Owners/Admins have `events.create`, `events.update`, `events.launch` and `events.archive`. Hosts have create/update/launch; Viewers have read/preview only. Copy checks source read and destination create, with additional Studio read/create when copying sources across workspaces. Events use the same workspace lock and server-derived actor as boards/Brand management. Archive or lost membership blocks new operations; an already-launched room continues through its existing capability model. See EVENTS.md.
+
+Phase 6: all four roles can read History/Analytics; only Owner/Admin have `history.delete` with explicit recap confirmation. Archive still retains workspace data. No workspace/account purge is added; [Retention](RETENTION.md) maps every dependency and future erasure requirements.

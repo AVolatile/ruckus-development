@@ -1,6 +1,6 @@
 import type { SessionSummary } from "../../shared/history.js";
 export interface HistoryPersistence {
-  status: "saving" | "saved" | "failed";
+  status: "saving" | "pending" | "saved" | "failed";
   sessionId: string;
   workspaceId: string;
 }
@@ -9,7 +9,7 @@ type Task = {
   update: (state: HistoryPersistence) => void;
   done: () => void;
 };
-/** Process-local bounded retry queue. It outlives room disposal, never live progression. */
+/** Bounded pre-handoff retries. Production writes durable outbox entries, not recaps. */
 export class SessionFinalizer {
   private queue: Task[] = [];
   private running = 0;
@@ -19,6 +19,7 @@ export class SessionFinalizer {
     private retryDelays = [250, 1000, 3000],
     private log: (data: object) => void = (data) =>
       console.error(JSON.stringify(data)),
+    private successStatus: "saved" | "pending" = "saved",
   ) {}
   private report(data: object) {
     try {
@@ -81,7 +82,7 @@ export class SessionFinalizer {
       try {
         await this.write(task.summary);
         task.update({
-          status: "saved",
+          status: this.successStatus,
           sessionId: task.summary.id,
           workspaceId: task.summary.workspaceId,
         });
